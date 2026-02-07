@@ -1,0 +1,125 @@
+# Unity MCP — рекомендации по использованию
+
+Unity MCP (плагин **MCP For Unity** + MCP-сервер, иногда встречается как `unity-mcp` / `mcp-for-unity`) — инструменты для управления Unity Editor из Cursor.
+
+Практическое правило для этого проекта:
+- перед любыми действиями в редакторе сначала читать `mcpforunity://custom-tools` (какие инструменты реально доступны),
+- при нескольких Unity-инстансах — читать `mcpforunity://instances` и при необходимости выбирать активный инстанс.
+
+---
+
+## Ключевые инструменты
+
+| Категория | Инструменты | Что делают |
+|-----------|-------------|------------|
+| **Ресурсы** | `mcpforunity://editor/state`, `mcpforunity://editor/selection`, `mcpforunity://project/info`, `mcpforunity://instances`, `mcpforunity://custom-tools` | Чтение состояния редактора/проекта, выбранных объектов, списка Unity-инстансов и доступных инструментов |
+| **Сцена** | `manage_scene` | Создание/загрузка/сохранение сцен, refresh assets |
+| **Объекты** | `manage_gameobject` | Создание, удаление, перемещение, переименование GameObject |
+| **Компоненты** | `manage_components` | Добавление/удаление/настройка компонентов |
+| **Префабы** | `manage_prefabs` | Создание и управление префабами |
+| **Скрипты** | `manage_script`, `create_script`, `apply_text_edits`, `validate_script` | Создание/правка C#, валидация компиляции |
+| **Материалы** | `manage_material` | Создание и настройка материалов |
+| **Консоль** | `read_console` | Чтение логов Unity |
+| **Пакетно** | `batch_execute` | Несколько операций за один вызов |
+
+---
+
+## Типовые паттерны
+
+### После написания кода
+
+```
+1. manage_scene → refresh assets (или validate_script)
+2. read_console → проверить ошибки
+3. Если есть ошибки — исправить → повторить
+4. editor_state → проверить что объекты на месте
+```
+
+### Создание объекта на сцене
+
+```
+1. manage_gameobject → create (имя, позиция)
+2. manage_components → add (SpriteRenderer / Rigidbody / скрипт)
+3. editor_state → убедиться что объект в иерархии
+```
+
+### Скриншот для DEV_STATE
+
+```
+1. manage_scene → screenshot (задать screenshot_file_name)
+2. Скриншот сохраняется в Assets/Screenshots/
+3. Обновить DEV_STATE.md — добавить ссылку на скриншот (можно прямо на Assets/Screenshots/...)
+```
+
+### Пакетные операции (batch_execute)
+
+Когда нужно выполнить 3+ операции подряд — использовать `batch_execute` вместо отдельных вызовов. Быстрее и надёжнее.
+
+```
+batch_execute:
+  - manage_gameobject: create "Enemy"
+  - manage_components: add SpriteRenderer to "Enemy"
+  - manage_components: add Rigidbody2D to "Enemy"
+  - manage_components: add BoxCollider2D to "Enemy"
+```
+
+---
+
+## Использование по режимам
+
+### Прототип
+
+- **Минимум MCP.** Основная работа — через файлы.
+- Refresh assets после правок кода.
+- `read_console` — только если что-то не работает.
+- Скриншот — **один раз в конце** для DEV_STATE (если ведётся).
+- `batch_execute` — не нужен (мало операций).
+
+### Стандартный
+
+- **На каждую фичу:**
+  1. Написать код → refresh assets.
+  2. `read_console` → проверить ошибки.
+  3. `editor_state` → убедиться что всё на месте.
+  4. Скриншот → добавить в DEV_STATE.
+- `manage_gameobject` / `manage_components` — для настройки сцены, если быстрее через MCP чем вручную.
+- `batch_execute` — при создании нескольких объектов за раз.
+
+### Быстрый
+
+- **Refresh и консоль по ходу работы** — не ждать конца.
+- `editor_state` — периодически, не после каждой мелочи.
+- Скриншот — **в конце этапа/блока**, не после каждой фичи.
+- `manage_gameobject` / `manage_components` — активно, для скорости.
+- `batch_execute` — **рекомендуется** (несколько фич за раз).
+
+### Профи
+
+- **Полное использование MCP на каждом шаге:**
+  1. Перед задачей: `editor_state` → зафиксировать исходное состояние.
+  2. После задачи: `read_console` + `editor_state` + скриншот.
+  3. После фичи: полная проверка + скриншот для DEV_STATE.
+- `validate_script` — после каждой правки (строгий контроль компиляции).
+- `batch_execute` — для сложных операций (создание системы объектов).
+- `manage_prefabs` — создавать префабы сразу, не откладывать.
+- `manage_material` — настраивать материалы через MCP.
+
+---
+
+## Когда НЕ использовать MCP
+
+- Правка `.cs` файлов — быстрее через Cursor напрямую (MCP для создания/валидации, не для редактирования больших файлов).
+- MCP сервер не запущен или недоступен — уточнить у пользователя: помочь настроить или начать без MCP (работать через файлы/код). Не блокировать разработку.
+- Простые операции с одним файлом — MCP overhead не оправдан.
+
+---
+
+## Troubleshooting
+
+| Проблема | Решение |
+|----------|---------|
+| Инструменты MCP не видны в Cursor | Unity открыт? → Window → MCP for Unity → Start Server. Cursor: Settings → MCP → проверить статус. |
+| `read_console` пуст | Refresh assets (manage_scene) — ошибки могут появиться после рекомпиляции. |
+| Объект создан но не видно | `editor_state` → проверить position, scale, active. Камера смотрит на объект? |
+| batch_execute падает | Разбить на отдельные вызовы, найти проблемную операцию. |
+| `editor_state` пишет `ready_for_tools=false` / `stale_status` | Подождать и перечитать `mcpforunity://editor/state` (смотреть `advice.recommended_retry_after_ms`). При необходимости сделать refresh (`refresh_unity`) и повторить. |

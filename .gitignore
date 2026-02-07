@@ -1,0 +1,22 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+
+# Backups
+*~
+*.bak
+*.swp
+*.swo
+
+# Local / temp
+*.local
+*.log
+.cache/
