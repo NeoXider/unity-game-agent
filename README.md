@@ -1,59 +1,61 @@
 # Unity Game Agent
 
-**Агент, который ведёт разработку Unity-игры от идеи до играбельного билда — без хаоса, с планом и проверками.**
+**An agent that drives Unity game development from idea to playable build — without chaos, with a clear plan and checks.**
+
+> **Repository description (GitHub/GitLab):** Cursor skill: agent-driven Unity game development in stages (sketch → plan → implement → verify). Modes: prototype, standard, fast, pro.
 
 ---
 
-## Зачем это нужно
+## Why this exists
 
-Хотите, чтобы ИИ не просто «накидал код», а **действовал как разработчик**: спросил настройки и геймдизайн, зафиксировал план, реализовывал по шагам и отчитывался?  
-**Unity Game Agent** — это скилл для Cursor, который превращает агента в предсказуемого партнёра по созданию игр: с этапами, режимами и единой «памятью» проекта (DEV_CONFIG, GAME_DESIGN, DEV_PLAN, DEV_STATE, лог итераций).
+Want the AI to act like a developer — ask for settings and game design, lock in a plan, implement step by step, and report back — instead of just dumping code?  
+**Unity Game Agent** is a Cursor skill that turns the agent into a predictable partner for making games: with stages, modes, and a single project “memory” (DEV_CONFIG, GAME_DESIGN, DEV_PLAN, DEV_STATE, iteration logs).
 
-- **Прототип за пару часов** — минимум планирования, быстрая проверка идеи.  
-- **Цельная маленькая игра** — стандартный режим с проверкой на каждую фичу.  
-- **Быстро до играбельного билда** — крупные этапы, проверки в конце.  
-- **Серьёзный проект** — полный план, тесты, архитектура.
+- **Prototype in a couple of hours** — minimal planning, quick idea validation.  
+- **A small, coherent game** — standard mode with checks on every feature.  
+- **Fast to a playable build** — big milestones, checks at the end.  
+- **Serious project** — full plan, tests, architecture.
 
-Всё через один цикл: **набросок → план → реализация → проверка → отчёт**. Планирование — в Plan mode, чтобы вы видели и подтверждали план до кода.
-
----
-
-## Что внутри
-
-| Часть | Описание |
-|-------|----------|
-| **SKILL.md** | Главный файл скилла: цикл, правила, ссылки на остальное. |
-| **reference.md** | Шаблоны DEV_CONFIG, GAME_DESIGN, DEV_STATE, DEV_PLAN и правила ведения «памяти» проекта. |
-| **MODE_CHOICE.md** / **MODE_DETAILS.md** | Выбор режима (Прототип / Стандартный / Быстрый / Профи) и детали. |
-| **modes/** | Правила по каждому режиму: объём плана, стиль кода, проверки. |
-| **tools/** | Unity MCP, ComfyUI, Figma, код, редактор — когда что использовать. |
-| **PROMPTS.md** | Готовые промпты: старт игры, фичи, продолжение, QA. |
-| **setup_source_folders.bat** | Автоматизация структуры папок проекта. |
-
-Настройки и данные — в **ScriptableObject**; при старте агент запрашивает **настройки** (режим, платформа, ориентация, стиль, Figma/ComfyUI и т.д.) и **геймдизайн**. Если MCP недоступны — спросит: помочь настроить или начать без них.
+One loop for everything: **sketch → plan → implement → verify → report**. Planning happens in Plan mode so you see and approve the plan before any code.
 
 ---
 
-## Как использовать
+## What’s inside
 
-1. **Подключите скилл** в Cursor (например, скопируйте эту папку в `.cursor/skills/` вашего проекта или укажите путь к репо).  
-2. **Откройте Unity-проект** и при необходимости настройте MCP (Unity MCP, Figma, ComfyUI) в `.cursor/mcp.json`.  
-3. **Скажите агенту**, что хотите сделать игру — он запросит настройки и геймдизайн, затем предложит план в Plan mode. После подтверждения начнётся реализация по этапам.
+| Part | Description |
+|------|-------------|
+| **SKILL.md** | Main skill file: cycle, rules, links to the rest. |
+| **reference.md** | Templates for DEV_CONFIG, GAME_DESIGN, DEV_STATE, DEV_PLAN and rules for project “memory”. |
+| **MODE_CHOICE.md** / **MODE_DETAILS.md** | Mode selection (Prototype / Standard / Fast / Pro) and details. |
+| **modes/** | Rules per mode: plan depth, code style, checks. |
+| **tools/** | Unity MCP, ComfyUI, Figma, code, editor — when to use what. |
+| **PROMPTS.md** | Ready-made prompts: start game, features, continue, QA. |
+| **setup_source_folders.bat** | Project folder structure automation. |
 
-Подробная настройка и сценарии — в [SKILL.md](SKILL.md) и [PROMPTS.md](PROMPTS.md).
-
----
-
-## Для кого
-
-- **Инди и джемутеры** — быстрый прототип или воркфлоу для маленькой игры.  
-- **Команды** — единый цикл и файлы состояния (DEV_*, лог), чтобы агент и люди говорили на одном языке.  
-- **Обучение** — понятные этапы и режимы вместо «напиши всё сразу».
+Settings and data live in **ScriptableObjects**. On start the agent asks for **settings** (mode, platform, orientation, style, Figma/ComfyUI, etc.) and **game design**. If MCP aren’t available, it asks: help set up or start without them.
 
 ---
 
-## Лицензия и вклад
+## How to use
 
-Используйте в своих проектах. Улучшения и идеи приветствуются — через issues и pull request’ы в репозитории.
+1. **Add the skill** in Cursor (e.g. copy this folder into your project’s `.cursor/skills/` or point to this repo).  
+2. **Open your Unity project** and, if needed, configure MCP (Unity MCP, Figma, ComfyUI) in `.cursor/mcp.json`.  
+3. **Tell the agent** you want to make a game — it will ask for settings and game design, then propose a plan in Plan mode. After you confirm, implementation runs by stages.
 
-**Unity Game Agent** — чтобы агент не терял нить, а вы — контроль над тем, как делается игра.
+Detailed setup and scenarios: [SKILL.md](SKILL.md) and [PROMPTS.md](PROMPTS.md).
+
+---
+
+## Who it’s for
+
+- **Indies and jam participants** — quick prototype or workflow for a small game.  
+- **Teams** — shared cycle and state files (DEV_*, logs) so the agent and humans stay on the same page.  
+- **Learning** — clear stages and modes instead of “write everything at once”.
+
+---
+
+## License and contributing
+
+Use it in your projects. Improvements and ideas welcome via issues and pull requests.
+
+**Unity Game Agent** — so the agent keeps the thread and you keep control over how the game is made.
