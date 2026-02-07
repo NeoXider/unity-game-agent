@@ -60,6 +60,15 @@ public class Enemy : MonoBehaviour
 - **Null-check** при работе с ссылками на другие объекты.
 - **Логирование** — объём зависит от режима (см. ниже).
 
+### Unity UI (создание в runtime)
+
+По умолчанию UI делается через **UI Builder** (UXML/USS), см. [ui-builder.md](ui-builder.md). Ниже — только для создания UI **программно на Canvas** (если пользователь попросил uGUI или нужна динамическая генерация на Canvas).
+
+При создании UI программно (Canvas, кнопки, панели) обязательно:
+
+- **EventSystem:** в сцене должен быть объект с `EventSystem` и `StandaloneInputModule` (или `InputSystemUIInputModule` при новом Input System). Если UI создаётся из кода при старте — проверять наличие EventSystem и при отсутствии создавать программно.
+- **Кнопки:** у GameObject кнопки должны быть компоненты `Image` (или другой Graphic) и `Button`. Не забывать добавлять `Button` перед подпиской на `onClick`.
+
 ---
 
 ## Код по режимам

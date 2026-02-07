@@ -190,6 +190,8 @@ Docs/DEV_PLAN.md     Docs/DEV_STATE.md         Docs/DEV_LOG/iteration-NN-YYYYMMD
 | Gameplay | Основной геймплей | Персонаж, враги, HUD |
 | GameOver | Экран проигрыша | Счёт, кнопка Restart |
 
+> **UI:** приоритетно через **UI Builder** (UI Toolkit, UXML/USS), если версия Unity поддерживает и пользователь не попросил иначе. См. [tools/ui-builder.md](tools/ui-builder.md).
+
 ---
 
 ## Данные (ScriptableObject)

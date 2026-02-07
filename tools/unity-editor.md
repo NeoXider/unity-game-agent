@@ -129,10 +129,8 @@
   Player
   Enemy_1
 --- UI ---
-  Canvas
-    MainMenu
-    HUD
-    PauseMenu
+  UIDocument (UI Toolkit) или Canvas (если uGUI по запросу)
+    MainMenu / GameHUD / PauseMenu (UXML или дочерние объекты)
 --- Cameras ---
   Main Camera
 ```
