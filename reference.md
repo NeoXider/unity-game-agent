@@ -410,7 +410,7 @@ Docs/DEV_PLAN.md     Docs/DEV_STATE.md         Docs/DEV_LOG/iteration-NN-YYYYMMD
 - [YYYY-MM-DD] [Конвенция]
 
 > Именование, структура, паттерны, установленные по ходу работы.
-> Примеры: «SO ассеты: XxxData (EnemyData, WeaponData)», «Префабы: PFB_Xxx», «Сцены: SCN_Xxx».
+> Примеры: «SO ассеты: XxxData (EnemyData, WeaponData)», «Префабы: PFB_Xxx», «Сцены: SCN_Xxx», «Скрипты и классы: ролевые имена (GameManager, MainMenuController), не название игры (TotalWar и т.п.)».
 
 ---
 
