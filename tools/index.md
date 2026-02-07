@@ -13,7 +13,8 @@
 | **Figma** | Дизайн UI, прототипирование экранов, стиль-гайд | [figma.md](figma.md) |
 | **Unity Editor** | Работа в редакторе: сцены, инспектор, профайлер, настройки проекта | [unity-editor.md](unity-editor.md) |
 | **UI Builder** | UI приоритетно через UI Toolkit (UXML/USS); рекомендации, паттерны, анти-паттерны | [ui-builder.md](ui-builder.md) |
-| **C# / Код** | Написание кода: паттерны, стиль, SO, архитектура — зависит от режима | [code-writing.md](code-writing.md) |
+| **C# / Код** | Написание кода: паттерны, стиль, SO, асинхронность (UniTask), часто используемые пакеты, архитектура — зависит от режима | [code-writing.md](code-writing.md) |
+| **Настройка библиотек** | Как добавить агенту UniTask, DOTween, Newtonsoft.Json, Unity Localization (UPM, Git URL, Asset Store) | [libraries-setup.md](libraries-setup.md) |
 
 ---
 

@@ -1,6 +1,6 @@
 # UI Builder (UI Toolkit) — рекомендации
 
-UI Builder — визуальный редактор UXML/USS для UI Toolkit. По скиллу **дизайн UI приоритетно делается через UI Builder**, если версия Unity поддерживает и пользователь не попросил иначе (например, uGUI/Canvas).
+UI Builder — визуальный редактор UXML/USS для UI Toolkit. По скиллу **весь интерфейс делается только через UI Builder** (Canvas/uGUI не используются).
 
 **Документация Unity (актуальная):**
 - [UI Toolkit](https://docs.unity3d.com/Manual/UIElements.html) — основной раздел (введение, UXML, USS, события, runtime, примеры).
@@ -11,9 +11,8 @@ UI Builder — визуальный редактор UXML/USS для UI Toolkit.
 
 ## Когда использовать
 
-- **Приоритет:** Unity поддерживает UI Builder (2021.1+ встроен, 2020.x/2019.4 — пакет `com.unity.ui.builder`) и пользователь **не указал** uGUI/Canvas/другое — делать UI **всегда** через UI Builder (UXML, USS, UI Toolkit runtime).
-- **Исключение:** пользователь явно попросил uGUI, Canvas, другой подход — следовать запросу.
-- **Проверка поддержки:** Window → UI Toolkit → UI Builder (или Package Manager → UI Builder). Если окно открывается — использовать.
+- **Всегда:** UI делается **только** через UI Builder (UXML, USS, UIDocument). Canvas/uGUI не использовать.
+- **Проверка поддержки:** Unity 2021.1+ — UI Builder встроен; 2020.x/2019.4 — пакет `com.unity.ui.builder`. Window → UI Toolkit → UI Builder. Если окно открывается — использовать.
 
 ---
 
@@ -39,11 +38,10 @@ UI Builder — визуальный редактор UXML/USS для UI Toolkit.
 
 ## Анти-паттерны
 
-- **Не делать UI на Canvas/uGUI по умолчанию** — если скилл говорит «приоритетно UI Builder» и пользователь не попросил иначе.
+- **Не использовать Canvas/uGUI** — весь UI только через UI Builder (UIDocument + UXML/USS).
 - **Не дублировать одни и те же стили** в каждом USS — выносить в общий USS.
 - **Не хардкодить длинные тексты** в UXML — брать из SO или локализации.
 - **Не искать элементы по индексу** в иерархии (например, третий VisualElement) — давать имена/классы и искать по ним.
-- **Не смешивать UI Toolkit и uGUI** в одном экране без явной необходимости (разный рендеринг, порядок отрисовки).
 
 ---
 
@@ -55,7 +53,7 @@ UI Builder — визуальный редактор UXML/USS для UI Toolkit.
 | 2020.x | Пакет в Package Manager (включить preview при необходимости) |
 | 2019.4 | Пакет preview `com.unity.ui.builder` |
 
-Если проект на более старой версии или пакет недоступен — использовать uGUI/Canvas и зафиксировать в DEV_STATE/AGENT_MEMORY причину (версия не поддерживает UI Builder).
+Если версия Unity не поддерживает UI Builder — зафиксировать в DEV_STATE/AGENT_MEMORY причину.
 
 ---
 

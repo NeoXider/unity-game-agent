@@ -60,11 +60,41 @@ public class Enemy : MonoBehaviour
 - **Null-check** при работе с ссылками на другие объекты.
 - **Логирование** — объём зависит от режима (см. ниже).
 
+### Асинхронность и отложенные операции
+
+**Рекомендация для всех режимов:** использовать **UniTask** (Cysharp) для async/await в Unity — zero allocation, работа на PlayerLoop (без потоков, подходит для WebGL), отмена через `CancellationToken`, удобный `UniTask.Delay`, `UniTask.Yield`, await для `AsyncOperation` и корутин.
+
+- **Если UniTask уже в проекте** — применять для задержек, загрузки сцен/ассетов, цепочек операций, отменяемых таймеров. Не дублировать логику корутинами без причины.
+- **Если UniTask не установлен** — перед реализацией асинхронной фичи проверить, не проще ли добавить пакет (UPM: `com.cysharp.unitasks` или [GitHub](https://github.com/Cysharp/UniTask)). Документация: [UniTask](https://github.com/Cysharp/UniTask#readme).
+- **Корутины** — допустимы для простых пошаговых задержек (одна цепочка `WaitForSeconds`), если UniTask не используется. Для сложных сценариев (отмена, несколько ожиданий, async-цепочки) предпочтительнее UniTask.
+
+```csharp
+// С UniTask (предпочтительно)
+await UniTask.Delay(TimeSpan.FromSeconds(1), cancellationToken: cts.Token);
+await sceneLoader.LoadSceneAsync("Game").ToUniTask();
+```
+
+### Часто используемые пакеты
+
+Перед реализацией фичи проверять: (1) встроенные возможности Unity; (2) уже установленные пакеты в проекте; (3) при необходимости — **поиск на GitHub** (unity, механика, library, UPM) и **в интернете** (готовые механики, туториалы, форумы Unity, Asset Store, статьи). Ниже — пакеты, которые часто используют в Unity-проектах; при выборе «искать готовое» учитывать их.
+
+| Назначение | Пакет | Кратко |
+|------------|--------|--------|
+| **Async/await** | **UniTask** (Cysharp) | Асинхронность без аллокаций, отмена, await для AsyncOperation. UPM: `com.cysharp.unitasks` или Git. Рекомендуется для всех режимов. |
+| **Твины и анимации** | **DOTween** (Demigiant) | Быстрые твины для transform, UI, значений. Asset Store или [dotween.demigiant.com](https://dotween.demigiant.com/). Альтернатива: встроенный Animator / Animation для сложных клипов. |
+| **JSON** | **Newtonsoft.Json** (Json.NET) | Сериализация/десериализация. В Unity часто уже есть (Unity 2022+ встроен частично). NuGet или UPM. |
+| **DI / IoC** | **VContainer**, **Zenject** | Внедрение зависимостей для больших проектов (Профи). Не обязательны для прототипа и малых игр. |
+| **Локализация** | **Unity Localization** | Пакет `com.unity.localization` — таблицы, ключи, подмена текстов. Встроенный вариант. |
+
+Не устанавливать пакеты «на всякий случай» — только под задачу. Если пользователь явно попросил конкретную библиотеку — следовать запросу. **Как добавить** UniTask, DOTween, Newtonsoft.Json, Unity Localization (и при необходимости VContainer, Cinemachine, Input System) — пошагово в [libraries-setup.md](libraries-setup.md).
+
+**Где искать готовое:** GitHub (по запросам вроде `unity 2d movement`, `unity inventory system`, `unity ui toolkit`; репозитории с открытым кодом и UPM); поиск в интернете — туториалы, [Unity Forums](https://forum.unity.com/), [Asset Store](https://assetstore.unity.com/), статьи и примеры механик.
+
 ### Unity UI (создание в runtime)
 
-По умолчанию UI делается через **UI Builder** (UXML/USS), см. [ui-builder.md](ui-builder.md). Ниже — только для создания UI **программно на Canvas** (если пользователь попросил uGUI или нужна динамическая генерация на Canvas).
+По скиллу **весь UI только через UI Builder** (UXML/USS, UIDocument), см. [ui-builder.md](ui-builder.md). Динамические элементы — через UI Toolkit API (добавление/удаление VisualElement в коде). Ниже — **исключительно для legacy** (например, версия Unity без UI Builder): создание UI программно на Canvas. В обычной разработке Canvas не использовать.
 
-При создании UI программно (Canvas, кнопки, панели) обязательно:
+При создании UI программно на Canvas (только в исключительных случаях) обязательно:
 
 - **EventSystem:** в сцене должен быть объект с `EventSystem` и `StandaloneInputModule` (или `InputSystemUIInputModule` при новом Input System). Если UI создаётся из кода при старте — проверять наличие EventSystem и при отсутствии создавать программно.
 - **Кнопки:** у GameObject кнопки должны быть компоненты `Image` (или другой Graphic) и `Button`. Не забывать добавлять `Button` перед подпиской на `onClick`.
@@ -130,7 +160,7 @@ public class PlayerController : MonoBehaviour
 
 **Рекомендуется:**
 - Events / UnityEvents для связи между системами.
-- Coroutines для тайм-зависимых операций.
+- UniTask для асинхронности и задержек (см. «Асинхронность и отложенные операции»); при отсутствии UniTask — корутины для простых тайм-зависимых операций.
 - `[Header]`, `[Tooltip]`, `[Range]` в SO для удобства Inspector.
 
 **Пример (Стандартный):**
