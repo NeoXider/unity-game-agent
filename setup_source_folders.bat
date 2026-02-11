@@ -41,10 +41,10 @@ for %%D in (
 
 rem Convenience folders used by tooling/docs.
 mkdir "%ASSETS%\Screenshots" 2>nul
-mkdir "%ROOT%\Docs\screenshots" 2>nul
+mkdir "%ROOT%\Docs\Screenshots" 2>nul
 
 echo [OK] Created/verified folders.
 echo - "%SOURCE%"
 echo - "%ASSETS%\Screenshots"
-echo - "%ROOT%\Docs\screenshots"
+echo - "%ROOT%\Docs\Screenshots"
 exit /b 0

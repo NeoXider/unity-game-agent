@@ -1,82 +1,103 @@
-# Режим «Быстрый»
+# Mode: Fast
 
-**Для кого:** когда нужно быстрее дойти до играбельного билда с упрощённым процессом (меньше отчётов и скриншотов). Объём игры может быть средним или большим.
+**For:** get to playable build faster with simpler process (fewer reports and screenshots). Game size can be medium or large.
 
-## Цель
+## Goal
 
-Быстро до играбельного результата. Упрощённый процесс: меньше документирования, меньше скриншотов, этапы крупнее. Допустимо делать **несколько фич за один проход**.
+Quick to playable result. Simplified process: less docs, fewer screenshots, bigger stages. **Several features per pass** is ok.
 
-## Уточняющие вопросы
+## Complexity limits
 
-- **Перед планом:** да, но минимум (1–3 вопроса). Уточнить самое основное и перейти к делу.
-- **Перед фичей:** нет. Принимать решения самостоятельно — скорость важнее.
-- **По ходу:** нет.
-- Можно отключить/включить по просьбе пользователя.
+> Default guidelines, not hard limits. Can exceed with user agreement.
 
-## Воркфлоу
+- Screens: usually **2–4**, max **5**.
+- Mechanics: **2–4** key.
+- Scenes: usually **1–2**, max **3**.
+- New features per iteration: **up to 4** (with batch check).
 
-1. Уточняющие вопросы (минимум, 1–3).
-2. Набросок + список этапов.
-3. Крупные этапы, меньше скриншотов и детализации.
-4. Reuse-first (по умолчанию): проверить встроенные возможности и установленные пакеты; при необходимости — быстрый поиск на **GitHub** и **в интернете** (готовые механики, библиотеки, ассеты). Если фича слишком маленькая и простая — писать вручную.
-5. Реализация (компоненты, SO); можно несколько фич за проход.
-6. Файлы состояния кратко, без избыточной истории.
+## Clarifying questions
 
-## Reuse-first (поиск готовых решений)
+- **Before plan:** yes, minimum (1–3). Clarify basics and move on.
+- **Before feature:** no. Decide on your own — speed matters.
+- **During:** no.
+- Can be turned off/on at user request.
 
-- По умолчанию **включено** (переключатель в `Docs/DEV_CONFIG.md` → «Поиск готовых решений»).
-- Сначала проверить готовое (Unity + установленные пакеты), затем при необходимости искать на GitHub и в интернете. Приоритет поиска: **UPM/пакет** → **GitHub/открытый код** → ассет → референс-код.
-- В Быстром режиме: **быстрый выбор**. Не подключать тяжёлые зависимости ради мелочи.
+## Workflow
 
-## Проверки и тесты
+1. Clarifying questions (min, 1–3).
+2. Outline + stage list.
+3. Big stages, fewer screenshots and detail.
+4. Reuse-first (default): check Unity built-in and packages; if needed quick search on **GitHub** and **web** (mechanics, libraries, assets). If feature small/simple — code by hand.
+5. Implement (components, SO); several features per pass ok.
+6. State files brief, no heavy history.
 
-- **Агент обязан проверять**, но допускается **не после каждой фичи**: можно проверить несколько фич подряд или одну проверку под конец этапа. При проверке: Play Mode, скриншоты игры, попытка поиграть (кнопки, сценарий).
-- Тесты не требуются.
-- **Финальная QA:** обязательно в конце — агент сам проверяет игру, составляет QA-чеклист по шаблону (шаги, ожидаемое, «Проверка агентом», «Проверка QA» — пустая для заполнения QA по просьбе). См. reference.md → «Шаблон QA-чеклиста».
+## Reuse-first
 
-## Набросок
+- **On by default** (toggle in `Docs/DEV_CONFIG.md` → “Search ready solutions”).
+- Check ready-made (Unity + packages) first, then GitHub and web if needed. Priority: **UPM/package** → **GitHub/open code** → asset → reference code.
+- In Fast: **quick choice**. Do not add heavy deps for small gains.
 
-Есть набросок и список этапов. Детализация меньше, чем в Стандартном.
+## Input policy
 
-## Этапы
+- Default `New Input System`.
+- Legacy projects: `Both` or `Old` ok per project limits.
 
-Крупные этапы. Меньше скриншотов и детализации в отчётах.
+## Checks and tests
 
-## Файлы состояния
+- **Agent must check**, but **not after every feature**: can check several features in a row or one check at stage end. When checking: Play Mode, try to play (buttons, flow), game screenshots, console via `read_console` during/after Play Mode.
+- **Before stage/project handoff:** Play Mode + `read_console` + final screenshot.
+- No tests required.
+- **QA checklists:** only if enabled in `Docs/DEV_CONFIG.md`. See reference.md → “QA checklist template”.
 
-Вести кратко. `Docs/DEV_STATE.md` — контекст + текущая задача + ближайшие. `Docs/DEV_PLAN.md` — все задачи с чекбоксами (кратко). `Docs/DEV_LOG/iteration-NN-YYYYMMDD-HHMM.md` — при завершении задач (без подробных описаний).
+## Outline
 
-## Стиль кода
+Outline and stage list. Less detail than Standard.
 
-**Компоненты** — один компонент — одна ответственность, данные в SO (NpcData, UiData, LevelSettings). Меньше слоёв, быстрее писать. **Все настройки в SO.** См. [SKILL.md](../SKILL.md) — правило «настройки только в SO».
+## Stages
 
-### Логирование (Быстрый)
+Big stages. Fewer screenshots and detail in reports.
 
-- **Умеренно.** `Debug.LogError` и `Debug.LogWarning` — обязательно. `Debug.Log` — по необходимости, без избытка.
-- Формат тот же: `Debug.Log($"[Фича.Класс.Метод] описание")`.
+## State files
 
-## Пример наброска (Быстрый)
+Keep brief. `Docs/DEV_STATE.md` — context + current task + next. `Docs/DEV_PLAN.md` — all tasks with checkboxes (brief). `Docs/DEV_LOG/iteration-NN-YYYYMMDD-HHMM.md` — when finishing tasks (no long descriptions).
+
+## Code style
+
+**Components** — one component one responsibility, data in SO (NpcData, UiData, LevelSettings). Fewer layers, faster to write. **All settings in SO.** See [SKILL.md](../SKILL.md) — “settings only in SO”.
+- **No C# namespaces** — keep scripts in default (global) scope. Namespaces only in Pro mode; see [tools/code-writing.md](../tools/code-writing.md).
+- **Hierarchy/scene:** prefer manual object setup (Unity Editor/Unity MCP). Do not use bootstrap unless for narrow checks/tech tasks.
+- **MonoBehaviour:** fewer “kitchen sink” scripts; split into components with explicit refs.
+- **Architecture:** [tools/architecture-by-mode.md](../tools/architecture-by-mode.md).
+- **Anti-pattern:** do not add global ServiceLocator without clear reason.
+
+### Logging (Fast)
+
+- **Moderate.** `Debug.LogError` and `Debug.LogWarning` — required. `Debug.Log` — as needed, not excessive.
+- Same format: `Debug.Log($"[Feature.Class.Method] description")`.
+
+## Example outline (Fast)
 
 ```
-Жанр: Runner.
-Механики: бег вперёд, уклонения (свайп/стрелки), сбор монет, препятствия.
-Экраны: Gameplay, GameOver с кнопкой Restart.
+Genre: Runner.
+Mechanics: run forward, dodge (swipe/arrows), collect coins, obstacles.
+Screens: Gameplay, GameOver with Restart.
 SO: RunnerSettings (speed, laneDistance), ObstacleData, CoinValue.
 ```
 
-## Пример этапов (Быстрый)
+## Example stages (Fast)
 
 ```
-Этап 1: Персонаж + бесконечное движение + уклонения + камера. SO: RunnerSettings.
-Этап 2: Препятствия + монеты + спавнер + Game Over. SO: ObstacleData, CoinValue.
-Этап 3: UI (счёт, GameOver, Restart) + полировка + проверка.
+Stage 1: Character + endless move + dodge + camera. SO: RunnerSettings.
+Stage 2: Obstacles + coins + spawner + Game Over. SO: ObstacleData, CoinValue.
+Stage 3: UI (score, GameOver, Restart) + polish + check.
 ```
 
-## Чеклист режима «Быстрый»
+## Fast mode checklist
 
-- [ ] Уточняющие вопросы → набросок + список этапов.
-- [ ] Крупные этапы; допустимо объединять несколько фич в один проход.
-- [ ] Реализация (компоненты, SO); работа в редакторе Unity (refresh, сцена, инспектор) по необходимости.
-- [ ] Проверки (редактор, скриншоты) — только в самом конце этапа/блока фич.
-- [ ] **Финальная QA** — составить QA-чеклист (шаги + ожидаемое поведение) для проверки.
-- [ ] Файлы состояния (DEV_STATE/PLAN/LOG) вести кратко, без избыточной истории.
+- [ ] Clarifying questions → outline + stage list.
+- [ ] Big stages; can combine several features in one pass.
+- [ ] Implement (components, SO); Unity editor (refresh, scene, inspector) as needed.
+- [ ] Checks per feature block: Play Mode + `read_console` + screenshots.
+- [ ] Before handoff: Play Mode + `read_console` + final screenshot.
+- [ ] QA checklists only if enabled in `Docs/DEV_CONFIG.md`.
+- [ ] State files (DEV_STATE/PLAN/LOG) brief, no heavy history.

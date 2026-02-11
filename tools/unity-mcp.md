@@ -1,64 +1,64 @@
-# Unity MCP — рекомендации по использованию
+# Unity MCP — usage recommendations
 
-Unity MCP (плагин **MCP For Unity** + MCP-сервер, иногда встречается как `unity-mcp` / `mcp-for-unity`) — инструменты для управления Unity Editor из Cursor.
+Unity MCP (plugin **MCP For Unity** + MCP server, sometimes referred to as `unity-mcp` / `mcp-for-unity`) — tools to control Unity Editor from Cursor.
 
-Практическое правило для этого проекта:
-- перед любыми действиями в редакторе сначала читать `mcpforunity://custom-tools` (какие инструменты реально доступны),
-- при нескольких Unity-инстансах — читать `mcpforunity://instances` и при необходимости выбирать активный инстанс.
-
----
-
-## Ключевые инструменты
-
-| Категория | Инструменты | Что делают |
-|-----------|-------------|------------|
-| **Ресурсы** | `mcpforunity://editor/state`, `mcpforunity://editor/selection`, `mcpforunity://project/info`, `mcpforunity://instances`, `mcpforunity://custom-tools` | Чтение состояния редактора/проекта, выбранных объектов, списка Unity-инстансов и доступных инструментов |
-| **Сцена** | `manage_scene` | Создание/загрузка/сохранение сцен, refresh assets |
-| **Объекты** | `manage_gameobject` | Создание, удаление, перемещение, переименование GameObject |
-| **Компоненты** | `manage_components` | Добавление/удаление/настройка компонентов |
-| **Префабы** | `manage_prefabs` | Создание и управление префабами |
-| **Скрипты** | `manage_script`, `create_script`, `apply_text_edits`, `validate_script` | Создание/правка C#, валидация компиляции |
-| **Материалы** | `manage_material` | Создание и настройка материалов |
-| **Консоль** | `read_console` | Чтение логов Unity |
-| **Пакетно** | `batch_execute` | Несколько операций за один вызов |
+Practical rule for this project:
+- before any editor actions read `mcpforunity://custom-tools` (which tools are actually available),
+- with multiple Unity instances read `mcpforunity://instances` and select active instance if needed.
 
 ---
 
-## Типовые паттерны
+## Key tools
 
-### После написания кода
+| Category | Tools | Purpose |
+|----------|-------|---------|
+| **Resources** | `mcpforunity://editor/state`, `mcpforunity://editor/selection`, `mcpforunity://project/info`, `mcpforunity://instances`, `mcpforunity://custom-tools` | Read editor/project state, selection, instances, available tools |
+| **Scene** | `manage_scene` | Create/load/save scenes, refresh assets |
+| **Objects** | `manage_gameobject` | Create, delete, move, rename GameObject |
+| **Components** | `manage_components` | Add/remove/configure components |
+| **Prefabs** | `manage_prefabs` | Create and manage prefabs |
+| **Scripts** | `manage_script`, `create_script`, `apply_text_edits`, `validate_script` | Create/edit C#, validate compilation |
+| **Materials** | `manage_material` | Create and configure materials |
+| **Console** | `read_console` | Read Unity logs |
+| **Batch** | `batch_execute` | Multiple operations in one call |
 
-```
-1. manage_scene → refresh assets (или validate_script)
-2. read_console → проверить ошибки (при запуске Play Mode — **периодически** проверять консоль на ошибки во время и после проверки).
-3. Если есть ошибки — исправить → повторить
-4. editor_state → проверить что объекты на месте
-```
+---
 
-### Создание объекта на сцене
+## Common patterns
 
-```
-1. manage_gameobject → create (имя, позиция)
-2. manage_components → add (SpriteRenderer / Rigidbody / скрипт)
-3. editor_state → убедиться что объект в иерархии
-4. manage_scene → action=save — сохранить сцену (обязательно, иначе изменения потеряются)
-```
-
-После любых изменений сцены через MCP (объекты, компоненты, иерархия) — **всегда сохранять сцену** (`manage_scene` action=save).
-
-### Скриншот для DEV_STATE
+### After writing code
 
 ```
-1. manage_scene → screenshot (задать screenshot_file_name). Итоговое расположение скриншотов — **только Docs/Screenshots/** (подпапки iter-01, iter-02, ...). Если MCP сохраняет в другое место (например Assets/Screenshots) — скопировать файл в Docs/Screenshots/iter-NN/.
-2. **Обязательно просмотреть скриншот** — открыть изображение и проверить содержимое. Агент обязан смотреть каждый сделанный скриншот. На снимке должно быть видно ожидаемое (игра в Play Mode, нужный экран, UI). Если нет — не считать задачу выполненной; зафиксировать расхождение, повторить скриншот или исправить сцену.
-3. Обновить Docs/DEV_STATE.md — добавить ссылку на скриншот (Docs/Screenshots/...).
+1. manage_scene → refresh assets (or validate_script)
+2. read_console → check errors (during Play Mode — check console periodically during and after check).
+3. If errors — fix → repeat
+4. editor_state → verify objects in place
 ```
 
-**Анти-паттерн:** делать скриншот и писать «реализация завершена», не проверив содержимое скриншота. Если на снимке пустой экран или не тот вид — отчёт вводит в заблуждение.
+### Creating an object in scene
 
-### Пакетные операции (batch_execute)
+```
+1. manage_gameobject → create (name, position)
+2. manage_components → add (SpriteRenderer / Rigidbody / script)
+3. editor_state → confirm object in hierarchy
+4. manage_scene → action=save — save scene (required or changes are lost)
+```
 
-Когда нужно выполнить 3+ операции подряд — использовать `batch_execute` вместо отдельных вызовов. Быстрее и надёжнее.
+After any scene changes via MCP (objects, components, hierarchy) — **always save scene** (`manage_scene` action=save).
+
+### Screenshot for DEV_STATE
+
+```
+1. manage_scene → screenshot (set screenshot_file_name). Final location — **only Docs/Screenshots/** (subfolders iter-01, iter-02, ...). If MCP saves elsewhere (e.g. Assets/Screenshots) — copy file to Docs/Screenshots/iter-NN/.
+2. **Always review the screenshot** — open the image and check content. Agent must review every screenshot. Image must show expected (game in Play Mode, correct screen, UI). If not — do not consider task done; note discrepancy, retake screenshot or fix scene.
+3. Update Docs/DEV_STATE.md — add link to screenshot (Docs/Screenshots/...).
+```
+
+**Anti-pattern:** take screenshot and report "implementation complete" without checking image. If the shot is empty or wrong view — the report is misleading.
+
+### Batch operations (batch_execute)
+
+When 3+ operations in a row — use `batch_execute` instead of separate calls. Faster and more reliable.
 
 ```
 batch_execute:
@@ -70,61 +70,61 @@ batch_execute:
 
 ---
 
-## Использование по режимам
+## Usage by mode
 
-### Прототип
+### Prototype
 
-- **Минимум MCP.** Основная работа — через файлы.
-- Refresh assets после правок кода.
-- `read_console` — только если что-то не работает.
-- Скриншот — **один раз в конце** для DEV_STATE (если ведётся).
-- `batch_execute` — не нужен (мало операций).
+- **Minimal MCP.** Main work via files.
+- Refresh assets after code changes.
+- `read_console` — only when something fails.
+- Screenshot — **once at the end** for DEV_STATE (if used).
+- `batch_execute` — not needed (few operations).
 
-### Стандартный
+### Standard
 
-- **На каждую фичу (агент обязан проверять сам):**
-  1. Написать код → refresh assets.
-  2. `read_console` → проверить ошибки.
-  3. Запустить Play Mode → **периодически во время проверки** вызывать `read_console` на ошибки → сделать скриншоты **игры** (Game view), попытаться поиграть (кнопки, сценарий). После выхода из Play Mode снова проверить консоль.
-  4. Скриншот в Docs/Screenshots → проверить содержимое → добавить ссылку в Docs/DEV_STATE.
-- `manage_gameobject` / `manage_components` — для настройки сцены, если быстрее через MCP чем вручную.
-- `batch_execute` — при создании нескольких объектов за раз.
+- **Per feature (agent must self-check):**
+  1. Write code → refresh assets.
+  2. `read_console` → check errors.
+  3. Start Play Mode → **during check** call `read_console` for errors → take screenshots of **game** (Game view), try to play (buttons, flow). After exiting Play Mode check console again.
+  4. Screenshot to Docs/Screenshots → review content → add link in Docs/DEV_STATE.
+- `manage_gameobject` / `manage_components` — for scene setup when faster via MCP than manually.
+- `batch_execute` — when creating several objects at once.
 
-### Быстрый
+### Fast
 
-- **Refresh и консоль по ходу работы** — не ждать конца.
-- `editor_state` — периодически, не после каждой мелочи.
-- Скриншот — **в конце этапа/блока**, не после каждой фичи.
-- `manage_gameobject` / `manage_components` — активно, для скорости.
-- `batch_execute` — **рекомендуется** (несколько фич за раз).
+- **Refresh and console as you go** — do not wait for the end.
+- `editor_state` — periodically, not after every small step.
+- Screenshot — **at end of stage/block**, not after every feature.
+- `manage_gameobject` / `manage_components` — use actively for speed.
+- `batch_execute` — **recommended** (multiple features at once).
 
-### Профи
+### Pro
 
-- **Полное использование MCP на каждом шаге:**
-  1. Перед задачей: `editor_state` → зафиксировать исходное состояние.
-  2. После задачи: `read_console` + `editor_state` + скриншот.
-  3. После фичи: полная проверка + скриншот для DEV_STATE.
-- `validate_script` — после каждой правки (строгий контроль компиляции).
-- `batch_execute` — для сложных операций (создание системы объектов).
-- `manage_prefabs` — создавать префабы сразу, не откладывать.
-- `manage_material` — настраивать материалы через MCP.
+- **Full MCP use every step:**
+  1. Before task: `editor_state` → note initial state.
+  2. After task: `read_console` + `editor_state` + screenshot.
+  3. After feature: full check + screenshot for DEV_STATE.
+- `validate_script` — after each edit (strict compile check).
+- `batch_execute` — for complex ops (creating object systems).
+- `manage_prefabs` — create prefabs immediately.
+- `manage_material` — configure materials via MCP.
 
 ---
 
-## Когда НЕ использовать MCP
+## When NOT to use MCP
 
-- Правка `.cs` файлов — быстрее через Cursor напрямую (MCP для создания/валидации, не для редактирования больших файлов).
-- MCP сервер не запущен или недоступен — уточнить у пользователя: помочь настроить или начать без MCP (работать через файлы/код). Не блокировать разработку.
-- Простые операции с одним файлом — MCP overhead не оправдан.
+- Editing `.cs` files — faster in Cursor directly (MCP for create/validate, not for editing large files).
+- MCP server not running or unreachable — ask user to help set up or proceed without MCP (files/code). Do not block development.
+- Simple single-file ops — MCP overhead not justified.
 
 ---
 
 ## Troubleshooting
 
-| Проблема | Решение |
-|----------|---------|
-| Инструменты MCP не видны в Cursor | Unity открыт? → Window → MCP for Unity → Start Server. Cursor: Settings → MCP → проверить статус. |
-| `read_console` пуст | Refresh assets (manage_scene) — ошибки могут появиться после рекомпиляции. |
-| Объект создан но не видно | `editor_state` → проверить position, scale, active. Камера смотрит на объект? |
-| batch_execute падает | Разбить на отдельные вызовы, найти проблемную операцию. |
-| `editor_state` пишет `ready_for_tools=false` / `stale_status` | Подождать и перечитать `mcpforunity://editor/state` (смотреть `advice.recommended_retry_after_ms`). При необходимости сделать refresh (`refresh_unity`) и повторить. |
+| Issue | Fix |
+|-------|-----|
+| MCP tools not visible in Cursor | Unity open? → Window → MCP for Unity → Start Server. Cursor: Settings → MCP → check status. |
+| `read_console` empty | Refresh assets (manage_scene) — errors may appear after recompile. |
+| Object created but not visible | `editor_state` → check position, scale, active. Camera looking at object? |
+| batch_execute fails | Split into separate calls, find failing op. |
+| `editor_state` says `ready_for_tools=false` / `stale_status` | Wait and re-read `mcpforunity://editor/state` (see `advice.recommended_retry_after_ms`). Optionally refresh (`refresh_unity`) and retry. |

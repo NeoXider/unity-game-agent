@@ -1,182 +1,182 @@
-# Подробное описание режимов разработки
+# Dev mode details
 
-Документ для детального просмотра перед выбором режима: отличия, описание каждого режима и схема воркфлоу.
-
----
-
-## Отличия режимов
-
-| Режим           | Цель                         | Объём наброска      | Этапы              | Вопросы | Проверки              | QA человеком | Файлы состояния | Стиль кода     |
-|-----------------|------------------------------|----------------------|--------------------|---------|----------------------|--------------|-----------------|----------------|
-| **Прототип**    | Проверить идею быстро        | Минимум (1 экран)    | 2–3 крупных блока  | Перед планом (мин.) | Только в конце       | Финальная    | По желанию      | Хардкод, SO    |
-| **Стандартный** | Маленькая цельная игра       | Краткий (2–3 экрана) | Короткие с чеклистом | Перед планом + фичей | На каждую фичу      | На фичу (опц.) + Финальная | STATE+PLAN+LOG | Умеренный, SO  |
-| **Быстрый**     | Быстро до играбельного билда | Набросок + этапы     | Крупные            | Перед планом (мин.) | Только в конце       | Финальная    | STATE+PLAN кратко | Компоненты, SO |
-| **Профи**       | Долгий проект с заделом      | Полный (системы, данные) | Детальные с критериями | Перед планом + фичей | На задачу и фичу | На фичу (опц.) + Финальная | Полный STATE+PLAN+LOG | Архитектура, тесты |
-
-**Общее для всех:** настройки и данные — только в ScriptableObject (NpcData, GameFightData, UiData и т.д.).
-
-### Когда какой режим выбирать
-
-| Ситуация | Рекомендуемый режим |
-|----------|---------------------|
-| «Хочу проверить одну идею за час-два» | **Прототип** |
-| «Маленькая игра на 1–3 дня, аккуратно» | **Стандартный** |
-| «Нужен играбельный билд побыстрее, без лишних отчётов» | **Быстрый** |
-| «Серьёзный проект на недели/месяцы, нужна архитектура» | **Профи** |
-| «Не уверен» | **Стандартный** (баланс скорости и качества) |
-
-### Чем Стандартный отличается от Быстрый
-
-- **Стандартный** — маленькая по объёму игра (мало механик, мало экранов). Процесс полный: этапы с чеклистом, проверка **на каждую фичу**, файлы состояния обязательны.
-- **Быстрый** — упор на скорость: меньше отчётов и скриншотов, этапы крупнее, **проверки только в конце**. Объём игры может быть любым.
+Document for choosing a mode: differences, per-mode description, and workflow.
 
 ---
 
-## Описание режимов
+## Mode comparison
 
-### Прототип
+| Mode | Goal | Outline size | Stages | Questions | Checks | QA (human) | State files | Code style |
+|------|------|--------------|--------|-----------|--------|------------|-------------|------------|
+| **Prototype** | Validate idea quickly | Min (1 screen) | 2–3 big blocks | Before plan (min.) | End only | Final | Optional | Hardcode, SO |
+| **Standard** | Small complete game | Short (2–3 screens) | Short with checklist | Before plan + feature | Per feature | Per feature (opt.) + Final | STATE+PLAN+LOG | Moderate, SO |
+| **Fast** | Quick to playable build | Outline + stages | Big | Before plan (min.) | End only | Final | STATE+PLAN brief | Components, SO |
+| **Pro** | Long project with foundation | Full (systems, data) | Detailed with criteria | Before plan + feature | Per task and feature | Per feature (opt.) + Final | Full STATE+PLAN+LOG | Architecture, tests |
 
-**Для кого:** проверить идею за пару часов, получить playable за минимум времени.
+**Common:** all settings and data in ScriptableObject (NpcData, GameFightData, UiData, etc.).
 
-- **Уточняющие вопросы:** перед планом — минимум (1–3). По ходу — нет.
-- Набросок минимальный (1 экран, 1–2 механики).
-- 2–3 крупных этапа без детальных чеклистов.
-- Код — хардкод, настройки обязательно в SO.
-- Проверки в редакторе и скриншоты — **только в самом конце** после всех блоков.
-- **Финальная QA:** обязательно в конце (шаги + ожидаемое поведение).
-- Файлы состояния (DEV_STATE/PLAN/LOG) по желанию или кратко.
+### When to choose which mode
 
-Подробнее: [modes/prototype.md](modes/prototype.md)
+| Situation | Recommended mode |
+|-----------|-------------------|
+| “Validate one idea in 1–2 hours” | **Prototype** |
+| “Small game in 1–3 days, tidy” | **Standard** |
+| “Playable build quickly, fewer reports” | **Fast** |
+| “Serious project for weeks/months, need architecture” | **Pro** |
+| “Not sure” | **Standard** (balance speed/quality) |
 
-### Стандартный
+### Standard vs Fast
 
-**Для кого:** небольшая цельная игра (мало механик, мало экранов) с нормальным процессом.
-
-- **Уточняющие вопросы:** перед планом — да. **Перед каждой фичей — если есть сомнения.**
-- Краткий набросок (жанр, 2–3 механики, 2–3 экрана).
-- Короткие этапы с чеклистом по этапу.
-- Стиль кода — умеренный, все данные в SO.
-- **На каждую фичу** — проверка в редакторе, скриншот/чеклист, затем следующая фича.
-- **QA на фичу (опционально):** если включена — агент пишет QA-шаги, пользователь проверяет.
-- **Финальная QA:** обязательно в конце.
-- Файлы состояния (DEV_STATE + DEV_PLAN + Docs/DEV_LOG/) обязательны.
-
-Подробнее: [modes/standard.md](modes/standard.md)
-
-### Быстрый
-
-**Для кого:** быстрее дойти до играбельного билда; меньше документирования.
-
-- **Уточняющие вопросы:** перед планом — минимум (1–3). По ходу — нет.
-- Набросок + список этапов; детализация меньше.
-- Крупные этапы; можно делать **несколько фич за один проход**.
-- Стиль кода — компоненты, данные в SO.
-- Проверки — **только в самом конце** (после набора фич/этапа).
-- **Финальная QA:** обязательно в конце.
-- Файлы состояния кратко (DEV_STATE + DEV_PLAN), без избыточной истории.
-
-Подробнее: [modes/fast.md](modes/fast.md)
-
-### Профи (долгострой)
-
-**Для кого:** масштабируемый проект, долгая разработка, тесты, полный учёт.
-
-- **Уточняющие вопросы:** перед планом — подробные. **Перед каждой фичей — если есть сомнения.** По ходу — при неясностях.
-- Полный набросок (системы, экраны, данные, расширяемость).
-- Детальные этапы с чеклистами и критериями приёмки.
-- Архитектура, SO, рефакторинг; **автотесты по умолчанию включены** (можно отключить по желанию).
-- **Почти на каждую задачу в фиче** — проверка; плюс проверка **на фичу целиком**.
-- **QA на фичу (опционально):** если включена — агент пишет QA-шаги + граничные случаи, пользователь проверяет.
-- **Финальная QA:** обязательно в конце (полный чеклист, включая производительность).
-- Полный формат: DEV_STATE (текущее + контекст), DEV_PLAN (план с чекбоксами), Docs/DEV_LOG/ (итерации со скриншотами).
-
-Подробнее: [modes/pro.md](modes/pro.md)
+- **Standard** — small game (few mechanics, few screens). Full process: stages with checklist, check **per feature**, state files required.
+- **Fast** — focus on speed: fewer reports/screenshots, bigger stages, **checks only at end**. Game size can be any.
 
 ---
 
-## Схема воркфлоу (общая для всех режимов)
+## Mode descriptions
 
-Общая последовательность фаз; детализация и момент проверок зависят от режима.
+### Prototype
+
+**For:** validate an idea in a couple of hours, get playable with minimal time.
+
+- **Questions:** before plan — minimum (1–3). During — no.
+- Minimal outline (1 screen, 1–2 mechanics).
+- 2–3 big stages, no detailed checklists.
+- Code — hardcode, settings in SO.
+- Editor checks and screenshots — **only at the very end** after all blocks.
+- **Final QA:** required at end (steps + expected behavior).
+- State files (DEV_STATE/PLAN/LOG) optional or brief.
+
+Details: [modes/prototype.md](modes/prototype.md)
+
+### Standard
+
+**For:** small complete game (few mechanics, few screens) with normal process.
+
+- **Questions:** before plan — yes. **Before each feature — if in doubt.**
+- Short outline (genre, 2–3 mechanics, 2–3 screens).
+- Short stages with per-stage checklist.
+- Code — moderate, all data in SO.
+- **Per feature** — editor check, screenshot/checklist, then next feature.
+- **QA per feature (optional):** if on — agent writes QA steps, user checks.
+- **Final QA:** required at end.
+- State files (DEV_STATE + DEV_PLAN + Docs/DEV_LOG/) required.
+
+Details: [modes/standard.md](modes/standard.md)
+
+### Fast
+
+**For:** get to playable build faster; less documentation.
+
+- **Questions:** before plan — minimum (1–3). During — no.
+- Outline + stage list; less detail.
+- Big stages; can do **several features in one pass**.
+- Code — components, data in SO.
+- Checks — **only at the end** (after a set of features/stage).
+- **Final QA:** required at end.
+- State files brief (DEV_STATE + DEV_PLAN), no heavy history.
+
+Details: [modes/fast.md](modes/fast.md)
+
+### Pro (long-term)
+
+**For:** scalable project, long development, tests, full accounting.
+
+- **Questions:** before plan — detailed. **Before each feature — if in doubt.** During — when unclear.
+- Full outline (systems, screens, data, extensibility).
+- Detailed stages with checklists and acceptance criteria.
+- Architecture, SO, refactor; **autotests on by default** (can disable).
+- **Per task in feature** — check; plus **per feature** check.
+- **QA per feature (optional):** if on — agent writes QA steps + edge cases, user checks.
+- **Final QA:** required at end (full checklist, including performance).
+- Full format: DEV_STATE, DEV_PLAN, Docs/DEV_LOG/ (iterations with screenshots).
+
+Details: [modes/pro.md](modes/pro.md)
+
+---
+
+## Workflow (all modes)
+
+Phases; when checks happen depends on mode.
 
 ```mermaid
 flowchart TB
-  subgraph phase1 [Фаза 1: План и уточнения]
-    A1[Уточняющие вопросы] --> A2[План игры набросок]
+  subgraph phase1 [Phase 1: Plan and clarify]
+    A1[Clarifying questions] --> A2[Game outline]
   end
 
-  subgraph phase2 [Фаза 2: Подробный план]
-    B1[Все фичи и TODO] --> B2[Расписание по этапам]
+  subgraph phase2 [Phase 2: Detailed plan]
+    B1[All features and TODO] --> B2[Schedule by stages]
   end
 
-  subgraph phase3 [Фаза 3: Разработка]
-    C1[Реализация фич код] --> C2[Refresh Unity]
-    C2 --> C3[Скриншоты сцена инспектор]
-    C3 --> C4[Работа со сценой и инспектором]
-    C4 --> C5[Обновление файлов: STATE/PLAN/LOG]
+  subgraph phase3 [Phase 3: Development]
+    C1[Implement features] --> C2[Refresh Unity]
+    C2 --> C3[Screenshots scene inspector]
+    C3 --> C4[Scene and inspector work]
+    C4 --> C5[Update STATE/PLAN/LOG]
     C5 --> C1
   end
 
-  subgraph phase4 [Фаза 4: Отчёт]
-    D1[Отчёт по этапу] --> D2[Следующая итерация или завершение]
+  subgraph phase4 [Phase 4: Report]
+    D1[Stage report] --> D2[Next iteration or done]
   end
 
   phase1 --> phase2
   phase2 --> phase3
-  C5 -.->|"завершение этапа"| phase4
-  D2 -.->|"есть ещё TODO"| phase3
+  C5 -.->|"stage done"| phase4
+  D2 -.->|"more TODO"| phase3
 ```
 
-- **Прототип и Быстрый:** проверки (редактор, скриншоты) — только при переходе в Фазу 4 после всех фич/этапа. Уточняющие вопросы — только перед Фазой 1 (минимум).
-- **Стандартный:** проверка после каждой фичи внутри Фазы 3. Уточняющие вопросы — перед Фазой 1 и **перед фичей если есть сомнения**.
-- **Профи:** проверка после задач внутри фичи и после фичи; плюс автотесты. Уточняющие вопросы — подробные перед Фазой 1 и **перед фичей если есть сомнения**.
+- **Prototype and Fast:** checks (editor, screenshots) — only when moving to Phase 4 after all features/stage. Questions — only before Phase 1 (min.).
+- **Standard:** check after each feature inside Phase 3. Questions — before Phase 1 and **before feature if in doubt**.
+- **Pro:** check after tasks in feature and after feature; plus autotests. Questions — detailed before Phase 1 and **before feature if in doubt**.
 
-> **Уточняющие вопросы можно отключить/включить** по просьбе пользователя в любой момент.
+> **Clarifying questions can be turned off/on** at user request.
 
 ---
 
-## Схема воркфлоу по режимам
+## Per-mode workflow
 
-Краткая цепочка шагов в каждом режиме.
+Short step chain per mode.
 
 ```mermaid
 flowchart LR
-  subgraph proto [Прототип]
-    P0[Вопросы мин.] --> P1[Минимальный набросок]
-    P1 --> P2[2-3 крупных этапа]
-    P2 --> P3[Реализация в лоб SO]
-    P3 --> P4[Проверки в конце]
+  subgraph proto [Prototype]
+    P0[Questions min.] --> P1[Minimal outline]
+    P1 --> P2[2-3 big stages]
+    P2 --> P3[Implement SO]
+    P3 --> P4[Checks at end]
   end
 
-  subgraph standard [Стандартный]
-    S0[Вопросы] --> S1[Краткий набросок]
-    S1 --> S2[Короткие этапы]
-    S2 --> S2a{Сомнения?}
-    S2a -->|Да| S2b[Вопрос перед фичей]
-    S2b --> S3[Реализация умеренный SO]
-    S2a -->|Нет| S3
-    S3 --> S4[Проверка на каждую фичу]
+  subgraph standard [Standard]
+    S0[Questions] --> S1[Short outline]
+    S1 --> S2[Short stages]
+    S2 --> S2a{Doubts?}
+    S2a -->|Yes| S2b[Question before feature]
+    S2b --> S3[Implement moderate SO]
+    S2a -->|No| S3
+    S3 --> S4[Check per feature]
     S4 --> S2
   end
 
-  subgraph fast [Быстрый]
-    F0[Вопросы мин.] --> F1[Набросок и этапы]
-    F1 --> F2[Крупные этапы]
-    F2 --> F3[Реализация компоненты SO]
-    F3 --> F4[Проверки в конце]
+  subgraph fast [Fast]
+    F0[Questions min.] --> F1[Outline and stages]
+    F1 --> F2[Big stages]
+    F2 --> F3[Implement components SO]
+    F3 --> F4[Checks at end]
   end
 
-  subgraph pro [Профи]
-    R0[Подробные вопросы] --> R1[Полный набросок]
-    R1 --> R2[Детальные этапы]
-    R2 --> R2a{Сомнения?}
-    R2a -->|Да| R2b[Вопрос перед фичей]
-    R2b --> R3[Реализация архитектура тесты]
-    R2a -->|Нет| R3
-    R3 --> R4[Проверки на задачу и фичу]
+  subgraph pro [Pro]
+    R0[Detailed questions] --> R1[Full outline]
+    R1 --> R2[Detailed stages]
+    R2 --> R2a{Doubts?}
+    R2a -->|Yes| R2b[Question before feature]
+    R2b --> R3[Implement architecture tests]
+    R2a -->|No| R3
+    R3 --> R4[Checks per task and feature]
     R4 --> R2
   end
 ```
 
 ---
 
-После просмотра вернитесь к [MODE_CHOICE.md](MODE_CHOICE.md) и напишите выбранный режим: **Прототип**, **Стандартный**, **Быстрый** или **Профи**.
+Return to [MODE_CHOICE.md](MODE_CHOICE.md) and reply with the chosen mode: **Prototype**, **Standard**, **Fast**, or **Pro**.

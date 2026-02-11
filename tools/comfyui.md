@@ -1,135 +1,129 @@
-# ComfyUI — рекомендации по использованию
+# ComfyUI — usage recommendations
 
-ComfyUI MCP (`http://127.0.0.1:9000/mcp`) — генерация визуальных ассетов: спрайты, текстуры, фоны, UI-иконки.
-
----
-
-## Предварительные требования
-
-- ComfyUI запущен (обычно `:8188`).
-- comfyui-mcp-server запущен на `:9000`.
-- В `.cursor/mcp.json` настроен `"comfyui": { "url": "http://127.0.0.1:9000/mcp" }`.
+ComfyUI MCP (`http://127.0.0.1:9000/mcp`) — visual asset generation: sprites, textures, backgrounds, UI icons.
 
 ---
 
-## Типовой воркфлоу
+## Prerequisites
+
+- ComfyUI running (usually `:8188`).
+- comfyui-mcp-server running on `:9000`.
+- In `.cursor/mcp.json`: `"comfyui": { "url": "http://127.0.0.1:9000/mcp" }`.
+
+---
+
+## Typical workflow
 
 ```
-1. Определить что нужно (спрайт, фон, иконка)
-2. Сформировать промпт (описание + стиль + размер)
-3. Вызвать ComfyUI MCP
-4. Проверить результат
-5. Сохранить в Assets/Art/[подпапка]/
-6. Настроить Import Settings в Unity (Sprite Mode, PPU, Filter Mode)
-7. Refresh Assets через Unity MCP
+1. Decide what is needed (sprite, background, icon)
+2. Build prompt (description + style + size)
+3. Call ComfyUI MCP
+4. Check result
+5. Save to Assets/Art/[subfolder]/
+6. Set Import Settings in Unity (Sprite Mode, PPU, Filter Mode)
+7. Refresh Assets via Unity MCP
 ```
 
 ---
 
-## Правила промптов
+## Prompt rules
 
-### Общие принципы
+### General
 
-- **Один стиль на проект** — решить стиль в начале и использовать одинаковый префикс для всех промптов.
-- **Конкретность** — вместо «красивый персонаж» писать «knight in blue armor, side view, pixel art, 64x64».
-- **Фон** — для спрайтов/иконок всегда указывать `transparent background` (или конкретный цвет).
-- **Размер** — указывать явно: `64x64`, `128x128`, `256x256`, `512x512`.
+- **One style per project** — decide style at start and use same prefix for all prompts.
+- **Be specific** — e.g. "knight in blue armor, side view, pixel art, 64x64" instead of "nice character".
+- **Background** — for sprites/icons always specify `transparent background` (or a color).
+- **Size** — explicit: `64x64`, `128x128`, `256x256`, `512x512`.
 
-### Шаблоны промптов
+### Prompt templates
 
-**Спрайт персонажа:**
+**Character sprite:**
 ```
-[описание персонажа], [поза/вид: side view / front view / idle pose],
-[стиль: pixel art / cartoon / hand-drawn / low-poly],
-[размер: 64x64 / 128x128], transparent background
-```
-
-**Фон / окружение:**
-```
-[описание: forest background / dungeon tileset / sky gradient],
-[стиль], [seamless tileable] (если нужен тайл),
-[размер: 512x512 / 1920x1080], [цветовая палитра: warm / cold / neon]
+[character description], [pose/view: side view / front view / idle pose],
+[style: pixel art / cartoon / hand-drawn / low-poly],
+[size: 64x64 / 128x128], transparent background
 ```
 
-**UI иконка:**
+**Background / environment:**
 ```
-[описание: sword icon / health potion / coin],
-flat icon, simple, [стиль],
-[размер: 32x32 / 48x48 / 64x64], transparent background
-```
-
-**Набор тайлов:**
-```
-tileset for [тип: platformer / top-down RPG / dungeon],
-[стиль], [содержимое: grass, dirt, stone, water],
-each tile [размер: 32x32 / 64x64], transparent background
+[description: forest background / dungeon tileset / sky gradient],
+[style], [seamless tileable] (if tile needed),
+[size: 512x512 / 1920x1080], [palette: warm / cold / neon]
 ```
 
-### Стиль-префиксы (примеры)
+**UI icon:**
+```
+[description: sword icon / health potion / coin],
+flat icon, simple, [style],
+[size: 32x32 / 48x48 / 64x64], transparent background
+```
 
-| Стиль | Префикс для промпта |
-|-------|---------------------|
-| Пиксель-арт | `pixel art, retro, limited color palette, crisp edges` |
-| Cartoon | `cartoon style, bold outlines, vibrant colors, cel-shaded` |
-| Минимализм | `minimalist, flat design, simple shapes, pastel colors` |
-| Hand-drawn | `hand-drawn, sketch style, watercolor, organic lines` |
-| Low-poly 3D (рендер) | `low-poly 3D render, isometric, soft lighting, minimal textures` |
+**Tile set:**
+```
+tileset for [type: platformer / top-down RPG / dungeon],
+[style], [content: grass, dirt, stone, water],
+each tile [size: 32x32 / 64x64], transparent background
+```
+
+### Style prefixes (examples)
+
+| Style       | Prompt prefix |
+|------------|----------------|
+| Pixel art  | `pixel art, retro, limited color palette, crisp edges` |
+| Cartoon   | `cartoon style, bold outlines, vibrant colors, cel-shaded` |
+| Minimal   | `minimalist, flat design, simple shapes, pastel colors` |
+| Hand-drawn| `hand-drawn, sketch style, watercolor, organic lines` |
+| Low-poly 3D | `low-poly 3D render, isometric, soft lighting, minimal textures` |
 
 ---
 
-## Использование по режимам
+## Usage by mode
 
-### Прототип
+### Prototype
 
-- **Не нужен.** Использовать плейсхолдеры (цветные квадраты, примитивы Unity).
-- Если хочется — максимум 1–2 ассета для настроения.
-- Не тратить время на подбор стиля.
+- **Not needed.** Use placeholders (colored quads, Unity primitives).
+- Optional: 1–2 assets for mood.
+- Do not spend time on style tuning.
 
-### Стандартный
+### Standard
 
-- **По желанию.** Генерировать ключевые ассеты: спрайт персонажа, базовые враги, фон.
-- Определить стиль-префикс в начале — использовать его для всех ассетов.
-- Иконки UI — если есть время.
-- **Момент:** после реализации фичи, перед следующей (или отдельным этапом «Арт»).
+- **Optional.** Generate key assets: character sprite, basic enemies, background.
+- Set style prefix at start — use for all assets.
+- UI icons if time allows.
+- **When:** after implementing a feature, before next (or separate “Art” stage).
 
-### Быстрый
+### Fast
 
-- **По желанию, но не обязательно.** Если нужны ассеты — генерировать пакетом (несколько за раз).
-- Плейсхолдеры приемлемы до финальной полировки.
-- Не тратить время на итерации — первый приемлемый результат = ок.
+- **Optional.** If assets needed — generate in batch. Placeholders ok until final polish.
+- First acceptable result = ok; no long iteration.
 
-### Профи
+### Pro
 
-- **Рекомендуется полноценно.** Все визуальные ассеты через генерацию.
-- Определить стиль-гайд (style guide) в начале:
-  - Стиль-префикс для промптов.
-  - Цветовая палитра.
-  - Размеры по типам ассетов.
-- Итерации: генерировать несколько вариантов, выбирать лучший.
-- Отдельный этап «Арт» в плане разработки.
-- Документировать промпты в DEV_STATE (чтобы регенерировать при необходимости).
+- **Full use recommended.** All visual assets via generation.
+- Define style guide at start: prompt prefix, color palette, sizes by asset type.
+- Iterate: several variants, pick best. Separate “Art” stage in plan. Document prompts in DEV_STATE for regeneration.
 
 ---
 
-## Import Settings в Unity
+## Import Settings in Unity
 
-После сохранения ассета в `Assets/Art/` — настроить:
+After saving asset to `Assets/Art/` — set:
 
-| Параметр | Спрайт | Фон | Иконка UI |
-|----------|--------|-----|-----------|
-| Texture Type | Sprite (2D and UI) | Sprite или Default | Sprite (2D and UI) |
+| Parameter   | Sprite | Background | UI icon |
+|------------|--------|------------|---------|
+| Texture Type | Sprite (2D and UI) | Sprite or Default | Sprite (2D and UI) |
 | Sprite Mode | Single | Single | Single |
-| Pixels Per Unit | 64 (для pixel art) / 100 | 100 | 100 |
+| Pixels Per Unit | 64 (pixel art) / 100 | 100 | 100 |
 | Filter Mode | Point (pixel art) / Bilinear | Bilinear | Bilinear |
 | Compression | None (pixel art) / Normal | Normal | None |
 
 ---
 
-## Fallback при недоступности
+## Fallback when unavailable
 
-Если ComfyUI не запущен или не генерирует:
+If ComfyUI is not running or not generating:
 
-1. Использовать **плейсхолдеры** — цветные спрайты, примитивы Unity (квадрат, круг).
-2. Продолжить разработку — арт не блокирует код.
-3. Вернуться к генерации позже, когда ComfyUI доступен.
-4. Пометить в DEV_STATE: «Арт: плейсхолдеры, заменить на сгенерированные».
+1. Use **placeholders** — colored sprites, Unity primitives (quad, circle).
+2. Continue development — art does not block code.
+3. Return to generation later when ComfyUI is available.
+4. Note in DEV_STATE: “Art: placeholders, replace with generated when ready.”

@@ -25,21 +25,21 @@ One loop for everything: **sketch → plan → implement → verify → report**
 | Part | Description |
 |------|-------------|
 | **SKILL.md** | Main skill file: cycle, rules, links to the rest. |
-| **reference.md** | Templates for DEV_CONFIG, GAME_DESIGN, DEV_STATE, DEV_PLAN and rules for project “memory”. |
+| **reference.md** | Templates for DEV_CONFIG, GAME_DESIGN, UI_BRIEF, DEV_STATE, DEV_PLAN and rules for project “memory”. |
 | **MODE_CHOICE.md** / **MODE_DETAILS.md** | Mode selection (Prototype / Standard / Fast / Pro) and details. |
 | **modes/** | Rules per mode: plan depth, code style, checks. |
-| **tools/** | Unity MCP, ComfyUI, Figma, code, editor — when to use what. |
+| **tools/** | Unity MCP, ComfyUI, UI Builder, architecture-by-mode, code, editor — when to use what. |
 | **PROMPTS.md** | Ready-made prompts: start game, features, continue, QA. |
 | **setup_source_folders.bat** | Project folder structure automation. |
 
-Settings and data live in **ScriptableObjects**. On start the agent asks for **settings** (mode, platform, orientation, style, Figma/ComfyUI, etc.) and **game design**. If MCP aren’t available, it asks: help set up or start without them.
+Settings and data live in **ScriptableObjects**. On start the agent asks for **settings** (mode, platform, orientation, style, design references, ComfyUI, etc.) and **game design**. If MCP aren’t available, it asks: help set up or start without them.
 
 ---
 
 ## How to use
 
 1. **Add the skill** in Cursor (e.g. copy this folder into your project’s `.cursor/skills/` or point to this repo).  
-2. **Open your Unity project** and, if needed, configure MCP (Unity MCP, Figma, ComfyUI) in `.cursor/mcp.json`.  
+2. **Open your Unity project** and, if needed, configure MCP (Unity MCP, ComfyUI) in `.cursor/mcp.json`.  
 3. **Tell the agent** you want to make a game — it will ask for settings and game design, then propose a plan in Plan mode. After you confirm, implementation runs by stages.
 
 Detailed setup and scenarios: [SKILL.md](SKILL.md) and [PROMPTS.md](PROMPTS.md).

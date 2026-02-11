@@ -1,81 +1,104 @@
-# Режим «Прототип»
+# Mode: Prototype
 
-**Для кого:** когда нужно быстро проверить идею, получить playable за минимум времени (пару часов).
+**For:** quickly validate an idea, get playable in minimal time (a couple of hours).
 
-## Цель
+## Goal
 
-Быстро проверить идею; минимум планирования, максимум скорости. Объём игры — минимальный (1 экран, 1–2 механики).
+Validate idea fast; minimal planning, max speed. Game scope minimal (1 screen, 1–2 mechanics).
 
-## Уточняющие вопросы
+## Complexity limits
 
-- **Перед планом:** да, но минимум (1–3 вопроса — жанр, ключевая механика, платформа). Не углубляться.
-- **Перед фичей:** нет. Принимать решения самостоятельно — скорость важнее.
-- **По ходу:** нет.
-- Можно отключить/включить по просьбе пользователя.
+> These are defaults, not hard limits. Can exceed with user agreement.
 
-## Воркфлоу
+- Screens: usually **1**, max **2**.
+- Mechanics: **1–2** key.
+- Scenes: usually **1**, max **2**.
+- New features per iteration: **up to 2**.
 
-1. Уточняющие вопросы (минимум, 1–3).
-2. Минимальный набросок (1 экран, 1–2 механики).
-3. 2–3 крупных этапа без детальных чеклистов.
-4. Reuse-first (по умолчанию): проверить встроенные возможности и установленные пакеты; при необходимости — быстрый поиск на **GitHub** и **в интернете** (1–5 минут). Если не найдено или фича слишком маленькая и простая — писать вручную.
-5. Реализация «в лоб», настройки в SO.
-6. Файлы состояния (DEV_STATE/PLAN/LOG) по желанию или кратко.
+## Clarifying questions
 
-## Reuse-first (поиск готовых решений)
+- **Before plan:** yes, minimum (1–3 — genre, key mechanic, platform). Do not go deep.
+- **Before feature:** no. Decide on your own — speed matters.
+- **During:** no.
+- Can be turned off/on at user request.
 
-- По умолчанию **включено** (переключатель в `Docs/DEV_CONFIG.md` → «Поиск готовых решений»).
-- Сначала проверить готовое (Unity + установленные пакеты), затем при необходимости искать на GitHub и в интернете. Приоритет поиска: **UPM/пакет** → **GitHub/открытый код** → ассет → референс-код.
-- Ограничение режима Прототип: **не тратить много времени на оценку**. Если за 1–5 минут нет явного выигрыша — делаем сами.
+## Workflow
 
-## Проверки и тесты
+1. Clarifying questions (min, 1–3).
+2. Minimal outline (1 screen, 1–2 mechanics).
+3. 2–3 big stages without detailed checklists.
+4. Reuse-first (default): check Unity built-in and installed packages; if needed quick search on **GitHub** and **web** (1–5 min). If not found or feature is small/simple — code by hand.
+5. Implement “straight”, settings in SO.
+6. State files (DEV_STATE/PLAN/LOG) optional or brief.
 
-- **Агент обязан проверять**, но допускается **только под конец** — после реализации всех блоков. При проверке: Play Mode, скриншоты игры, попытка поиграть (кнопки, сценарий).
-- Тесты не требуются.
-- **Финальная QA:** обязательно в конце — агент сам проверяет игру, составляет QA-чеклист по шаблону (шаги, ожидаемое, «Проверка агентом», «Проверка QA» — пустая). См. reference.md → «Шаблон QA-чеклиста».
+## Code
 
-## Набросок
+- **No C# namespaces** — keep all scripts in default (global) scope. Namespaces only in Pro mode; see [tools/code-writing.md](../tools/code-writing.md).
 
-Минимальный: один экран, 1–2 механики. Без детального описания систем.
+## Reuse-first (search ready solutions)
 
-## Этапы
+- **On by default** (toggle in `Docs/DEV_CONFIG.md` → “Search ready solutions”).
+- Check ready-made first (Unity + packages), then search GitHub and web if needed. Priority: **UPM/package** → **GitHub/open code** → asset → reference code.
+- Prototype limit: **do not spend much time evaluating**. If no clear win in 1–5 min — implement ourselves.
 
-Крупные блоки (2–3 этапа). Без детальных чеклистов и критериев приёмки.
+## Input policy
 
-## Файлы состояния
+- Default `Old` or `Both` (quick start, compatibility).
+- If project already uses `New Input System`, do not revert without reason.
 
-По желанию или кратко. `Docs/DEV_STATE.md` — контекст + текущая задача + ближайшие. `Docs/DEV_PLAN.md` — по желанию. `Docs/DEV_LOG/` — можно не вести; достаточно краткого списка «сделано / в работе» в Docs/DEV_STATE.
+## Checks and tests
 
-## Стиль кода
+- **Agent must check**, but **batch** (several features per pass) or at stage end is ok. When checking: Play Mode, try to play (buttons, flow), game screenshots, console via `read_console` during/after Play Mode.
+- **Before stage/project handoff:** Play Mode + `read_console` + final screenshot.
+- No tests required.
+- **QA checklists:** only if enabled in `Docs/DEV_CONFIG.md` (QA per feature / final QA). See reference.md → “QA checklist template”.
 
-**Хардкод** — быстрые скрипты, мало абстракций, логика «в лоб». **Настройки обязательно в SO** (GameFightData, UiData и т.д.): баланс и тексты менять без правки сцены и кода. См. [SKILL.md](../SKILL.md) — правило «настройки только в SO».
+## Outline
 
-### Логирование (Прототип)
+Minimal: one screen, 1–2 mechanics. No detailed system descriptions.
 
-- **Минимум или без логов.** Логировать только при отладке конкретной проблемы. Можно вообще без `Debug.Log`.
-- Если логи есть — формат тот же: `Debug.Log($"[Фича.Класс.Метод] описание")`.
+## Stages
 
-## Пример наброска (Прототип)
+Big blocks (2–3 stages). No detailed checklists or acceptance criteria.
+
+## State files
+
+Optional or brief. `Docs/DEV_STATE.md` — context + current task + next. `Docs/DEV_PLAN.md` — optional. `Docs/DEV_LOG/` — can skip; short “done / in progress” in Docs/DEV_STATE is enough.
+
+## Code style
+
+**Hardcode** — fast scripts, few abstractions, straight logic. **Settings must be in SO** (GameFightData, UiData, etc.): balance and texts change without touching scene/code. See [SKILL.md](../SKILL.md) — “settings only in SO”.
+- **Hierarchy/scene:** prefer manual object setup (Unity Editor/Unity MCP). Do not use bootstrap unless for narrow checks/tech tasks. MonoBehaviour solutions ok in this mode.
+- **Architecture:** [tools/architecture-by-mode.md](../tools/architecture-by-mode.md).
+- **Anti-pattern:** do not add global ServiceLocator without clear reason.
+
+### Logging (Prototype)
+
+- **Minimal or none.** Log only when debugging a specific issue. No `Debug.Log` at all is fine.
+- If logging: same format `Debug.Log($"[Feature.Class.Method] description")`.
+
+## Example outline (Prototype)
 
 ```
-Жанр: 2D-платформер.
-Механики: бег + прыжок.
-Один уровень, без меню.
+Genre: 2D platformer.
+Mechanics: run + jump.
+One level, no menu.
 ```
 
-## Пример этапов (Прототип)
+## Example stages (Prototype)
 
 ```
-Этап 1: Сцена + персонаж с управлением (бег, прыжок). SO: PlayerSettings (speed, jumpForce).
-Этап 2: Уровень (платформы, коллизии) + камера.
-Этап 3: Проверка, скриншот, финальная правка.
+Stage 1: Scene + character with controls (run, jump). SO: PlayerSettings (speed, jumpForce).
+Stage 2: Level (platforms, collisions) + camera.
+Stage 3: Check, screenshot, final tweaks.
 ```
 
-## Чеклист режима «Прототип»
+## Prototype mode checklist
 
-- [ ] Задать минимум уточняющих вопросов, зафиксировать набросок (1 экран, 1–2 механики).
-- [ ] Разбить на 2–3 крупных этапа без детальных чеклистов.
-- [ ] Реализовать блоки «в лоб», все настраиваемые данные — в ScriptableObject.
-- [ ] Проверки (редактор, скриншоты) — только в самом конце.
-- [ ] **Финальная QA** — составить QA-чеклист (шаги + ожидаемое поведение) для проверки.
-- [ ] Файлы состояния (DEV_STATE/PLAN/LOG) вести по желанию или кратко.
+- [ ] Ask minimum clarifying questions, capture outline (1 screen, 1–2 mechanics).
+- [ ] Split into 2–3 big stages without detailed checklists.
+- [ ] Implement blocks “straight”, all tunable data in ScriptableObject.
+- [ ] Checks in batch or at stage end: Play Mode + `read_console` + screenshots.
+- [ ] Before handoff: Play Mode + `read_console` + final screenshot.
+- [ ] QA checklists only if enabled in `Docs/DEV_CONFIG.md`.
+- [ ] State files (DEV_STATE/PLAN/LOG) optional or brief.

@@ -1,120 +1,94 @@
-# Unity Editor — рекомендации по работе
+# Unity Editor — workflow recommendations
 
-Рекомендации по эффективной работе в Unity Editor при разработке игр с помощью ИИ-агента.
-
----
-
-## Ключевые окна
-
-| Окно | Назначение | Горячая клавиша |
-|------|------------|-----------------|
-| **Scene** | Визуальное редактирование сцены | — |
-| **Game** | Предпросмотр игры (Play Mode). **Соотношение сторон** должно соответствовать целевым настройкам (Docs/DEV_CONFIG: разрешение, ориентация). Не оставлять Free Aspect, если в настройках задано фиксированное разрешение (например 1920×1080). Если MCP не позволяет выставить — указать в чеклисте ручную проверку. | — |
-| **Hierarchy** | Дерево объектов сцены | — |
-| **Inspector** | Свойства выбранного объекта | — |
-| **Project** | Файлы проекта (Assets/) | — |
-| **Console** | Логи, ошибки, предупреждения | Ctrl+Shift+C |
-| **Profiler** | Анализ производительности | Ctrl+7 |
-| **Animation** | Анимации и Animator | Ctrl+6 |
+Recommendations for working effectively in Unity Editor when developing games with an AI agent.
 
 ---
 
-## Рекомендации по настройке проекта
+## Key windows
 
-### Первая настройка
+| Window | Purpose | Shortcut |
+|--------|---------|----------|
+| **Scene** | Visual scene editing | — |
+| **Game** | Game preview (Play Mode). **Aspect ratio** should match target (Docs/DEV_CONFIG: resolution, orientation). Do not leave Free Aspect if fixed resolution is set (e.g. 1920×1080). If MCP cannot set it — add manual check to checklist. | — |
+| **Hierarchy** | Scene object tree | — |
+| **Inspector** | Selected object properties | — |
+| **Project** | Project files (Assets/) | — |
+| **Console** | Logs, errors, warnings | Ctrl+Shift+C |
+| **Profiler** | Performance analysis | Ctrl+7 |
+| **Animation** | Animations and Animator | Ctrl+6 |
 
-- **Структура контента (обязательно):** создать `Assets/_source/` и хранить **всё созданное агентом/пользователем** только там.  
-  Причина: папка `Assets/` почти всегда захламляется импортированными пакетами/ассетами, а `_source` даёт стабильные пути и чистую навигацию.
+---
 
-  Рекомендуемый минимум:
+## Project setup
+
+### First-time setup
+
+- **Content structure (required):** create `Assets/_source/` and keep **all agent/user-created content** only there.  
+  Reason: `Assets/` is usually cluttered with packages; `_source` gives stable paths and clear navigation.
+
+  Recommended minimum:
 
   ```
   Assets/
     _source/
       Scripts/
       Editor/
-      Data/        # ScriptableObject ассеты
+      Data/        # ScriptableObject assets
       Prefabs/
       Scenes/
       Materials/
       Textures/
       Audio/
       UI/
-      Resources/   # Unity Resources (если осознанно нужно)
+      Resources/   # Unity Resources (if needed)
   ```
 
-- **Player Settings** (Edit → Project Settings → Player):
-  - Company Name, Product Name.
-  - Разрешение и полноэкранный режим.
-  - Целевая платформа.
-- **Quality Settings** — уровни качества.
-- **Physics / Physics 2D** — настройки физики (гравитация, Layer Collision Matrix).
-- **Input System** — если используется новый Input System, установить пакет и переключить Active Input Handling в Player Settings.
-- **Tags & Layers** — добавить теги и слои для фильтрации коллизий.
+- **Player Settings** (Edit → Project Settings → Player): Company Name, Product Name, resolution, fullscreen, target platform.
+- **Quality Settings** — quality levels.
+- **Physics / Physics 2D** — gravity, Layer Collision Matrix.
+- **Input System** — if using new Input System, install package and set Active Input Handling in Player Settings.
+- **Tags & Layers** — add tags and layers for collision filtering.
 
-### Структура сцен
+### Scene structure
 
-| Сцена | Содержимое |
-|-------|------------|
-| **MainMenu** | UI меню, фон, кнопки |
-| **Gameplay** | Игровой мир, персонажи, камера, HUD |
-| **Loading** | Экран загрузки (опционально) |
-| **Settings** | Экран настроек (или как overlay в Gameplay) |
+| Scene | Content |
+|-------|---------|
+| **MainMenu** | Menu UI, background, buttons |
+| **Gameplay** | Game world, characters, camera, HUD |
+| **Loading** | Loading screen (optional) |
+| **Settings** | Settings screen (or overlay in Gameplay) |
 
-Добавить все сцены в **Build Settings** (File → Build Settings → Add Open Scenes).
+Add all scenes to **Build Settings** (File → Build Settings → Add Open Scenes).
 
 ---
 
-## Использование по режимам
+## Usage by mode
 
-### Прототип
+### Prototype
 
-- **Минимальная работа в редакторе:**
-  - Одна сцена.
-  - Объекты создавать через код или MCP.
-  - Play Mode → проверить → остановить.
-  - Настройки через SO → менять в Inspector.
-- **Не трогать:** Quality Settings, Profiler, сложные настройки.
-- **Console:** смотреть только при ошибках.
+- **Minimal editor work:** one scene; create objects via code or MCP; Play Mode → check → stop; tune via SO in Inspector.
+- **Do not touch:** Quality Settings, Profiler, complex settings.
+- **Console:** only when errors occur.
 
-### Стандартный
+### Standard
 
-- **Стандартная работа:**
-  - 2–3 сцены, настроенные в Build Settings.
-  - Префабы для повторяемых объектов.
-  - Inspector для тонкой настройки SO ассетов.
-  - Console — после каждой фичи.
-  - **Tags & Layers** — настроить для коллизий.
-- **Рекомендуется:** организовать Hierarchy с пустыми объектами-контейнерами (`--- Environment ---`, `--- UI ---`, `--- Managers ---`).
+- **Standard workflow:** 2–3 scenes in Build Settings; prefabs for repeated objects; Inspector for SO tuning; Console after each feature; **Tags & Layers** for collisions.
+- **Recommended:** organize Hierarchy with empty containers (`--- Environment ---`, `--- UI ---`, `--- Managers ---`).
 
-### Быстрый
+### Fast
 
-- **Практичная работа:**
-  - Объекты и компоненты через MCP или код (что быстрее).
-  - Play Mode — проверять периодически, не после каждой мелочи.
-  - Префабы — создавать когда объект повторяется 3+ раз.
-  - Console — мониторить в фоне.
-- **Batch-подход:** несколько изменений → одна проверка в Play Mode.
+- **Practical workflow:** objects and components via MCP or code (whichever is faster); Play Mode — check periodically, not after every small change; prefabs when object repeats 3+ times; Console in background.
+- **Batch:** several changes → one Play Mode check.
 
-### Профи
+### Pro
 
-- **Полная работа в редакторе:**
-  - Все сцены настроены, в Build Settings.
-  - Prefix-организация в Hierarchy.
-  - **Profiler** — использовать для анализа производительности:
-    - CPU: Update-heavy скрипты.
-    - Memory: утечки, GC alloc.
-    - Rendering: draw calls, batching.
-  - **Frame Debugger** — анализ рендеринга.
-  - **Physics Debugger** — коллизии и триггеры.
-  - **Custom Editor Scripts** — при необходимости для кастомного инспектора SO.
-  - Console — Warnings тоже исправлять (не только ошибки).
+- **Full editor use:** all scenes in Build Settings; prefix organization in Hierarchy; **Profiler** for performance (CPU: Update-heavy scripts; Memory: leaks, GC alloc; Rendering: draw calls, batching); **Frame Debugger**; **Physics Debugger**; custom Editor scripts for SO if needed; fix Warnings too, not only errors.
 
 ---
 
-## Полезные практики
+## Practices
 
-### Организация Hierarchy
+### Hierarchy organization
 
 ```
 --- Managers ---
@@ -130,40 +104,39 @@
   Enemy_1
 --- UI ---
   UIDocument (UI Builder: UXML/USS)
-    MainMenu / GameHUD / PauseMenu (UXML-документы, переключение через display или смена sourceAsset)
+    MainMenu / GameHUD / PauseMenu (separate UXML, switch via sourceAsset)
 --- Cameras ---
   Main Camera
 ```
 
-### Горячие клавиши (must-know)
+### Shortcuts (must-know)
 
-| Действие | Клавиша |
-|----------|---------|
+| Action | Key |
+|--------|-----|
 | Play / Stop | Ctrl+P |
 | Pause | Ctrl+Shift+P |
 | Step | Ctrl+Alt+P |
-| Дублировать объект | Ctrl+D |
-| Удалить объект | Delete |
-| Фокус на объект | F (в Scene view) |
-| Переименовать | F2 |
+| Duplicate object | Ctrl+D |
+| Delete object | Delete |
+| Focus on object | F (in Scene view) |
+| Rename | F2 |
 | Refresh Assets | Ctrl+R |
-| Сохранить сцену | Ctrl+S |
+| Save scene | Ctrl+S |
 
-### Play Mode Tips
+### Play Mode tips
 
-- **Изменения в Play Mode НЕ сохраняются!** Настраивать SO в Play Mode можно (для теста), но значения сбросятся. Если нашли хорошие значения — записать и применить после выхода из Play Mode.
-- **Консоль во время Play Mode:** периодически проверять консоль (через MCP: `read_console`) на ошибки — во время и после сессии Play Mode. При появлении ошибок — зафиксировать, выйти из Play Mode, исправить и повторить проверку.
-- Использовать `[Header]` и `[Tooltip]` в SO для удобства настройки в Inspector.
-- Использовать `[Range(min, max)]` для ползунков.
+- **Changes in Play Mode are NOT saved!** You can tune SO in Play Mode for testing, but values reset. If you find good values — write them down and apply after exiting Play Mode.
+- **Console during Play Mode:** check console (via MCP: `read_console`) for errors during and after the session. On errors — fix, exit Play Mode, fix, re-check.
+- Use `[Header]` and `[Tooltip]` on SO for Inspector. Use `[Range(min, max)]` for sliders.
 
 ---
 
-## Чеклист при завершении этапа
+## Stage completion checklist
 
-- [ ] Console чист (нет ошибок, минимум предупреждений).
-- [ ] Play Mode работает (игра не крашится).
-- [ ] SO ассеты настроены (значения не по умолчанию).
-- [ ] **Сцены сохранены** — при работе через MCP вызывать `manage_scene` action=save после изменений сцены; вручную — Ctrl+S.
-- [ ] Все сцены в Build Settings.
-- [ ] Скриншот сделан в **Docs/Screenshots/** (iter-NN/), **просмотрен агентом** — на снимке видно ожидаемое (игра в Play Mode, нужный экран). Если нет — не считать этап завершённым.
-- [ ] **Game view:** соотношение сторон/разрешение по Docs/DEV_CONFIG (не Free Aspect, если задано фиксированное разрешение). Если MCP не меняет — проверить вручную и указать в отчёте.
+- [ ] Console clean (no errors, minimal warnings).
+- [ ] Play Mode works (no crash).
+- [ ] SO assets configured (not default values).
+- [ ] **Scenes saved** — when using MCP call `manage_scene` action=save after scene changes; manually — Ctrl+S.
+- [ ] All scenes in Build Settings.
+- [ ] Screenshot in **Docs/Screenshots/** (iter-NN/), **reviewed by agent** — image shows expected (game in Play Mode, correct screen). If not — stage not complete.
+- [ ] **Game view:** aspect/resolution per Docs/DEV_CONFIG (not Free Aspect if fixed). If MCP cannot change — check manually and note in report.

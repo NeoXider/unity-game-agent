@@ -1,213 +1,213 @@
-# Готовые промпты для AutoUnity
+# Ready prompts for AutoUnity
 
-Шаблоны запросов для типовых задач при создании Unity-игр с помощью ИИ. Подставляй свои значения вместо `[...]`.
-
----
-
-## Старт нового проекта
-
-**Поведение агента при старте с нуля:** сначала запросить **настройки** и **геймдизайн**. Все файлы памяти создавать **в папке Docs/** (Docs/DEV_CONFIG.md, Docs/GAME_DESIGN.md, Docs/DEV_STATE.md, Docs/DEV_PLAN.md, **Docs/AGENT_MEMORY.md** — обязательно). Файл лога итерации — с датой и временем в имени (iteration-NN-YYYYMMDD-HHMM.md). Не стартовать без запроса настроек и геймдизайна (анти-паттерн). Планирование выполнять в **Plan mode**; после подтверждения плана — реализация.
-
-### Создать игру с нуля
-
-```
-Создай [жанр] игру: [краткое описание].
-Основные механики: [механика 1], [механика 2], [механика 3].
-Платформа: [PC / Mobile / WebGL].
-Стиль графики: [2D пиксельный / 2D casual / 3D low-poly / ...].
-```
-
-**Пример:**
-
-```
-Создай 2D-платформер: персонаж бежит по уровню, собирает монеты и избегает ловушек.
-Основные механики: бег, прыжок, сбор предметов.
-Платформа: PC.
-Стиль графики: 2D пиксельный.
-```
-
-### Продолжить существующий проект
-
-```
-Проект уже настроен. Посмотри Docs/DEV_CONFIG.md, Docs/DEV_STATE.md, Docs/AGENT_MEMORY.md и Docs/DEV_PLAN.md — продолжи разработку с того места, где остановились.
-```
-
-### Сменить / уточнить режим
-
-```
-Переключи режим разработки на [Прототип / Стандартный / Быстрый / Профи]. Обнови Docs/DEV_CONFIG.md.
-```
-
-### Записать в память агента
-
-```
-Запомни: [важная информация, предпочтение, решение, конвенция]. Запиши в Docs/AGENT_MEMORY.md.
-```
+Request templates for common tasks when building Unity games with AI. Replace `[...]` with your values.
 
 ---
 
-## Работа с фичами
+## Starting a new project
 
-### Добавить новую механику
+**Agent behavior from scratch:** first ask for **settings** and **game design**. Create all memory files **in Docs/** (Docs/DEV_CONFIG.md, Docs/GAME_DESIGN.md, Docs/DEV_STATE.md, Docs/DEV_PLAN.md, **Docs/AGENT_MEMORY.md** — required). Iteration log file name includes date and time (iteration-NN-YYYYMMDD-HHMM.md). Do not start without asking for settings and game design (anti-pattern). Do planning in **Plan mode**; after plan confirmation — implementation.
 
-```
-Добавь механику [название]: [описание поведения].
-Настройки (скорость, урон и т.д.) — в ScriptableObject.
-```
-
-**Пример:**
+### Create game from scratch
 
 ```
-Добавь механику даш: персонаж при нажатии Shift рывком перемещается на 3 юнита вперёд с кулдауном.
-Настройки (дистанция, кулдаун, скорость) — в ScriptableObject DashSettings.
+Create a [genre] game: [short description].
+Main mechanics: [mechanic 1], [mechanic 2], [mechanic 3].
+Platform: [PC / Mobile / WebGL].
+Art style: [2D pixel / 2D casual / 3D low-poly / ...].
 ```
 
-### Создать UI экран
+**Example:**
 
 ```
-Создай UI экран [название]: [описание элементов].
-Тексты и параметры — в ScriptableObject UiData.
+Create a 2D platformer: character runs through level, collects coins, avoids traps.
+Main mechanics: run, jump, collect items.
+Platform: PC.
+Art style: 2D pixel.
 ```
 
-**Пример:**
+### Continue existing project
 
 ```
-Создай UI экран главного меню: кнопки «Играть», «Настройки», «Выход». Заголовок с названием игры.
-Тексты — в ScriptableObject UiData.
+Project is already set up. Check Docs/DEV_CONFIG.md, Docs/DEV_STATE.md, Docs/AGENT_MEMORY.md and Docs/DEV_PLAN.md — continue from where we left off.
 ```
 
-### Система сохранений
+### Change / clarify mode
 
 ```
-Добавь систему сохранений: [что сохранять].
-Формат: JSON. Путь: Application.persistentDataPath.
+Switch dev mode to [Prototype / Standard / Fast / Pro]. Update Docs/DEV_CONFIG.md.
+```
+
+### Write to agent memory
+
+```
+Remember: [important info, preference, decision, convention]. Write to Docs/AGENT_MEMORY.md.
 ```
 
 ---
 
-## Генерация ассетов (ComfyUI)
+## Working with features
 
-### Спрайт персонажа
-
-```
-Сгенерируй через ComfyUI спрайт [описание персонажа].
-Стиль: [пиксельный / cartoon / realistic].
-Размер: [64x64 / 128x128 / 256x256].
-Фон: прозрачный.
-```
-
-**Пример:**
+### Add new mechanic
 
 ```
-Сгенерируй через ComfyUI спрайт рыцаря в синих доспехах, вид сбоку.
-Стиль: пиксельный. Размер: 64x64. Фон: прозрачный.
+Add mechanic [name]: [behavior description].
+Settings (speed, damage, etc.) — in ScriptableObject.
 ```
 
-### Фон / тайлы
+**Example:**
 
 ```
-Сгенерируй через ComfyUI [фон уровня / набор тайлов].
-Описание: [описание].
-Стиль: [стиль]. Размер: [размер].
+Add dash mechanic: on Shift press character dashes 3 units forward with cooldown.
+Settings (distance, cooldown, speed) — in ScriptableObject DashSettings.
 ```
 
-### UI иконки
+### Create UI screen
 
 ```
-Сгенерируй через ComfyUI набор иконок для UI: [перечислить иконки].
-Стиль: [стиль]. Размер: [32x32 / 48x48 / 64x64].
-Фон: прозрачный.
+Create UI screen [name]: [element description].
+Texts and params — in ScriptableObject UiData.
 ```
 
----
-
-## Работа с Unity Editor (через MCP)
-
-### Проверка состояния
+**Example:**
 
 ```
-Покажи текущее состояние сцены и сделай скриншот. Обнови Docs/DEV_STATE.md.
+Create main menu UI screen: buttons Play, Settings, Exit. Title with game name.
+Texts — in ScriptableObject UiData.
 ```
 
-### Настройка сцены
+### Save system
 
 ```
-Настрой сцену [название]: [описание что должно быть на сцене].
-Используй Unity MCP для создания объектов.
-```
-
-### Отладка
-
-```
-Прочитай логи Unity консоли. Если есть ошибки — исправь и проверь снова.
+Add save system: [what to save].
+Format: JSON. Path: Application.persistentDataPath.
 ```
 
 ---
 
-## Работа с ScriptableObject
+## Asset generation (ComfyUI)
 
-### Создать SO для данных
-
-```
-Создай ScriptableObject [название] для хранения [описание данных].
-Поля: [перечислить поля с типами].
-Создай ассет в Assets/_source/Data/.
-```
-
-**Пример:**
+### Character sprite
 
 ```
-Создай ScriptableObject EnemyData для хранения параметров врагов.
-Поля: string enemyName, int health, float speed, float attackDamage, float attackCooldown.
-Создай ассет в Assets/_source/Data/Enemies/.
+Generate via ComfyUI a sprite [character description].
+Style: [pixel / cartoon / realistic].
+Size: [64x64 / 128x128 / 256x256].
+Background: transparent.
 ```
 
-### Обновить баланс
+**Example:**
 
 ```
-Обнови параметры в SO [название]: [какие поля на какие значения].
+Generate via ComfyUI a sprite of a knight in blue armor, side view.
+Style: pixel. Size: 64x64. Background: transparent.
 ```
 
----
-
-## Рефакторинг и оптимизация
-
-### Рефакторинг
+### Background / tiles
 
 ```
-Проведи рефакторинг [файла / системы]: [что улучшить].
-Не меняй публичный API без согласования.
+Generate via ComfyUI [level background / tile set].
+Description: [description].
+Style: [style]. Size: [size].
 ```
 
-### Оптимизация
+### UI icons
 
 ```
-Проанализируй производительность [системы]. Предложи оптимизации.
-Приоритет: [draw calls / GC alloc / physics / загрузка].
+Generate via ComfyUI a set of UI icons: [list icons].
+Style: [style]. Size: [32x32 / 48x48 / 64x64].
+Background: transparent.
 ```
 
 ---
 
-## Полезные комбинации
+## Unity Editor (via MCP)
 
-### Полный цикл фичи (Стандартный режим)
-
-```
-Добавь фичу [название]: [описание].
-1. Создай SO для настроек.
-2. Реализуй логику.
-3. Создай UI (если нужно).
-4. Проверь в редакторе, сделай скриншот.
-5. Обнови Docs/DEV_STATE (микро-план, 📈 прогресс, блокеры, скрин) + Docs/DEV_PLAN + текущую итерацию в Docs/DEV_LOG/ (имя файла с датой и временем: iteration-NN-YYYYMMDD-HHMM.md).
-```
-
-### Быстрый прототип механики
+### Check state
 
 ```
-Быстро сделай прототип [механики]: [описание].
-Без UI, без полировки. Настройки в SO. Проверь что работает.
+Show current scene state and take a screenshot. Update Docs/DEV_STATE.md.
+```
+
+### Setup scene
+
+```
+Setup scene [name]: [what should be in the scene].
+Use Unity MCP to create objects.
+```
+
+### Debug
+
+```
+Read Unity console logs. If there are errors — fix and check again.
 ```
 
 ---
 
-> **Совет:** эти промпты — отправная точка. Комбинируй и адаптируй под свой проект. Режим разработки определяет глубину планирования и проверок.
+## ScriptableObject
+
+### Create SO for data
+
+```
+Create ScriptableObject [name] to store [data description].
+Fields: [list fields with types].
+Create asset in Assets/_source/Data/.
+```
+
+**Example:**
+
+```
+Create ScriptableObject EnemyData to store enemy parameters.
+Fields: string enemyName, int health, float speed, float attackDamage, float attackCooldown.
+Create asset in Assets/_source/Data/Enemies/.
+```
+
+### Update balance
+
+```
+Update params in SO [name]: [which fields to which values].
+```
+
+---
+
+## Refactor and optimization
+
+### Refactor
+
+```
+Refactor [file / system]: [what to improve].
+Do not change public API without agreement.
+```
+
+### Optimize
+
+```
+Analyze performance of [system]. Suggest optimizations.
+Priority: [draw calls / GC alloc / physics / loading].
+```
+
+---
+
+## Useful combinations
+
+### Full feature cycle (Standard mode)
+
+```
+Add feature [name]: [description].
+1. Create SO for settings.
+2. Implement logic.
+3. Create UI (if needed).
+4. Check in editor, take screenshot.
+5. Update Docs/DEV_STATE (micro-plan, 📈 progress, blockers, screenshot) + Docs/DEV_PLAN + current iteration in Docs/DEV_LOG/ (file name with date and time: iteration-NN-YYYYMMDD-HHMM.md).
+```
+
+### Quick mechanic prototype
+
+```
+Quick prototype of [mechanic]: [description].
+No UI, no polish. Settings in SO. Check it works.
+```
+
+---
+
+> **Tip:** these prompts are a starting point. Combine and adapt for your project. Dev mode defines planning depth and checks.

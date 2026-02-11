@@ -1,96 +1,115 @@
-# Режим «Стандартный»
+# Mode: Standard
 
-**Для кого:** когда нужна небольшая цельная игра (мало механик, мало экранов) с полным процессом и умеренным стилем кода.
+**For:** small complete game (few mechanics, few screens) with full process and moderate code style.
 
-## Цель
+## Goal
 
-Небольшая по объёму цельная игра. Мало механик, мало экранов — «минимальная цельная игра». Процесс обычный: этапы, файлы состояния ведутся.
+Small complete game. Few mechanics, few screens — “minimal complete game”. Normal process: stages, state files kept.
 
-## Уточняющие вопросы
+## Complexity limits
 
-- **Перед планом:** да. Уточнить жанр, механики, экраны, стиль, платформу — всё что неясно.
-- **Перед фичей:** да, **если есть сомнения**. Если механика или UI неоднозначны — спросить пользователя. Если всё понятно — делать без вопросов.
-- **По ходу:** при неясностях — спросить. При ясности — не спрашивать.
-- Можно отключить/включить по просьбе пользователя.
+> Default guidelines, not hard limits. Can exceed with user agreement.
 
-## Воркфлоу
+- Screens: **3–6**.
+- Mechanics: **3–6**.
+- Scenes: **2–5**.
+- New features per iteration: **1–2**.
 
-1. Уточняющие вопросы → прояснить детали.
-2. Краткий набросок (жанр, 2–3 механики, 2–3 экрана).
-3. Короткие этапы с чеклистом по этапу.
-4. Reuse-first (по умолчанию): перед реализацией фичи (1) проверить встроенные возможности Unity и установленные пакеты; (2) при необходимости искать готовые механики и библиотеки на **GitHub** и **в интернете** (UPM, открытый код, туториалы, Asset Store). Если фича слишком маленькая и простая — писать вручную. **Перед каждой фичей — уточнить если есть сомнения.**
-5. Файлы состояния обязательны (Docs/DEV_STATE + Docs/DEV_PLAN + Docs/DEV_LOG/).
+## Clarifying questions
 
-## Reuse-first (поиск готовых решений)
+- **Before plan:** yes. Clarify genre, mechanics, screens, style, platform — whatever is unclear.
+- **Before feature:** yes **if in doubt**. If mechanic or UI is ambiguous — ask. If clear — do without asking.
+- **During:** if unclear — ask. If clear — do not ask.
+- Can be turned off/on at user request.
 
-- По умолчанию **включено** (переключатель в `Docs/DEV_CONFIG.md` → «Поиск готовых решений»).
-- Сначала проверить готовое (встроенное в Unity + уже установленные пакеты), затем при необходимости искать на GitHub и в интернете (готовые механики, библиотеки, туториалы). Приоритет поиска: **UPM/пакет** → **GitHub/открытый код** → ассет → референс-код.
-- Критерии выбора: совместимость с Unity/платформой, активность/поддержка, лицензия, размер зависимости.
-- Фиксация решения: записать выбранный вариант и причину в текущий файл итерации в `Docs/DEV_LOG/` (имя: iteration-NN-YYYYMMDD-HHMM.md); если архитектурно важно — также в `Docs/ARCHITECTURE.md`.
+## Workflow
 
-## Проверки и тесты
+1. Clarifying questions → clarify details.
+2. Short outline (genre, 2–3 mechanics, 2–3 screens).
+3. Short stages with per-stage checklist.
+4. Reuse-first (default): before implementing feature (1) check Unity built-in and installed packages; (2) if needed search for mechanics/libraries on **GitHub** and **web** (UPM, open code, tutorials, Asset Store). If feature is small and simple — code by hand. **Before each feature — ask if in doubt.**
+5. State files required (Docs/DEV_STATE + Docs/DEV_PLAN + Docs/DEV_LOG/).
 
-- **Агент обязан сам проверять каждую фичу** перед переходом к следующей: запустить Play Mode, сделать скриншоты игры (не только сцены в редакторе), попробовать поиграть (нажать кнопки, пройти сценарий по фиче). Проверка в редакторе + скриншот/чеклист по фиче.
-- Тесты по умолчанию не требуются.
-- **QA на фичу:** при запросе настроек (создание Docs/DEV_CONFIG) агент **обязан спросить** пользователя: «QA на фичу: включить (после каждой фичи вы проверяете по шагам, агент ждёт ОК) или только финальная QA в конце?» Значение записать в Docs/DEV_CONFIG.md. Если **включена** — после каждой фичи агент пишет мини-QA-чеклист по шаблону (шаги + ожидаемое + колонка «Проверка агентом» — заполняет сам после проверки + колонка «Проверка QA» — пустая, заполнит пользователь по просьбе агента). Агент не переходит к следующей фиче без ОК пользователя. Если выключена — только финальная QA.
-- **Финальная QA:** обязательно в конце — полный QA-чеклист (шаги + ожидаемое поведение + **Проверка агентом** — агент заполняет после своей проверки + **Проверка QA** — оставить пустой, заполнит QA по просьбе агента). См. reference.md → «Шаблон QA-чеклиста».
+## Reuse-first
 
-## Набросок
+- **On by default** (toggle in `Docs/DEV_CONFIG.md` → “Search ready solutions”).
+- Check ready-made (Unity + packages) first, then GitHub and web if needed. Priority: **UPM/package** → **GitHub/open code** → asset → reference code.
+- Choice criteria: compatibility, activity/support, license, dependency size.
+- Record choice: write to current iteration file in `Docs/DEV_LOG/` (name: iteration-NN-YYYYMMDD-HHMM.md); if architecturally important also `Docs/ARCHITECTURE.md`.
 
-Краткий: жанр, 2–3 механики, 2–3 экрана (меню, геймплей, настройки и т.д.).
+## Input policy
 
-## Этапы
+- Default `Old` or `Both`.
+- If project runs on `New Input System`, change only by agreement.
 
-Короткие этапы с чеклистом по каждому этапу. Указывать файлы/сцены/префабы и что проверить в Unity.
+## Checks and tests
 
-## Файлы состояния
+- **Agent must check each feature** before next: run Play Mode, take game screenshots (not only editor scene), try to play (buttons, flow), read console via `read_console` during/after Play Mode. Editor check + screenshot/checklist per feature.
+- **Before stage/project handoff:** Play Mode + `read_console` + final screenshot.
+- Tests not required by default.
+- **QA per feature:** on/off in `Docs/DEV_CONFIG.md`. If on — after each feature agent writes mini QA checklist (steps + expected + “Agent check” + “QA check”) and waits for user OK.
+- **Final QA checklist:** only if enabled in `Docs/DEV_CONFIG.md`. See reference.md → “QA checklist template”.
 
-Обязательны. `Docs/DEV_STATE.md` — контекст + текущая задача + блокеры + ближайшие 3–5 (обновлять при каждом действии). `Docs/DEV_PLAN.md` — все задачи с чекбоксами. `Docs/DEV_LOG/iteration-NN-YYYYMMDD-HHMM.md` — записи о завершённых задачах (можно упрощённо).
+## Outline
 
-## Стиль кода
+Short: genre, 2–3 mechanics, 2–3 screens (menu, gameplay, settings, etc.).
 
-**Умеренный (стандартный)** — чёткое разделение данных (SO) и логики, разумная структура без избыточной архитектуры. **Все настройки в SO** (NpcData, GameFightData, UiData и т.д.). См. [SKILL.md](../SKILL.md) — правило «настройки только в SO».
+## Stages
 
-### Логирование (Стандартный)
+Short stages with checklist per stage. List files/scenes/prefabs and what to check in Unity.
 
-- **Обильное и уместное.** Логировать ключевые события, смену состояний, ошибки, предупреждения.
-- Формат: `Debug.Log($"[Фича.Класс.Метод] описание с параметрами")`.
-  - Пример: `Debug.Log($"[Spawn.WaveSpawner.StartNextWave] Wave {wave}: {count} enemies")`.
-- Не логировать каждый кадр.
+## State files
 
-## Пример наброска (Стандартный)
+Required. `Docs/DEV_STATE.md` — context + current task + blockers + next 3–5 (update on each action). `Docs/DEV_PLAN.md` — all tasks with checkboxes. `Docs/DEV_LOG/iteration-NN-YYYYMMDD-HHMM.md` — completed task entries (can be simplified).
+
+## Code style
+
+**Moderate** — clear separation of data (SO) and logic, sensible structure without heavy architecture. **All settings in SO** (NpcData, GameFightData, UiData, etc.). See [SKILL.md](../SKILL.md) — “settings only in SO”.
+- **No C# namespaces** — keep scripts in default (global) scope. Namespaces only in Pro mode; see [tools/code-writing.md](../tools/code-writing.md).
+- **Hierarchy/scene:** use template from [tools/architecture-by-mode.md](../tools/architecture-by-mode.md): `GameManager` + `Core/Features/UI`, separate `Environment`.
+- **MonoBehaviour:** ok for feature logic and view layer without extra service layers.
+- **Architecture:** [tools/architecture-by-mode.md](../tools/architecture-by-mode.md).
+
+### Logging (Standard)
+
+- **Plenty and relevant.** Log key events, state changes, errors, warnings.
+- Format: `Debug.Log($"[Feature.Class.Method] description with params")`. Example: `Debug.Log($"[Spawn.WaveSpawner.StartNextWave] Wave {wave}: {count} enemies")`.
+- Do not log every frame.
+
+## Example outline (Standard)
 
 ```
-Жанр: Top-down шутер.
-Механики: WASD-движение, стрельба мышью, волны врагов.
-Экраны: MainMenu, Gameplay, GameOver.
-Данные: PlayerData (speed, fireRate, maxHealth), EnemyData (speed, health, damage), WaveData (enemyCount, spawnInterval).
+Genre: Top-down shooter.
+Mechanics: WASD move, mouse shoot, enemy waves.
+Screens: MainMenu, Gameplay, GameOver.
+Data: PlayerData (speed, fireRate, maxHealth), EnemyData (speed, health, damage), WaveData (enemyCount, spawnInterval).
 ```
 
-## Пример этапов (Стандартный)
+## Example stages (Standard)
 
 ```
-Этап 1: Сцена Gameplay + персонаж с движением.
-  - Файлы: PlayerController.cs, PlayerData.asset
-  - Проверить: WASD работает, скорость из SO.
-Этап 2: Стрельба.
-  - Файлы: ShootController.cs, BulletPrefab
-  - Проверить: пули летят к курсору, fireRate из SO.
-Этап 3: Враги и волны.
-  - Файлы: Enemy.cs, EnemyData.asset, WaveSpawner.cs, WaveData.asset
-  - Проверить: враги спавнятся, идут к игроку, параметры из SO.
-Этап 4: UI (HUD + меню + GameOver).
-  - Файлы: UIManager.cs, UiData.asset, сцены MainMenu/GameOver
-  - Проверить: HP-бар, счёт, переходы между сценами.
-Этап 5: Полировка (баланс через SO, звук).
+Stage 1: Gameplay scene + character movement.
+  Files: PlayerController.cs, PlayerData.asset
+  Check: WASD works, speed from SO.
+Stage 2: Shooting.
+  Files: ShootController.cs, BulletPrefab
+  Check: bullets toward cursor, fireRate from SO.
+Stage 3: Enemies and waves.
+  Files: Enemy.cs, EnemyData.asset, WaveSpawner.cs, WaveData.asset
+  Check: enemies spawn, move to player, params from SO.
+Stage 4: UI (HUD + menu + GameOver).
+  Files: UIManager.cs, UiData.asset, MainMenu/GameOver scenes
+  Check: HP bar, score, scene transitions.
+Stage 5: Polish (balance via SO, sound).
 ```
 
-## Чеклист режима «Стандартный»
+## Standard mode checklist
 
-- [ ] Уточняющие вопросы → краткий набросок (жанр, 2–3 механики, 2–3 экрана).
-- [ ] Подробный план: короткие этапы с чеклистом по этапу.
-- [ ] **Перед каждой фичей** — если есть сомнения, задать уточняющий вопрос пользователю.
-- [ ] Реализация по этапам, умеренный стиль кода, все данные в SO.
-- [ ] **После каждой фичи** — агент сам проверяет: Play Mode, скриншоты игры, попытка поиграть (кнопки, сценарий). Затем скриншот/чеклист в Docs/DEV_STATE. Если в Docs/DEV_CONFIG «QA на фичу» включена — написать QA-шаги, дождаться ОК пользователя перед следующей фичей.
-- [ ] Файлы состояния (DEV_STATE/PLAN/LOG) вести обязательно, обновлять при каждом действии.
-- [ ] **Финальная QA** — составить полный QA-чеклист по шаблону (шаги, ожидаемое поведение, колонка «Проверка агентом» — заполнить самому, колонка «Проверка QA» — пустая, для заполнения по просьбе агента).
+- [ ] Clarifying questions → short outline (genre, 2–3 mechanics, 2–3 screens).
+- [ ] Detailed plan: short stages with per-stage checklist.
+- [ ] **Before each feature** — if in doubt, ask user.
+- [ ] Implement by stages, moderate code style, all data in SO.
+- [ ] **After each feature** — agent checks: Play Mode, `read_console`, game screenshots, try to play (buttons, flow). Then screenshot/checklist in Docs/DEV_STATE. If “QA per feature” on in Docs/DEV_CONFIG — write QA steps, wait for user OK before next feature.
+- [ ] Before stage/project handoff: Play Mode + `read_console` + final screenshot.
+- [ ] State files (DEV_STATE/PLAN/LOG) required, update on each action.
+- [ ] Final QA checklist only if enabled in `Docs/DEV_CONFIG.md`.

@@ -1,125 +1,139 @@
-# Режим «Профи (долгострой)»
+# Mode: Pro (long-term)
 
-**Для кого:** масштабируемый проект, долгая разработка с заделом на расширяемость, тестами и полным учётом состояния.
+**For:** scalable project, long development with extensibility, tests, and full state tracking.
 
-## Цель
+## Goal
 
-Долгий проект с заделом. Полный набросок, детальные этапы с критериями приёмки, архитектура, тесты. Полное ведение файлов: Docs/DEV_STATE (текущее + контекст), Docs/DEV_PLAN (план), Docs/DEV_LOG/ (итерации с именами iteration-NN-YYYYMMDD-HHMM.md, скриншоты).
+Long project with foundation. Full outline, detailed stages with acceptance criteria, architecture, tests. Full state files: Docs/DEV_STATE (current + context), Docs/DEV_PLAN (plan), Docs/DEV_LOG/ (iterations with iteration-NN-YYYYMMDD-HHMM.md, screenshots).
 
-## Уточняющие вопросы
+## Complexity limits
 
-- **Перед планом:** да, подробные. Уточнить жанр, все механики, экраны, системы, стиль, платформу, расширяемость, приоритеты.
-- **Перед фичей:** да, **если есть сомнения**. Уточнить детали реализации, поведение, граничные случаи, какие данные в SO, какой UI. Если всё понятно из плана — делать без вопросов.
-- **По ходу:** при неясностях — обязательно спросить. Лучше спросить, чем переделывать.
-- Можно отключить/включить по просьбе пользователя.
+> Default guidelines, not hard limits. Can exceed with user agreement.
 
-## Воркфлоу
+- Screens: **6+** (or cross-scene UI).
+- Mechanics: **6+** or systemic gameplay.
+- Scenes: **5+**.
+- New features per iteration: usually **1** (deep implementation and check).
 
-1. Подробные уточняющие вопросы → полное понимание проекта.
-2. Полный набросок (системы, экраны, данные, расширяемость).
-3. Детальные этапы с чеклистами и критериями приёмки.
-4. Reuse-first (по умолчанию): перед реализацией фичи (1) проверить встроенные возможности Unity и установленные пакеты; (2) при необходимости искать готовые механики и библиотеки на **GitHub** и **в интернете**. Сравнить 1–3 варианта и выбрать. Если фича слишком маленькая и простая — писать вручную. **Перед каждой фичей — уточнить если есть сомнения.**
-5. Полное ведение файлов: Docs/DEV_STATE + Docs/DEV_PLAN + Docs/DEV_LOG/ (итерации).
+## Clarifying questions
 
-## Reuse-first (поиск готовых решений)
+- **Before plan:** yes, detailed. Clarify genre, all mechanics, screens, systems, style, platform, extensibility, priorities.
+- **Before feature:** yes **if in doubt**. Clarify implementation details, behavior, edge cases, what data in SO, what UI. If clear from plan — do without asking.
+- **During:** when unclear — ask. Better ask than redo.
+- Can be turned off/on at user request.
 
-- По умолчанию **включено** (переключатель в `Docs/DEV_CONFIG.md` → «Поиск готовых решений»).
-- Сначала проверить готовое (встроенное в Unity + уже установленные пакеты), затем при необходимости искать на GitHub и в интернете. Приоритет поиска: **UPM/пакет** → **GitHub/открытый код** → ассет → референс-код.
-- Критерии выбора (обязательные): лицензия, поддержка/обновления, совместимость с Unity/платформой, размер/риски зависимости.
-- Фиксация решения: записать в `Docs/ARCHITECTURE.md` (что выбрали и почему) + в текущий файл итерации в `Docs/DEV_LOG/` (имя: iteration-NN-YYYYMMDD-HHMM.md) (что сделали).
+## Workflow
 
-## Проверки и тесты
+1. Detailed clarifying questions → full project understanding.
+2. Full outline (systems, screens, data, extensibility).
+3. Detailed stages with checklists and acceptance criteria.
+4. Reuse-first (default): before implementing feature (1) check Unity built-in and packages; (2) if needed search GitHub and web. Compare 1–3 options and choose. If feature small/simple — code by hand. **Before each feature — ask if in doubt.**
+5. Full state files: Docs/DEV_STATE + Docs/DEV_PLAN + Docs/DEV_LOG/ (iterations).
 
-- **Агент обязан сам проверять:** почти на каждую задачу внутри фичи + проверка на фичу целиком. Запуск Play Mode, скриншоты игры (не только сцены), попытка поиграть (кнопки, сценарий). В редакторе + скриншоты + чеклисты.
-- **Автотесты по умолчанию включены.** По желанию пользователя можно отключить. При старте в режиме Профи уточнить: «Автотесты включены по умолчанию; отключить?»
-- **QA на фичу:** при запросе настроек (создание Docs/DEV_CONFIG) агент **обязан спросить** пользователя: «QA на фичу: включить (после каждой фичи вы проверяете по шагам, агент ждёт ОК) или только финальная QA в конце?» Значение записать в Docs/DEV_CONFIG.md. Если включена — после каждой фичи агент пишет QA-чеклист по шаблону (шаги + ожидаемое + граничные случаи + «Проверка агентом» + «Проверка QA»). Агент не переходит к следующей фиче без ОК пользователя.
-- **Финальная QA:** обязательно в конце — полный QA-чеклист (шаги + ожидаемое поведение + граничные случаи + **Проверка агентом** + **Проверка QA**). См. reference.md → «Шаблон QA-чеклиста».
+## Reuse-first
 
-## Набросок
+- **On by default** (toggle in `Docs/DEV_CONFIG.md` → “Search ready solutions”).
+- Check ready-made (Unity + packages) first, then GitHub and web if needed. Priority: **UPM/package** → **GitHub/open code** → asset → reference code.
+- Choice criteria (required): license, support/updates, Unity/platform compatibility, dependency size/risks.
+- Record: write to `Docs/ARCHITECTURE.md` (what chosen and why) + current iteration file in `Docs/DEV_LOG/` (what was done).
 
-Полный: жанр, механики, все экраны/сцены, основные системы (ввод, сохранения, UI, звук), данные и расширяемость.
+## Input policy
 
-## Этапы
+- Default `New Input System`.
+- Use `Both`/`Old` only for confirmed legacy limits; document reason.
 
-Детальные этапы с чеклистами и критериями приёмки. По каждому этапу — файлы/сцены/префабы, чеклист проверки, критерии «готово».
+## Checks and tests
 
-## Файлы состояния
+- **Agent must check:** per task in feature + per feature. Play Mode, game screenshots (not only scene), try to play (buttons, flow), console via `read_console` during/after Play Mode. Editor + screenshots + checklists.
+- **Before stage/project handoff:** Play Mode + `read_console` + final screenshot.
+- **Autotests on by default.** User can disable. At Pro start ask: “Autotests on by default; disable?”
+- **QA per feature:** on/off in `Docs/DEV_CONFIG.md`. If on — after each feature agent writes QA checklist (steps + expected + edge cases + “Agent check” + “QA check”) and waits for user OK.
+- **Final QA checklist:** only if enabled in `Docs/DEV_CONFIG.md`. See reference.md → “QA checklist template”.
 
-Полный формат. `Docs/DEV_STATE.md` — контекст + текущая задача + блокеры + ближайшие (обновлять при каждом действии). `Docs/DEV_PLAN.md` — все задачи с чекбоксами, статистика. `Docs/DEV_LOG/iteration-NN-YYYYMMDD-HHMM.md` — полные записи: дата, результат, файлы, скриншоты с описаниями. Обновлять при каждом действии.
+## Outline
 
-## Стиль кода
+Full: genre, mechanics, all screens/scenes, main systems (input, saves, UI, audio), data and extensibility.
 
-**Архитектура** — SO для всех данных + сервисы/интерфейсы, рефакторинг, расширяемость. Юнит-тесты (или автотесты) по умолчанию да. **Все настройки в SO** (NpcData, GameFightData, UiData и т.д.). См. [SKILL.md](../SKILL.md) — правило «настройки только в SO».
+## Stages
 
-### Комментарии в коде (Профи)
+Detailed stages with checklists and acceptance criteria. Per stage — files/scenes/prefabs, check checklist, “done” criteria.
 
-- **XML-документация (docstring) обязательна** для: классов, публичных методов, публичных полей/свойств, интерфейсов.
-- **Обычных комментариев (`//`) НЕ писать.** Код должен быть самодокументируемым.
-- **Исключения — только:**
-  - `// TODO:` — задача на будущее.
-  - `// HACK:` / `// WORKAROUND:` — явное неочевидное место, которое требует пояснения почему так.
-  - `// NOTE:` — критически неочевидная логика, где без пометки следующий разработчик не поймёт.
-  - Комментарии в SO-классах для пояснения настроек (через `[Tooltip]` или `//` рядом с полем).
-- **Никаких** «очевидных» комментариев вроде `// увеличиваем счётчик`, `// вызываем метод`.
+## State files
 
-### Логирование (Профи)
+Full format. `Docs/DEV_STATE.md` — context + current task + blockers + next (update on each action). `Docs/DEV_PLAN.md` — all tasks with checkboxes, stats. `Docs/DEV_LOG/iteration-NN-YYYYMMDD-HHMM.md` — full entries: date, result, files, screenshots with descriptions. Update on each action.
 
-- **Обильное и уместное.** Логировать ключевые события, смену состояний, действия, ошибки, предупреждения.
-- Формат: `Debug.Log($"[Фича.Класс.Метод] описание с параметрами")`.
-  - Пример: `Debug.Log($"[Combat.HealthComponent.TakeDamage] Damage={amount}, HP={_currentHealth}")`.
-- `Debug.LogError` — ошибки. `Debug.LogWarning` — подозрительные ситуации.
-- Не логировать в Update каждый кадр.
+## Code style
 
-Подробнее и примеры: [tools/code-writing.md](../tools/code-writing.md).
+**Architecture** — SO for all data + services/interfaces, refactor, extensibility. Unit/autotests on by default. **All settings in SO** (NpcData, GameFightData, UiData, etc.). See [SKILL.md](../SKILL.md) — “settings only in SO”.
+- **C# namespaces** — use namespaces by system (e.g. `Game.Combat`, `Game.UI`). Pro is the only mode where namespaces are used; see [tools/code-writing.md](../tools/code-writing.md).
+- **Composition:** main logic mostly in classes/services; MonoBehaviour — mainly view/entry points. Use DI/LifetimeScope when project really needs scalable composition.
+- **Architecture:** [tools/architecture-by-mode.md](../tools/architecture-by-mode.md).
 
-## Пример наброска (Профи)
+### Code comments (Pro)
 
-```
-Жанр: RPG с пошаговыми боями.
-Цель: масштабируемый проект с заделом на контент.
+- **XML docs required** for: classes, public methods, public fields/properties, interfaces.
+- **No plain `//` comments.** Code must be self-documenting.
+- **Only:** `// TODO:`, `// HACK:` / `// WORKAROUND:`, `// NOTE:` (non-obvious), SO field explanations (`[Tooltip]` or `//`).
+- **No** “obvious” comments like `// increment counter`, `// call method`.
 
-Системы:
-- Бой: пошаговый, способности, эффекты. SO: AbilityData, StatusEffectData.
-- Инвентарь: предметы, экипировка. SO: ItemData, EquipmentData.
-- Диалоги: NPC, квесты. SO: DialogueData, QuestData.
-- Прогрессия: уровни, опыт. SO: LevelCurveData.
+### Logging (Pro)
 
-Экраны: MainMenu, WorldMap, Battle, Inventory, Dialogue, Settings.
+- **Plenty and relevant.** Log key events, state changes, actions, errors, warnings.
+- Format: `Debug.Log($"[Feature.Class.Method] description with params")`. Example: `Debug.Log($"[Combat.HealthComponent.TakeDamage] Damage={amount}, HP={_currentHealth}")`.
+- `Debug.LogError` — errors. `Debug.LogWarning` — suspicious cases.
+- Do not log every frame in Update.
 
-Данные: все параметры боя, предметов, NPC, квестов, UI — в SO.
-Расширяемость: новый враг = новый EnemyData asset, новый квест = новый QuestData asset.
-Тесты: бой, инвентарь, прогрессия.
-```
+Details and examples: [tools/code-writing.md](../tools/code-writing.md).
 
-## Пример этапов (Профи)
+## Example outline (Pro)
 
 ```
-Этап 1: Архитектура — GameManager, SceneLoader, ServiceLocator.
-  Критерий: сцены переключаются, сервисы доступны. Тест: SceneLoadTest.
+Genre: RPG with turn-based combat.
+Goal: scalable project with room for content.
 
-Этап 2: Боевая система.
-  2.1: Модель боя (BattleManager, TurnSystem). Тест: TurnOrderTest.
-  2.2: Способности (AbilitySystem + AbilityData SO). Тест: DamageCalcTest.
-  2.3: UI боя (BattleUI, HP-бары, выбор способности). Проверка в редакторе.
-  Критерий фичи: бой проходит от начала до конца, параметры из SO.
+Systems:
+- Combat: turn-based, abilities, effects. SO: AbilityData, StatusEffectData.
+- Inventory: items, equipment. SO: ItemData, EquipmentData.
+- Dialogue: NPCs, quests. SO: DialogueData, QuestData.
+- Progression: levels, XP. SO: LevelCurveData.
 
-Этап 3: Инвентарь.
-  3.1: Модель (Inventory, ItemData SO). Тест: InventoryAddRemoveTest.
-  3.2: UI инвентаря. Проверка в редакторе.
-  Критерий: предметы добавляются/удаляются, данные из SO.
+Screens: MainMenu, WorldMap, Battle, Inventory, Dialogue, Settings.
 
-Этап 4: Диалоги и квесты (DialogueSystem, QuestSystem, SO-данные).
-Этап 5: Мир, навигация, интеграция всех систем.
-Этап 6: Полировка, баланс через SO, финальные тесты.
+Data: all combat, items, NPC, quest, UI params in SO.
+Extensibility: new enemy = new EnemyData asset, new quest = new QuestData asset.
+Tests: combat, inventory, progression.
 ```
 
-## Чеклист режима «Профи»
+## Example stages (Pro)
 
-- [ ] Подробные уточняющие вопросы → полный набросок (системы, экраны, данные). Уточнить: автотесты? Уточняющие вопросы? **Обязательно спросить про QA на фичу** и записать в Docs/DEV_CONFIG.md.
-- [ ] Подробный план: детальные этапы с чеклистами и критериями приёмки.
-- [ ] **Перед каждой фичей** — если есть сомнения или неоднозначность, задать уточняющий вопрос пользователю.
-- [ ] Реализация по этапам: архитектура, SO, тесты. **Проверка почти на каждую задачу в фиче и на фичу целиком.**
-- [ ] После каждой фичи/задачи агент сам проверяет: Play Mode, скриншоты игры, попытка поиграть. Если QA на фичу включена — написать QA-шаги, дождаться ОК.
-- [ ] Запуск автотестов по мере разработки (если не отключено пользователем).
-- [ ] Файлы состояния (DEV_STATE/PLAN/LOG) вести в полном формате; обновлять при каждом действии; скриншоты с датами.
-- [ ] **Финальная QA** — составить QA-чеклист по шаблону (шаги, ожидаемое, «Проверка агентом» — заполнить, «Проверка QA» — пустая для QA по просьбе агента).
+```
+Stage 1: Architecture — GameManager, SceneLoader, ServiceLocator.
+  Criteria: scenes switch, services available. Test: SceneLoadTest.
+
+Stage 2: Combat system.
+  2.1: Combat model (BattleManager, TurnSystem). Test: TurnOrderTest.
+  2.2: Abilities (AbilitySystem + AbilityData SO). Test: DamageCalcTest.
+  2.3: Battle UI (HP bars, ability choice). Editor check.
+  Feature criteria: combat runs start to end, params from SO.
+
+Stage 3: Inventory.
+  3.1: Model (Inventory, ItemData SO). Test: InventoryAddRemoveTest.
+  3.2: Inventory UI. Editor check.
+  Criteria: add/remove items, data from SO.
+
+Stage 4: Dialogue and quests (DialogueSystem, QuestSystem, SO data).
+Stage 5: World, navigation, integrate all systems.
+Stage 6: Polish, balance via SO, final tests.
+```
+
+## Pro mode checklist
+
+- [ ] Detailed clarifying questions → full outline (systems, screens, data). Clarify: autotests? Questions? QA per feature? Final QA checklist? Write to Docs/DEV_CONFIG.md.
+- [ ] Detailed plan: stages with checklists and acceptance criteria.
+- [ ] **Before each feature** — if in doubt or ambiguous, ask user.
+- [ ] Implement by stages: architecture, SO, tests. **Check per task in feature and per feature.**
+- [ ] After each feature/task agent checks: Play Mode, `read_console`, game screenshots, try to play. If QA per feature on — write QA steps, wait for OK.
+- [ ] Before stage/project handoff: Play Mode + `read_console` + final screenshot.
+- [ ] Run autotests as you go (unless user disabled).
+- [ ] State files (DEV_STATE/PLAN/LOG) in full format; update on each action; screenshots with dates.
+- [ ] Final QA checklist only if enabled in `Docs/DEV_CONFIG.md`.

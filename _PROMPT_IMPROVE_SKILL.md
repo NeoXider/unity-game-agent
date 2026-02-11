@@ -1,45 +1,45 @@
-# Промпт: улучшение скилла (текущий проект)
+# Prompt: skill improvement (current project)
 
-**Файл временный** — используется при настройке и доработке скилла. После стабилизации можно удалить или перенести в документацию.
-
----
-
-## Цель текущего проекта
-
-Сделать **набор MCP, готовые промпты, скиллы, автоматизацию (bat) и ComfyUI** для **создания автономных Unity-игр с помощью ИИ**.
-
-Агент должен уметь **автономно** вести разработку игры: набросок → план → реализация → проверка → отчёт, с минимальным ручным вмешательством. Всё, что можно автоматизировать (создание папок, рутинные шаги, чеклисты), нужно подготавливать в скилле и скриптах.
+**Temporary file** — used when configuring and refining the skill. After stabilization can be removed or moved to docs.
 
 ---
 
-## Что улучшать: директория скилла (SKILL_DIR)
+## Current project goal
+
+Provide **MCP set, ready prompts, skills, automation (bat) and ComfyUI** for **creating autonomous Unity games with AI**.
+
+The agent should be able to **autonomously** run game development: outline → plan → implementation → check → report, with minimal manual intervention. Everything that can be automated (folder creation, routine steps, checklists) should be prepared in the skill and scripts.
+
+---
+
+## What to improve: skill directory (SKILL_DIR)
 
 **SKILL_DIR** = `c:\Git\AutoUnity\.cursor\skills\unity-game-agent\`
 
-Нужно **по максимуму** улучшать содержимое этой директории:
+Improve the contents of this directory **as much as possible**:
 
-1. **Правила и инструкции** — чтобы агент с чистым контекстом понимал, что делать, в каком порядке, какие файлы читать/обновлять.
-2. **Автоматизация** — всё рутинное выносить в `.bat` / скрипты / чеклисты (создание папок уже есть в `setup_source_folders.bat`; придумать другие рутины).
-3. **Сокращение дублей и контекста** — не повторять одно и то же в нескольких файлах; тянуть детали по ссылкам (`reference.md`, `tools/*`, `modes/*`).
-4. **Чёткое разделение инструментов:**
-   - файлы/папки/код — через IDE/файловые инструменты или `.bat`;
-   - Unity Editor (сцена, объекты, PlayMode, скриншоты, консоль) — через Unity MCP.
-5. **Режимы разработки** — выбор режима перед стартом, явные воркфлоу и проверки по режиму (прототип / стандартный / быстрый / профи).
-6. **Память проекта** — DEV_CONFIG, DEV_STATE, DEV_PLAN, AGENT_MEMORY, итерации логов; порядок чтения при старте и правила обновления без перегруза.
-7. **Готовые промпты** — в PROMPTS.md и при необходимости отдельные файлы для типовых сценариев (старт игры, продолжение, одна фича, QA и т.д.).
+1. **Rules and instructions** — so the agent with a clean context knows what to do, in what order, which files to read/update.
+2. **Automation** — put routine work in `.bat` / scripts / checklists (folder creation is already in `setup_source_folders.bat`; add other routines).
+3. **Reduce duplication and context** — do not repeat the same in multiple files; pull details via links (`reference.md`, `tools/*`, `modes/*`).
+4. **Clear tool split:**
+   - files/folders/code — via IDE/file tools or `.bat`;
+   - Unity Editor (scene, objects, PlayMode, screenshots, console) — via Unity MCP.
+5. **Dev modes** — choose mode before start, explicit workflow and checks per mode (prototype / standard / fast / pro).
+6. **Project memory** — DEV_CONFIG, DEV_STATE, DEV_PLAN, AGENT_MEMORY, iteration logs; read order at start and update rules without overload.
+7. **Ready prompts** — in PROMPTS.md and if needed separate files for typical scenarios (start game, continue, one feature, QA, etc.).
 
 ---
 
-## Запрос к агенту
+## Request to the agent
 
-При работе с этим файлом:
+When working with this file:
 
-1. **Повтори и зафиксируй цель** (набор MCP + промпты + скиллы + автоматизация + ComfyUI → автономные Unity-игры).
-2. **Просмотри всю директорию скилла** (`SKILL.md`, `reference.md`, `MODE_*.md`, `modes/*`, `tools/*`, `PROMPTS.md`, `setup_source_folders.bat`).
-3. **Предложи улучшения** по пунктам выше:
-   - что добавить (новые правила, шаги, автоматизацию, промпты);
-   - что убрать или сократить (дубли, лишний контекст);
-   - что переструктурировать для ясности и экономии токенов.
-4. **Реализуй** те улучшения, которые не требуют решения пользователя; остальные оформи как список «на согласование».
+1. **Restate and fix the goal** (MCP set + prompts + skills + automation + ComfyUI → autonomous Unity games).
+2. **Review the whole skill directory** (`SKILL.md`, `reference.md`, `MODE_*.md`, `modes/*`, `tools/*`, `PROMPTS.md`, `setup_source_folders.bat`).
+3. **Suggest improvements** per the points above:
+   - what to add (new rules, steps, automation, prompts);
+   - what to remove or shorten (duplicates, extra context);
+   - what to restructure for clarity and token economy.
+4. **Implement** improvements that do not require user decisions; put the rest in a “for approval” list.
 
-Приоритет: чтобы агент с **чистым контекстом** мог сразу понять цель, режим, порядок работы и обновления файлов состояния, и чтобы рутина была по возможности автоматизирована.
+Priority: so the agent with a **clean context** can immediately understand goal, mode, work order and state file updates, and so routine is automated where possible.

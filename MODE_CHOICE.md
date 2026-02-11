@@ -1,34 +1,35 @@
-# Выберите режим разработки
+# Choose dev mode
 
-При старте игры с нуля агент запрашивает **настройки** (в т.ч. режим ниже) и **геймдизайн**; планирование делается в **Plan mode**.
+When starting a game from scratch the agent asks for **settings** (including the mode below) and **game design**; planning is done in **Plan mode**.
 
-От режима зависят объём наброска, детализация этапов, стиль кода, когда выполняются проверки и ведение файлов состояния (DEV_STATE / DEV_PLAN / DEV_LOG). **Во всех режимах настройки хранятся в ScriptableObject** (NpcData, GameFightData, UiData и т.д.) — чтобы вы могли менять параметры без разбора сцены и кода.
+Mode affects outline size, stage detail, code style, when checks run, and state files (DEV_STATE / DEV_PLAN / DEV_LOG). **In all modes settings live in ScriptableObject** (NpcData, GameFightData, UiData, etc.) so you can change parameters without touching scene and code.
 
-**Подробный просмотр перед выбором:** отличия режимов, описание каждого и схемы воркфлоу — в [MODE_DETAILS.md](MODE_DETAILS.md).
+**Before choosing:** mode comparison, descriptions, and workflow diagrams — [MODE_DETAILS.md](MODE_DETAILS.md).
 
-## Сравнение режимов
+## Mode comparison
 
-| Режим       | Цель                         | Стиль кода              | Уточняющие вопросы | Проверки        | Воркфлоу                                                              |
-| ----------- | ---------------------------- | ----------------------- | ------------------ | --------------- | --------------------------------------------------------------------- |
-| **Прототип** | Проверить идею за пару часов | Хардкод, настройки в SO | Перед планом (мин.) | В самом конце   | Минимальный набросок → 2–3 крупных этапа → файлы по желанию           |
-| **Стандартный** | Маленькая цельная игра       | Умеренный               | Перед планом + перед фичей | На каждую фичу  | Краткий набросок → короткие этапы с чеклистом → STATE/PLAN/LOG        |
-| **Быстрый** | Быстро до играбельного билда | Компоненты              | Перед планом (мин.) | В самом конце   | Набросок + этапы → крупные этапы → STATE/PLAN кратко                  |
-| **Профи**   | Долгий проект с заделом      | Архитектура, тесты      | Перед планом + перед фичей | На задачу и фичу; автотесты по умолчанию | Полный набросок → детальные этапы → полный STATE/PLAN/LOG             |
+| Mode | Goal | Code style | Clarifying questions | Checks | Workflow |
+|------|------|------------|----------------------|--------|----------|
+| **Prototype** | Validate idea in a couple of hours | Hardcode, settings in SO | Before plan (min.) | At the end | Minimal outline → 2–3 big stages → files optional |
+| **Standard** | Small complete game | Moderate | Before plan + before feature | Per feature | Short outline → short stages with checklist → STATE/PLAN/LOG |
+| **Fast** | Quick to playable build | Components | Before plan (min.) | At the end | Outline + stages → big stages → STATE/PLAN brief |
+| **Pro** | Long project with foundation | Architecture, tests | Before plan + before feature | Per task and feature; autotests default | Full outline → detailed stages → full STATE/PLAN/LOG |
 
-## Подробнее о режимах
+## Mode details
 
-- **Прототип** — [подробнее](modes/prototype.md): минимум планирования, проверки в конце, файлы по желанию.
-- **Стандартный** — [подробнее](modes/standard.md): маленькая игра, проверка на каждую фичу, умеренный стиль кода.
-- **Быстрый** — [подробнее](modes/fast.md): быстрее к результату, несколько фич за проход, проверки в конце.
-- **Профи** — [подробнее](modes/pro.md): полный план, проверки на задачу и фичу, автотесты по умолчанию.
+- **Prototype** — [details](modes/prototype.md): minimal planning, checks at end, files optional.
+- **Standard** — [details](modes/standard.md): small game, check per feature, moderate code style.
+- **Fast** — [details](modes/fast.md): faster to result, several features per pass, checks at end.
+- **Pro** — [details](modes/pro.md): full plan, checks per task and feature, autotests by default.
 
----
-
-**Во всех режимах** в конце проекта — обязательная **финальная QA** (шаги + ожидаемое поведение для проверки пользователем).
-В **Стандартном** и **Профи** можно опционально включить **QA на каждую фичу** — агент пишет шаги для проверки, пользователь проверяет руками.
-
-**Рекомендации по инструментам** (Unity MCP, ComfyUI, Figma, написание кода) зависят от режима — подробнее в [tools/index.md](tools/index.md).
+Each mode has **complexity limits** (screens/mechanics/scenes/iteration size) — see `modes/*`.
 
 ---
 
-**Напишите название режима: Прототип, Стандартный, Быстрый или Профи — чтобы начать.**
+QA checklists depend on `Docs/DEV_CONFIG.md`: **QA per feature** and **final QA checklist** are configured separately.
+
+**Tool recommendations** (Unity MCP, ComfyUI, UI Builder, code) depend on mode — [tools/index.md](tools/index.md).
+
+---
+
+**Reply with the mode name: Prototype, Standard, Fast, or Pro — to start.**

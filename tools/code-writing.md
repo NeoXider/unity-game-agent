@@ -1,45 +1,46 @@
-# C# / Написание кода — рекомендации
+# C# / Code — recommendations
 
-Рекомендации по написанию кода для Unity-игр. Стиль, паттерны и строгость зависят от [режима разработки](../MODE_CHOICE.md).
+Recommendations for writing Unity game code. Style, patterns, and strictness depend on [dev mode](../MODE_CHOICE.md).
 
 ---
 
-## Общие правила (для всех режимов)
+## General rules (all modes)
 
-### Именование
+### Naming
 
-- **Не использовать уникальные названия игры/проекта** в скриптах, классах, SO и именах файлов (например `TotalWar`, `MyGame`, `SuperPuzzle`). Использовать **ролевые/общие имена**: `GameManager`, `MainMenuController`, `RewardPanel`, `UiData`, `ShopItemView` — так код и ассеты остаются переносимыми и не привязаны к названию игры.
+- **Do not use game/project-specific names** in scripts, classes, SO, or file names (e.g. `TotalWar`, `MyGame`, `SuperPuzzle`). Use **role-based names**: `GameManager`, `MainMenuController`, `RewardPanel`, `UiData`, `ShopItemView` — so code and assets stay portable.
+- **Namespaces:** do not use C# `namespace` (keep default/global scope) in **Prototype, Standard, Fast**. Use namespaces **only in Pro mode** — by system, e.g. `Game.Combat`, `Game.Inventory`, `Game.UI`. See [Code by mode](#code-by-mode) below.
 
-| Элемент | Стиль | Пример |
+| Element | Style | Example |
 |---------|-------|--------|
-| Классы, структуры | PascalCase | `PlayerController`, `EnemyData` |
-| Публичные методы | PascalCase | `TakeDamage()`, `Initialize()` |
-| Публичные свойства | PascalCase | `MaxHealth`, `MoveSpeed` |
-| Приватные поля | camelCase с _ | `_currentHealth`, `_moveDirection` |
-| Локальные переменные | camelCase | `spawnPosition`, `enemyCount` |
-| Константы | UPPER_SNAKE или PascalCase | `MAX_ENEMIES` или `MaxEnemies` |
-| SO ассеты | PascalCase с суффиксом | `PlayerData`, `EnemyData_Goblin` |
+| Classes, structs | PascalCase | `PlayerController`, `EnemyData` |
+| Public methods | PascalCase | `TakeDamage()`, `Initialize()` |
+| Public properties | PascalCase | `MaxHealth`, `MoveSpeed` |
+| Private fields | camelCase with _ | `_currentHealth`, `_moveDirection` |
+| Local variables | camelCase | `spawnPosition`, `enemyCount` |
+| Constants | UPPER_SNAKE or PascalCase | `MAX_ENEMIES` or `MaxEnemies` |
+| SO assets | PascalCase with suffix | `PlayerData`, `EnemyData_Goblin` |
 
-### ScriptableObject (обязательно во всех режимах)
+### ScriptableObject (required in all modes)
 
-**Все настройки и данные — в SO.** Не хардкодить в MonoBehaviour.
+**All settings and data in SO.** No hardcoding in MonoBehaviour.
 
 ```csharp
-// SO — данные
+// SO — data
 [CreateAssetMenu(fileName = "NewEnemyData", menuName = "GameData/EnemyData")]
 public class EnemyData : ScriptableObject
 {
-    [Header("Характеристики")]
+    [Header("Stats")]
     public int health = 50;
     public float speed = 3f;
     public float damage = 10f;
 
-    [Header("Визуал")]
+    [Header("Visual")]
     public Sprite sprite;
     public Color tintColor = Color.white;
 }
 
-// MonoBehaviour — логика (ссылается на SO)
+// MonoBehaviour — logic (references SO)
 public class Enemy : MonoBehaviour
 {
     [SerializeField] private EnemyData _data;
@@ -54,592 +55,206 @@ public class Enemy : MonoBehaviour
 }
 ```
 
-### Базовые принципы
+### Basics
 
-- **Один скрипт — одна ответственность.** `PlayerMovement` отдельно от `PlayerHealth`.
-- **SerializeField вместо public** для полей в Inspector.
-- **Не использовать Find/FindObjectOfType в Update** — кешировать в Start/Awake.
-- **Null-check** при работе с ссылками на другие объекты.
-- **Логирование** — объём зависит от режима (см. ниже).
+- **One script — one responsibility.** `PlayerMovement` separate from `PlayerHealth`.
+- **SerializeField instead of public** for Inspector fields.
+- **No Find/FindObjectOfType in Update** — cache in Start/Awake.
+- **Null-check** when using references.
+- **Logging** — volume depends on mode (see below).
 
-### Асинхронность и отложенные операции
+### Async and deferred ops
 
-**Рекомендация для всех режимов:** использовать **UniTask** (Cysharp) для async/await в Unity — zero allocation, работа на PlayerLoop (без потоков, подходит для WebGL), отмена через `CancellationToken`, удобный `UniTask.Delay`, `UniTask.Yield`, await для `AsyncOperation` и корутин.
+**Recommendation for all modes:** use **UniTask** (Cysharp) for async/await in Unity — zero allocation, runs on PlayerLoop (no threads, WebGL ok), cancellation via `CancellationToken`, `UniTask.Delay`, `UniTask.Yield`, await for `AsyncOperation` and coroutines.
 
-- **Если UniTask уже в проекте** — применять для задержек, загрузки сцен/ассетов, цепочек операций, отменяемых таймеров. Не дублировать логику корутинами без причины.
-- **Если UniTask не установлен** — перед реализацией асинхронной фичи проверить, не проще ли добавить пакет (UPM: `com.cysharp.unitasks` или [GitHub](https://github.com/Cysharp/UniTask)). Документация: [UniTask](https://github.com/Cysharp/UniTask#readme).
-- **Корутины** — допустимы для простых пошаговых задержек (одна цепочка `WaitForSeconds`), если UniTask не используется. Для сложных сценариев (отмена, несколько ожиданий, async-цепочки) предпочтительнее UniTask.
+- **If UniTask is in project** — use for delays, scene/asset load, chains, cancellable timers. Do not duplicate with coroutines without reason.
+- **If UniTask not installed** — before implementing async feature check if adding the package is simpler (UPM: `com.cysharp.unitasks` or [GitHub](https://github.com/Cysharp/UniTask)). Docs: [UniTask](https://github.com/Cysharp/UniTask#readme).
+- **Coroutines** — ok for simple step delays (single `WaitForSeconds` chain) if UniTask not used. For complex (cancellation, multiple waits, async chains) prefer UniTask.
 
 ```csharp
-// С UniTask (предпочтительно)
+// With UniTask (preferred)
 await UniTask.Delay(TimeSpan.FromSeconds(1), cancellationToken: cts.Token);
 await sceneLoader.LoadSceneAsync("Game").ToUniTask();
 ```
 
-### Часто используемые пакеты
+### Common packages
 
-Перед реализацией фичи проверять: (1) встроенные возможности Unity; (2) уже установленные пакеты в проекте; (3) при необходимости — **поиск на GitHub** (unity, механика, library, UPM) и **в интернете** (готовые механики, туториалы, форумы Unity, Asset Store, статьи). Ниже — пакеты, которые часто используют в Unity-проектах; при выборе «искать готовое» учитывать их.
+Before implementing a feature check: (1) Unity built-in; (2) packages already in project; (3) if needed — **search GitHub** (unity, mechanic, library, UPM) and **web** (tutorials, Unity Forums, Asset Store). Below — packages often used in Unity projects.
 
-| Назначение | Пакет | Кратко |
-|------------|--------|--------|
-| **Async/await** | **UniTask** (Cysharp) | Асинхронность без аллокаций, отмена, await для AsyncOperation. UPM: `com.cysharp.unitasks` или Git. Рекомендуется для всех режимов. |
-| **Твины и анимации** | **DOTween** (Demigiant) | Быстрые твины для transform, UI, значений. Asset Store или [dotween.demigiant.com](https://dotween.demigiant.com/). Альтернатива: встроенный Animator / Animation для сложных клипов. |
-| **JSON** | **Newtonsoft.Json** (Json.NET) | Сериализация/десериализация. В Unity часто уже есть (Unity 2022+ встроен частично). NuGet или UPM. |
-| **DI / IoC** | **VContainer**, **Zenject** | Внедрение зависимостей для больших проектов (Профи). Не обязательны для прототипа и малых игр. |
-| **Локализация** | **Unity Localization** | Пакет `com.unity.localization` — таблицы, ключи, подмена текстов. Встроенный вариант. |
+| Purpose | Package | Brief |
+|---------|---------|-------|
+| **Async/await** | **UniTask** (Cysharp) | Async, no alloc, cancellation, await AsyncOperation. UPM: `com.cysharp.unitasks` or Git. Recommended all modes. |
+| **Tweens** | **DOTween** (Demigiant) | Fast tweens for transform, UI, values. Asset Store or [dotween.demigiant.com](https://dotween.demigiant.com/). Alternative: Animator/Animation. |
+| **JSON** | **Newtonsoft.Json** | Serialization. Often already in Unity (2022+). NuGet or UPM. |
+| **DI / IoC** | **VContainer**, **Zenject** | DI for large projects (Pro). Not required for prototype/small games. |
+| **Localization** | **Unity Localization** | Package `com.unity.localization` — tables, keys, text swap. |
 
-Не устанавливать пакеты «на всякий случай» — только под задачу. Если пользователь явно попросил конкретную библиотеку — следовать запросу. **Как добавить** UniTask, DOTween, Newtonsoft.Json, Unity Localization (и при необходимости VContainer, Cinemachine, Input System) — пошагово в [libraries-setup.md](libraries-setup.md).
+Do not install packages “just in case” — only for a task. **How to add** UniTask, DOTween, Newtonsoft.Json, Unity Localization: [libraries-setup.md](libraries-setup.md).
 
-**Где искать готовое:** GitHub (по запросам вроде `unity 2d movement`, `unity inventory system`, `unity ui toolkit`; репозитории с открытым кодом и UPM); поиск в интернете — туториалы, [Unity Forums](https://forum.unity.com/), [Asset Store](https://assetstore.unity.com/), статьи и примеры механик.
+**Where to find ready-made:** GitHub (e.g. `unity 2d movement`, `unity inventory system`, `unity ui toolkit`); web — tutorials, [Unity Forums](https://forum.unity.com/), [Asset Store](https://assetstore.unity.com/).
 
-### Unity UI (создание в runtime)
+### Unity UI (runtime creation)
 
-По скиллу **весь UI только через UI Builder** (UXML/USS, UIDocument), см. [ui-builder.md](ui-builder.md). Динамические элементы — через UI Toolkit API (добавление/удаление VisualElement в коде). Ниже — **исключительно для legacy** (например, версия Unity без UI Builder): создание UI программно на Canvas. В обычной разработке Canvas не использовать.
+Per this skill **all UI only via UI Builder** (UXML/USS, UIDocument), see [ui-builder.md](ui-builder.md). Dynamic elements via UI Toolkit API. Below — **legacy only** (e.g. Unity without UI Builder): programmatic Canvas. Do not use Canvas in normal workflow.
 
-При создании UI программно на Canvas (только в исключительных случаях) обязательно:
+When creating UI on Canvas (exceptional cases only):
 
-- **EventSystem:** в сцене должен быть объект с `EventSystem` и `StandaloneInputModule` (или `InputSystemUIInputModule` при новом Input System). Если UI создаётся из кода при старте — проверять наличие EventSystem и при отсутствии создавать программно.
-- **Кнопки:** у GameObject кнопки должны быть компоненты `Image` (или другой Graphic) и `Button`. Не забывать добавлять `Button` перед подпиской на `onClick`.
-
----
-
-## Код по режимам
-
-### Прототип
-
-**Цель:** работает = ок. Минимум абстракций, максимум скорости.
-
-**Допустимо:**
-- Вся логика в одном скрипте (если < 100 строк).
-- Прямые ссылки через `[SerializeField]` без архитектуры.
-- `GetComponent<>()` в Start без кеширования (если объектов мало).
-- Магические числа — **кроме настроек** (те в SO).
-- Без XML-документации (кроме неочевидных мест).
-- **Singleton для менеджеров** — свободно (`GameManager.Instance`, `AudioManager.Instance` и т.д.).
-
-**Не допустимо:**
-- Хардкод настроек (скорость, урон) — **только в SO**.
-- `Update` без проверок (бесконечные вычисления без смысла).
-
-**Пример (Прототип):**
-
-```csharp
-public class PlayerController : MonoBehaviour
-{
-    [SerializeField] private PlayerSettings _settings;
-
-    private Rigidbody2D _rb;
-
-    private void Start()
-    {
-        _rb = GetComponent<Rigidbody2D>();
-    }
-
-    private void Update()
-    {
-        float h = Input.GetAxisRaw("Horizontal");
-        _rb.velocity = new Vector2(h * _settings.speed, _rb.velocity.y);
-
-        if (Input.GetKeyDown(KeyCode.Space))
-            _rb.AddForce(Vector2.up * _settings.jumpForce, ForceMode2D.Impulse);
-    }
-}
-```
+- **EventSystem:** scene must have `EventSystem` and `StandaloneInputModule` (or `InputSystemUIInputModule` with new Input System). If UI is created from code at start — ensure EventSystem exists or create it.
+- **Buttons:** button GameObject must have `Image` (or other Graphic) and `Button`. Add `Button` before subscribing to `onClick`.
 
 ---
 
-### Стандартный
+## Code by mode
 
-**Цель:** чистый, читаемый код с разумным разделением.
+### Prototype
 
-**Обязательно:**
-- Отдельные скрипты по ответственности: `PlayerMovement`, `PlayerHealth`, `PlayerCombat`.
-- `[SerializeField]` для всех полей в Inspector.
-- Кеширование компонентов в `Awake`/`Start`.
-- Данные — в SO, ссылки на SO через `[SerializeField]`.
-- Prefabs для повторяемых объектов.
-- XML-документация для публичных методов.
+**Goal:** it works = ok. Minimal abstraction, max speed.
 
-**Рекомендуется:**
-- Events / UnityEvents для связи между системами.
-- UniTask для асинхронности и задержек (см. «Асинхронность и отложенные операции»); при отсутствии UniTask — корутины для простых тайм-зависимых операций.
-- `[Header]`, `[Tooltip]`, `[Range]` в SO для удобства Inspector.
+**Allowed:**
+- All logic in one script (if < 100 lines).
+- Direct references via `[SerializeField]` without architecture.
+- `GetComponent<>()` in Start without caching (if few objects).
+- Magic numbers — **except settings** (those in SO).
+- No XML docs (except non-obvious).
+- **Singleton for managers** — freely (`GameManager.Instance`, `AudioManager.Instance`).
 
-**Пример (Стандартный):**
+**Not allowed:**
+- Hardcoded settings (speed, damage) — **only in SO**.
+- `Update` without checks (endless pointless work).
+- **Namespaces** — do not use; keep scripts in default (global) scope.
 
-```csharp
-/// <summary>
-/// Управление передвижением игрока. Настройки в PlayerData SO.
-/// </summary>
-public class PlayerMovement : MonoBehaviour
-{
-    [SerializeField] private PlayerData _data;
+**Example (Prototype):** *(same code block as in original, comments in code can stay)*
 
-    private Rigidbody2D _rb;
-    private bool _isGrounded;
+### Standard
 
-    private void Awake()
-    {
-        _rb = GetComponent<Rigidbody2D>();
-    }
+**Goal:** clean, readable code with sensible separation.
 
-    private void Update()
-    {
-        HandleMovement();
-        HandleJump();
-    }
+**Required:**
+- Separate scripts per responsibility: `PlayerMovement`, `PlayerHealth`, `PlayerCombat`.
+- `[SerializeField]` for all Inspector fields.
+- Cache components in `Awake`/`Start`.
+- Data in SO, references to SO via `[SerializeField]`.
+- Prefabs for repeated objects.
+- XML docs for public methods.
 
-    private void HandleMovement()
-    {
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        _rb.velocity = new Vector2(horizontal * _data.moveSpeed, _rb.velocity.y);
-    }
+**Recommended:**
+- Events / UnityEvents for cross-system communication.
+- UniTask for async and delays; if no UniTask — coroutines for simple time-based ops.
+- `[Header]`, `[Tooltip]`, `[Range]` on SO for Inspector.
 
-    private void HandleJump()
-    {
-        if (Input.GetKeyDown(KeyCode.Space) && _isGrounded)
-        {
-            _rb.AddForce(Vector2.up * _data.jumpForce, ForceMode2D.Impulse);
-            _isGrounded = false;
-        }
-    }
+**Not allowed:**
+- **Namespaces** — do not use; keep scripts in default (global) scope.
 
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Ground"))
-            _isGrounded = true;
-    }
-}
-```
+### Fast
 
----
+**Goal:** working component code, fast to write, easy to change.
 
-### Быстрый
+**Required:**
+- Components per responsibility (small ones may be combined).
+- Data in SO.
+- Cache components.
 
-**Цель:** рабочий компонентный код, быстро писать, легко модифицировать.
+**Allowed:**
+- Minimal XML docs (only non-obvious).
+- Less strict separation (2 responsibilities in one script if related).
+- **Singleton for managers** — freely.
 
-**Обязательно:**
-- Компоненты по ответственности (но допустимо объединять мелкие).
-- Данные в SO.
-- Кеширование компонентов.
+**Not allowed:**
+- Hardcoded settings.
+- Copy-paste (prefer helper or base class).
+- **Namespaces** — do not use; keep scripts in default (global) scope.
 
-**Допустимо:**
-- Минимум XML-документации (только для неочевидных мест).
-- Менее строгое разделение (2 ответственности в одном скрипте если они связаны).
-- **Singleton для менеджеров** — свободно (`GameManager.Instance`, `UIManager.Instance`, `SpawnManager.Instance` и т.д.).
+### Pro
 
-**Не допустимо:**
-- Хардкод настроек.
-- Копипаст кода (лучше быстрый метод / базовый класс).
+**Goal:** scalable architecture, testable code, extensibility.
 
-**Пример (Быстрый):**
+**Required:**
+- **Interfaces** for key systems (`IDamageable`, `IInteractable`, `ISaveable`).
+- **Services** via ServiceLocator or DI (Zenject / VContainer).
+- **Data vs logic:** SO for data, MonoBehaviour for Unity binding, POCO for pure logic.
+- **Events / Observer** for cross-system communication.
+- **XML docs** for classes, public methods, public fields/properties, interfaces — **required**.
+- **Autotests** (if not disabled): EditMode for logic, PlayMode for integration.
+- **Namespace** by system (only mode where namespaces are used): e.g. `Game.Combat`, `Game.Inventory`, `Game.UI`.
 
-```csharp
-public class PlayerController : MonoBehaviour
-{
-    [SerializeField] private PlayerData _data;
+**Comments — strict:** No plain `//` comments. Code self-documenting. Only allowed: `// TODO:`, `// HACK:` / `// WORKAROUND:`, `// NOTE:` (non-obvious). No “call method”, “increment counter” etc.
 
-    private Rigidbody2D _rb;
-    private int _currentHealth;
-    private bool _isGrounded;
-
-    private void Awake()
-    {
-        _rb = GetComponent<Rigidbody2D>();
-        _currentHealth = _data.maxHealth;
-    }
-
-    private void Update()
-    {
-        float h = Input.GetAxisRaw("Horizontal");
-        _rb.velocity = new Vector2(h * _data.moveSpeed, _rb.velocity.y);
-
-        if (Input.GetKeyDown(KeyCode.Space) && _isGrounded)
-            _rb.AddForce(Vector2.up * _data.jumpForce, ForceMode2D.Impulse);
-    }
-
-    public void TakeDamage(int amount)
-    {
-        _currentHealth -= amount;
-        if (_currentHealth <= 0)
-            GameManager.Instance.GameOver();
-    }
-
-    private void OnCollisionEnter2D(Collision2D col)
-    {
-        if (col.gameObject.CompareTag("Ground"))
-            _isGrounded = true;
-    }
-}
-```
+**Recommended:**
+- State machine for complex behavior (AI, animation).
+- Command pattern for actions (undo/redo, replay).
+- Object pool for frequent create/destroy.
+- Addressables instead of Resources.
+- Assembly Definitions for compile speed.
 
 ---
 
-### Профи
+## Common Unity patterns
 
-**Цель:** масштабируемая архитектура, тестируемый код, расширяемость.
+### Singleton (managers)
 
-**Обязательно:**
-- **Интерфейсы** для ключевых систем (`IDamageable`, `IInteractable`, `ISaveable`).
-- **Сервисы** через ServiceLocator или DI (Zenject / VContainer — по выбору).
-- **Разделение данных и логики:** SO для данных, MonoBehaviour для привязки к Unity, POCO-классы для чистой логики.
-- **Events / Observer Pattern** для связи между системами.
-- **XML-документация (docstring)** для классов, публичных методов, публичных полей/свойств, интерфейсов — **обязательна**.
-- **Автотесты** (если не отключены): EditMode тесты для логики, PlayMode для интеграции.
-- **Namespace** по системам: `Game.Combat`, `Game.Inventory`, `Game.UI`.
+*(Same code block — GameManager Awake pattern.)*
 
-**Комментарии — строгие правила:**
-- **Обычных комментариев (`//`) НЕ писать.** Код самодокументируемый. Имена классов, методов, переменных должны объяснять смысл.
-- **Разрешены только:**
-  - `// TODO:` — задача на будущее, которую нужно не забыть.
-  - `// HACK:` / `// WORKAROUND:` — неочевидное решение, которое выглядит странно, но сделано намеренно (пояснить почему).
-  - `// NOTE:` — критически неочевидная логика, без пометки будет непонятно следующему разработчику.
-  - Комментарии в SO-классах — для пояснения настроек (допустимы `[Tooltip("...")]` или `//` рядом с полем, объясняющие что значит параметр для пользователя).
-- **Запрещено:** `// вызываем метод`, `// увеличиваем счётчик`, `// проверяем условие` и любые очевидные комментарии.
-
-**Рекомендуется:**
-- State Machine для сложного поведения (AI, анимации).
-- Command Pattern для действий (undo/redo, реплей).
-- Object Pool для частого создания/уничтожения.
-- Addressables вместо Resources для загрузки ассетов.
-- Assembly Definitions для ускорения компиляции.
-
-**Пример (Профи):**
-
-```csharp
-namespace Game.Combat
-{
-    /// <summary>
-    /// Компонент здоровья. Реализует IDamageable.
-    /// Данные из HealthData SO.
-    /// </summary>
-    public class HealthComponent : MonoBehaviour, IDamageable
-    {
-        [SerializeField] private HealthData _data;
-
-        private int _currentHealth;
-
-        /// <summary>Вызывается при изменении HP: (current, max).</summary>
-        public event System.Action<int, int> OnHealthChanged;
-
-        /// <summary>Вызывается при смерти (HP <= 0).</summary>
-        public event System.Action OnDeath;
-
-        /// <summary>Текущее здоровье.</summary>
-        public int CurrentHealth => _currentHealth;
-
-        /// <summary>Максимальное здоровье из SO.</summary>
-        public int MaxHealth => _data.maxHealth;
-
-        /// <summary>Жив ли объект.</summary>
-        public bool IsAlive => _currentHealth > 0;
-
-        private void Awake()
-        {
-            _currentHealth = _data.maxHealth;
-        }
-
-        /// <summary>
-        /// Нанести урон. Если HP падает до 0 — вызывает OnDeath.
-        /// </summary>
-        /// <param name="amount">Количество урона (положительное).</param>
-        public void TakeDamage(int amount)
-        {
-            if (!IsAlive) return;
-
-            _currentHealth = Mathf.Max(0, _currentHealth - amount);
-            OnHealthChanged?.Invoke(_currentHealth, _data.maxHealth);
-
-            if (!IsAlive)
-                OnDeath?.Invoke();
-        }
-
-        /// <summary>
-        /// Восстановить здоровье. Не превышает MaxHealth.
-        /// </summary>
-        /// <param name="amount">Количество лечения (положительное).</param>
-        public void Heal(int amount)
-        {
-            if (!IsAlive) return;
-
-            // NOTE: лечение мёртвого объекта игнорируется намеренно — воскрешение через отдельный метод
-            _currentHealth = Mathf.Min(_data.maxHealth, _currentHealth + amount);
-            OnHealthChanged?.Invoke(_currentHealth, _data.maxHealth);
-        }
-    }
-
-    /// <summary>
-    /// Интерфейс для объектов, которым можно нанести урон.
-    /// </summary>
-    public interface IDamageable
-    {
-        /// <summary>Нанести урон.</summary>
-        void TakeDamage(int amount);
-
-        /// <summary>Жив ли объект.</summary>
-        bool IsAlive { get; }
-    }
-}
-```
-
-**Пример SO с пояснениями настроек (допустимые комментарии):**
-
-```csharp
-namespace Game.Combat
-{
-    /// <summary>
-    /// Данные здоровья для компонента HealthComponent.
-    /// </summary>
-    [CreateAssetMenu(fileName = "NewHealthData", menuName = "GameData/HealthData")]
-    public class HealthData : ScriptableObject
-    {
-        [Tooltip("Максимальное здоровье при спавне")]
-        public int maxHealth = 100;
-
-        [Tooltip("Время неуязвимости после получения урона (сек)")]
-        public float invincibilityDuration = 0.5f;
-
-        // Множитель урона от стихий (1.0 = нормальный, 2.0 = двойной)
-        [Tooltip("Множитель входящего урона от стихий")]
-        public float elementalDamageMultiplier = 1f;
-    }
-}
-```
-
-**Пример теста (Профи):**
-
-```csharp
-namespace Game.Tests
-{
-    using NUnit.Framework;
-    using Game.Combat;
-
-    [TestFixture]
-    public class HealthComponentTests
-    {
-        [Test]
-        public void TakeDamage_ReducesHealth()
-        {
-            // Arrange — создать HealthData SO, установить maxHealth = 100
-            // Act — TakeDamage(30)
-            // Assert — CurrentHealth == 70
-        }
-
-        [Test]
-        public void TakeDamage_BelowZero_TriggersOnDeath()
-        {
-            // Arrange — maxHealth = 50
-            // Act — TakeDamage(60)
-            // Assert — IsAlive == false, OnDeath вызван
-        }
-    }
-}
-```
-
----
-
-## Общие паттерны Unity
-
-### Singleton (для менеджеров)
-
-```csharp
-public class GameManager : MonoBehaviour
-{
-    public static GameManager Instance { get; private set; }
-
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
-    }
-}
-```
-
-**Режимы:** Прототип/Быстрый — Singleton свободно, основной способ доступа к менеджерам. Стандартный — допустим. Профи — предпочитать ServiceLocator/DI.
+**Modes:** Prototype/Fast — Singleton freely. Standard — ok. Pro — prefer ServiceLocator/DI.
 
 ### Object Pool
 
-```csharp
-public class ObjectPool : MonoBehaviour
-{
-    [SerializeField] private GameObject _prefab;
-    [SerializeField] private int _initialSize = 10;
+*(Same code block — ObjectPool Get/Return.)*
 
-    private Queue<GameObject> _pool = new Queue<GameObject>();
-
-    private void Start()
-    {
-        for (int i = 0; i < _initialSize; i++)
-            AddToPool(CreateInstance());
-    }
-
-    public GameObject Get(Vector3 position)
-    {
-        var obj = _pool.Count > 0 ? _pool.Dequeue() : CreateInstance();
-        obj.transform.position = position;
-        obj.SetActive(true);
-        return obj;
-    }
-
-    public void Return(GameObject obj)
-    {
-        obj.SetActive(false);
-        _pool.Enqueue(obj);
-    }
-
-    private GameObject CreateInstance()
-    {
-        var obj = Instantiate(_prefab, transform);
-        obj.SetActive(false);
-        return obj;
-    }
-}
-```
-
-**Режимы:** Прототип — не нужен. Стандартный — если объекты спавнятся часто. Быстрый/Профи — рекомендуется.
+**Modes:** Prototype — not needed. Standard — if objects spawn often. Fast/Pro — recommended.
 
 ---
 
-## Логирование (Debug.Log)
+## Logging (Debug.Log)
 
-Объём логирования зависит от режима. Логи помогают отлаживать и понимать поведение игры.
+Volume depends on mode. Logs help debug and understand behavior.
 
-| Режим | Логирование | Что логировать |
-|-------|-------------|----------------|
-| **Прототип** | Минимум или без логов | Только при отладке проблемы. Можно без логов. |
-| **Быстрый** | Умеренно | Ошибки (`LogError`), предупреждения (`LogWarning`). `Log` — по необходимости. |
-| **Стандартный** | **Обильно (уместно)** | Ключевые события, смена состояний, ошибки, предупреждения. |
-| **Профи** | **Обильно (уместно)** | Ключевые события, смена состояний, входящие параметры, ошибки, предупреждения. |
+| Mode | Logging | What to log |
+|------|---------|-------------|
+| **Prototype** | Minimal or none | Only when debugging. No logs is ok. |
+| **Fast** | Moderate | Errors (`LogError`), warnings (`LogWarning`). `Log` as needed. |
+| **Standard** | **Plenty (when relevant)** | Key events, state changes, errors, warnings. |
+| **Pro** | **Plenty (when relevant)** | Key events, state changes, input params, errors, warnings. |
 
-### Формат логов (все режимы)
+### Log format (all modes)
 
 ```
-Debug.Log($"[Фича.Класс.Метод] комментарий");
+Debug.Log($"[Feature.Class.Method] comment");
 ```
 
-- **Фича** — название системы/фичи (`Combat`, `Spawn`, `UI`, `Save`, `Inventory`, `Input`).
-- **Класс** — имя класса (`WaveSpawner`, `PlayerCombat`, `SaveSystem`).
-- **Метод** — имя метода (`StartNextWave`, `TakeDamage`, `Save`).
-- **Комментарий** — что произошло + параметры.
+- **Feature** — system/feature name (`Combat`, `Spawn`, `UI`, `Save`, `Inventory`, `Input`).
+- **Class** — class name (`WaveSpawner`, `PlayerCombat`, `SaveSystem`).
+- **Method** — method name (`StartNextWave`, `TakeDamage`, `Save`).
+- **Comment** — what happened + params.
 
-### Примеры формата
-
-```csharp
-Debug.Log($"[Spawn.WaveSpawner.StartNextWave] Wave {_currentWave}: {count} enemies, interval={interval}s");
-Debug.Log($"[Combat.PlayerCombat.TakeDamage] Damage={amount}, HP={_currentHealth}/{_data.maxHealth}");
-Debug.Log($"[UI.HUDController.UpdateScore] Score updated: {score}");
-Debug.LogError($"[Inventory.Inventory.AddItem] Item {itemId} not found in database");
-Debug.LogWarning($"[Save.SaveSystem.Load] Save file corrupted, using defaults");
-Debug.Log($"[Data.DataLoader.LoadEnemies] Loaded {count} enemies from SO");
-```
-
-### Что логировать (Стандартный и Профи)
-
-- **Инициализация:** `[Spawn.EnemySpawner.SpawnEnemy] Spawned {name} at {pos}`.
-- **Смена состояния:** `[Combat.BattleManager.NextTurn] Turn changed: {turn}`.
-- **Действия игрока:** `[Combat.PlayerCombat.Attack] Damage={dmg}, target={name}`.
-- **Ошибки:** `[Inventory.Inventory.AddItem] Item {id} not found`.
-- **Предупреждения:** `[Save.SaveSystem.Load] File corrupted, using defaults`.
-- **Загрузка данных:** `[Data.DataLoader.LoadEnemies] Loaded {count} from SO`.
-
-### Правила оформления
-
-- **Формат `[Фича.Класс.Метод]`** — обязателен во всех режимах где есть логи. Позволяет фильтровать в консоли Unity по фиче, классу или методу.
-- **Интерполяция строк** `$"..."` — для читаемости.
-- `Debug.LogError` — для ошибок (красный в консоли).
-- `Debug.LogWarning` — для подозрительных ситуаций (жёлтый).
-- `Debug.Log` — для информации.
-- **Не логировать в Update каждый кадр** (кроме отладки) — это убивает производительность.
-- В **Прототипе** формат тот же, просто логов меньше (или нет).
-
-### Пример (Стандартный / Профи)
-
-```csharp
-public class WaveSpawner : MonoBehaviour
-{
-    [SerializeField] private WaveData _waveData;
-
-    private int _currentWave;
-
-    public void StartNextWave()
-    {
-        _currentWave++;
-        Debug.Log($"[Spawn.WaveSpawner.StartNextWave] Wave {_currentWave}: {_waveData.enemyCount} enemies, interval={_waveData.spawnInterval}s");
-        StartCoroutine(SpawnWave());
-    }
-
-    private IEnumerator SpawnWave()
-    {
-        for (int i = 0; i < _waveData.enemyCount; i++)
-        {
-            SpawnEnemy();
-            yield return new WaitForSeconds(_waveData.spawnInterval);
-        }
-        Debug.Log($"[Spawn.WaveSpawner.SpawnWave] Wave {_currentWave} complete");
-    }
-
-    private void SpawnEnemy()
-    {
-        if (_waveData.enemyPrefab == null)
-        {
-            Debug.LogError("[Spawn.WaveSpawner.SpawnEnemy] enemyPrefab is null in WaveData!");
-            return;
-        }
-        var enemy = Instantiate(_waveData.enemyPrefab, GetSpawnPosition(), Quaternion.identity);
-        Debug.Log($"[Spawn.WaveSpawner.SpawnEnemy] Spawned at {enemy.transform.position}");
-    }
-}
-```
-
-### Пример (Прототип — минимум)
-
-```csharp
-public class PlayerController : MonoBehaviour
-{
-    [SerializeField] private PlayerSettings _settings;
-
-    private void Update()
-    {
-        float h = Input.GetAxisRaw("Horizontal");
-        GetComponent<Rigidbody2D>().velocity = new Vector2(h * _settings.speed, GetComponent<Rigidbody2D>().velocity.y);
-    }
-}
-```
-
-Никаких логов — и это нормально для прототипа.
+Use `$"..."` for readability. `Debug.LogError` for errors, `Debug.LogWarning` for warnings. **Do not log every frame in Update** (except when debugging). In Prototype same format, fewer logs (or none).
 
 ---
 
-## Чеклист качества кода
+## Code quality checklist
 
-| Проверка | Прототип | Стандартный | Быстрый | Профи |
-|----------|----------|-------------|---------|-------|
-| Настройки в SO | ✅ | ✅ | ✅ | ✅ |
-| Одна ответственность | — | ✅ | ≈ | ✅ |
-| XML-документация (docstring) | — | ✅ public | Минимум | ✅ классы + public методы/поля |
-| Обычные комментарии `//` | Допустимы | Допустимы | Допустимы | ❌ Запрещены (кроме TODO/HACK/NOTE и SO) |
-| Логирование (Debug.Log) | Минимум / без | ✅ Обильно | Умеренно | ✅ Обильно |
-| SerializeField (не public) | — | ✅ | ✅ | ✅ |
-| Кеширование компонентов | — | ✅ | ✅ | ✅ |
-| Интерфейсы | — | — | — | ✅ |
+| Check | Prototype | Standard | Fast | Pro |
+|-------|-----------|----------|------|-----|
+| Settings in SO | ✅ | ✅ | ✅ | ✅ |
+| Single responsibility | — | ✅ | ≈ | ✅ |
+| XML docs | — | ✅ public | Min | ✅ classes + public |
+| Plain `//` comments | Allowed | Allowed | Allowed | ❌ No (except TODO/HACK/NOTE and SO) |
+| Logging | Min / none | ✅ Plenty | Moderate | ✅ Plenty |
+| SerializeField (not public) | — | ✅ | ✅ | ✅ |
+| Cache components | — | ✅ | ✅ | ✅ |
+| Interfaces | — | — | — | ✅ |
 | Namespace | — | — | — | ✅ |
-| Автотесты | — | — | — | ✅ |
-| Singleton для менеджеров | ✅ Свободно | Допустим | ✅ Свободно | ServiceLocator/DI |
-| Events вместо прямых ссылок | — | ✅ | ≈ | ✅ |
-| Object Pool (если нужен) | — | ≈ | ✅ | ✅ |
+| Autotests | — | — | — | ✅ |
+| Singleton for managers | ✅ Free | Ok | ✅ Free | ServiceLocator/DI |
+| Events vs direct refs | — | ✅ | ≈ | ✅ |
+| Object Pool (if needed) | — | ≈ | ✅ | ✅ |
 
-### Допустимые комментарии по режимам
+### Allowed comments by mode
 
-| Тип | Прототип | Стандартный | Быстрый | Профи |
-|-----|----------|-------------|---------|-------|
-| XML-документация (`/// <summary>`) | — | public методы | Минимум | Классы + все public |
-| Обычные `//` | Да | Да | Да | **Нет** |
-| `// TODO:` | Да | Да | Да | Да |
-| `// HACK:` / `// WORKAROUND:` | Да | Да | Да | Да |
-| `// NOTE:` (неочевидное место) | Да | Да | Да | Да |
-| Пояснения в SO (`[Tooltip]` / `//`) | Да | Да | Да | Да |
+| Type | Prototype | Standard | Fast | Pro |
+|------|-----------|----------|------|-----|
+| XML (`/// <summary>`) | — | public methods | Min | Classes + all public |
+| Plain `//` | Yes | Yes | Yes | **No** |
+| `// TODO:` | Yes | Yes | Yes | Yes |
+| `// HACK:` / `// WORKAROUND:` | Yes | Yes | Yes | Yes |
+| `// NOTE:` | Yes | Yes | Yes | Yes |
+| SO explanations (`[Tooltip]` / `//`) | Yes | Yes | Yes | Yes |
