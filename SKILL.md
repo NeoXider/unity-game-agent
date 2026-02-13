@@ -39,7 +39,12 @@ Briefly:
 
 ## Starting a new game (from scratch)
 
-- **First question to user (always):**  
+- **First question to user (always, mandatory):**
+  - "Choose mode: **prototype / fast / standard / pro**."
+  - Do not ask cycle/settings/MCP before user picks one of the 4 modes.
+  - After mode selection, read and follow the corresponding file in `modes/`.
+
+- **Second question to user (always):**  
   "Use **full skill cycle** (settings → docs → plan → implementation) or **just do the current task** without full onboarding?"
   - If **full skill cycle** — follow the rules below.
   - If **direct task** — ask only minimal context for the current task; do not overload with settings.
@@ -47,6 +52,10 @@ Briefly:
 - **At start request two blocks:**
   1. **Settings** — everything that goes into `Docs/DEV_CONFIG.md`: mode, platform(s), orientation, style, resolution, input, toggles (clarifying questions, search ready solutions, ComfyUI, QA per feature, final QA checklist, **Auto mode**). **Auto mode (save time):** ask if desired — when on, agent works as autonomously as possible and batches questions/check requests at the end. For UI separately ask **design source** (screenshots/mockup/ref). If design is from Figma — ask user for export (screenshots, specs, SVG/PNG, code snippet), do not require Figma MCP. Use structured request (AskQuestion or clear list).
   2. **Game design** — asked separately: game idea, mechanics, screens (to fill `GAME_DESIGN.md`).
+- **MCP decision is mandatory at start:** ask explicitly "Use Unity MCP on this stage or work without MCP/fallback mode?" and record the choice in `Docs/DEV_CONFIG.md` and `Docs/DEV_PLAN.md`.
+- **QA decision is mandatory at start:** ask explicitly and record in `Docs/DEV_CONFIG.md`:
+  - "QA per feature: on/off?"
+  - "Final QA checklist before handoff: on/off?"
 - **Planning in Plan mode:** planning (outline → task plan, write to `GAME_DESIGN.md` and `DEV_PLAN.md`) in Cursor **Plan mode**: agent gathers data, forms implementation plan, user confirms plan, then move to implementation.
 
 ### Task size triage (before start)
@@ -59,8 +68,9 @@ Briefly:
 
 ## Dev mode
 
-Rule: **before starting** always ask for settings (including mode) and show [MODE_CHOICE.md](MODE_CHOICE.md).  
+Rule: **before starting** always ask for mode from 4 options (`prototype`, `fast`, `standard`, `pro`) and show [MODE_CHOICE.md](MODE_CHOICE.md).  
 After choice — read the mode file from `modes/` and follow it.
+Only then ask cycle/settings/MCP.
 
 Common for all modes:
 - **All settings and data in ScriptableObject** (NpcData, UiData, GameFightData, etc.).
@@ -80,13 +90,52 @@ Common for all modes:
 When **"full skill cycle"** is selected.
 
 Skeleton (details in `modes/*` and [reference.md](reference.md)):
-1. **Request settings and game design** — DEV_CONFIG and game idea (GAME_DESIGN). See "Starting a new game".
-2. Clarifying questions (if on and required by mode).
-3. Outline → write to `GAME_DESIGN.md`.
-4. **Plan (in Plan mode)** → form and write to `DEV_PLAN.md`; user confirms plan before implementation.
-5. **Install libraries** — before implementation agent installs per **[tools/libraries-setup.md](tools/libraries-setup.md)**: UniTask, DOTween, Newtonsoft.Json (and rest from that file). Do not start implementation until install done (or confirmed packages already present/not needed).
-6. Implementation by tasks/features → update `DEV_STATE.md` and iteration log.
-7. Check (per mode) + required pre-handoff check (Play Mode + `read_console`) + QA per DEV_CONFIG.
+1. **Request mode selection** (one of 4: `prototype`, `fast`, `standard`, `pro`) and record in docs.
+2. **Request settings and game design** — DEV_CONFIG and game idea (GAME_DESIGN). See "Starting a new game".
+3. **Request Unity MCP decision** (use MCP / no MCP / try + fallback), and include it into plan/docs.
+4. **Request QA decision** (QA per feature on/off, final QA on/off), and include it into `DEV_CONFIG.md`.
+5. Clarifying questions (if on and required by mode).
+6. Outline → write to `GAME_DESIGN.md`.
+7. **Plan (in Plan mode)** → form and write to `DEV_PLAN.md`; user confirms plan before implementation.
+8. **MCP preflight gate** (mandatory if user selected `use MCP`):
+   - verify Unity MCP connection and core commands availability before coding;
+   - if MCP is down, try to set up/fix it first;
+   - if still unavailable, explicitly ask user permission to continue without MCP.
+9. **Install libraries** — before implementation agent installs per **[tools/libraries-setup.md](tools/libraries-setup.md)**: UniTask, DOTween, Newtonsoft.Json (and rest from that file). Do not start implementation until install done (or confirmed packages already present/not needed).
+10. **Docs baseline gate** — verify and create required docs/log folders/files before coding.
+11. Implementation by tasks/features → update `DEV_STATE.md` and iteration log.
+12. Check (per mode) + required pre-handoff check (Play Mode + `read_console`) + QA per DEV_CONFIG.
+
+### Plan approval gate (mandatory)
+
+After creating/updating the plan and before implementing features/todos, the agent must explicitly ask for user approval and point to the plan file.
+
+Required behavior:
+- Ask a direct confirmation question and include plan path, e.g. `Docs/DEV_PLAN.md` (or current generated plan file path).
+- If user says **yes/approve**: start implementation.
+- If user says **no/not yet**: ask what to change, update plan/docs first, then request approval again.
+- Do not start implementation while plan is not explicitly approved.
+
+## Plan mode protocol (explicit)
+
+When Cursor is in **Plan mode**, the agent must produce a concrete implementation structure before coding.
+
+Required output structure in Plan mode:
+1. **Scope and assumptions** (what is in/out for current iteration).
+2. **Reuse map** (what ready scripts/systems are reused as-is, what wrappers are needed, what is custom code).
+3. **Architecture split by folders/files** (Domain/App/Infrastructure/Presentation or chosen mode architecture).
+4. **Step-by-step tasks** with done criteria for each step.
+5. **Validation plan** (PlayMode checks, console checks, screenshots, QA toggles).
+
+Mandatory Plan mode actions:
+- Write/update `Docs/GAME_DESIGN.md` (outline).
+- Write/update `Docs/DEV_PLAN.md` (task plan with stages).
+- Keep `Docs/DEV_STATE.md` minimal and current after moving to implementation.
+- Do not implement code until the user confirms the plan.
+- Explicitly ask user if the plan in `Docs/DEV_PLAN.md` is approved before starting feature/todo implementation.
+- If scope/requirements changed during discussion, update `Docs/DEV_PLAN.md` before implementation (no stale plan).
+
+For game projects with existing framework/tools, the plan must explicitly list reuse decisions first (framework pages/UI managers, card/deck systems, save systems, etc.), then only add missing logic.
 
 If **"direct task"** — use simplified flow:
 1. Clarify goal and done criteria.
@@ -99,6 +148,35 @@ If **"direct task"** — use simplified flow:
 All memory and log files — **in `Docs/`**: `Docs/DEV_CONFIG.md`, `Docs/GAME_DESIGN.md`, `Docs/DEV_STATE.md`, `Docs/DEV_PLAN.md`, `Docs/AGENT_MEMORY.md`, `Docs/ARCHITECTURE.md`, `Docs/DEV_LOG/`, `Docs/Screenshots/`. Do not create them in project root. Read order, templates, rules — in [reference.md](reference.md).  
 **DEV_STATE** stays small; DEV_PLAN is full plan; iteration log file name **strictly** with date and time (`iteration-NN-YYYYMMDD-HHMM.md`).
 
+### Docs baseline gate (mandatory, always)
+
+Before implementation starts, agent must verify Docs baseline exists in project and create missing files/folders from templates.
+
+Required baseline:
+- `Docs/DEV_CONFIG.md`
+- `Docs/GAME_DESIGN.md`
+- `Docs/DEV_PLAN.md`
+- `Docs/DEV_STATE.md`
+- `Docs/AGENT_MEMORY.md`
+- `Docs/ARCHITECTURE.md`
+- `Docs/UI_BRIEF.md`
+- `Docs/DEV_LOG/iteration-NN-YYYYMMDD-HHMM.md` (at least one iteration file)
+- `Docs/Screenshots/iter-01/` (or current iteration folder)
+
+Rules:
+- If any baseline item is missing, create it immediately before coding.
+- If scope/settings changed, update relevant docs before continuing (`DEV_CONFIG`, `DEV_PLAN`, `DEV_STATE`, log).
+- Do not report feature implementation complete without docs/log updates.
+
+### Bootstrap scripts (safe usage)
+
+- Prefer:
+  - `setup_project.bat "<project-root>"`
+  - `setup_source_folders.bat "<project-root>"`
+- If no path is passed, scripts try current working directory.
+- Scripts validate Unity root (`Assets` + `ProjectSettings`) before creating files.
+- Never rely on relative traversal from skill folder for target project selection.
+
 ### Docs/DEV_STATE.md format
 
 - **Emoji and structure (required):** use sections with emoji: 🧠 Context · ⚙️ In progress · ⏭️ Next tasks · ⚠️ Blockers · 📸 Last screenshot · 📈 Progress · 📊 Info. At top — **Legend** (🧭): status 🟦 in progress, 🟨 review, 🟥 blocker, 🟩 done; markers `[x]` done, `[ ]` todo, `←` current step.
@@ -108,7 +186,14 @@ All memory and log files — **in `Docs/`**: `Docs/DEV_CONFIG.md`, `Docs/GAME_DE
 
 ## MCP use
 
-Unity MCP and ComfyUI are accelerators. **If MCP unavailable** — ask user: help set up MCP or start without (develop via code/files). Do not block development: if user declines setup — continue without MCP.
+Unity MCP and ComfyUI are accelerators.
+
+If user selected `use MCP`, treat MCP as required preflight:
+- before implementation, verify MCP connection and required editor checks workflow;
+- if unavailable, try to configure/fix MCP first;
+- only after explicit user permission continue without MCP.
+
+If user selected `no MCP`, continue file/code workflow without MCP.
 
 Details: [tools/unity-mcp.md](tools/unity-mcp.md), [tools/comfyui.md](tools/comfyui.md).
 
@@ -166,12 +251,15 @@ Briefly (details in [tools/code-writing.md](tools/code-writing.md) and `modes/*`
 - **Do not start without choosing launch mode** — first choose: "full skill cycle" or "direct task". For full cycle ask settings and game design; for direct task ask only minimal context.
 - **Do not start implementing a feature without checking ready-made** — check Unity built-in and installed packages first; with Reuse-first on — search GitHub and web for mechanics/libraries. Do not write from scratch what exists in project, package, or open source.
 - **Do not skip pre-handoff check** — before handoff always Play Mode + `read_console` + reviewed screenshot.
+- **Do not skip MCP setup when user requested it** — if user said `use MCP`, first try to configure/fix MCP and verify it works; do not silently continue as if checks were done.
 - **Do not add global ServiceLocator in Prototype/Fast without clear reason** — prefer direct refs and simple composition.
 - **Do not require Figma MCP** — ask user for design reference and implement via UI Builder; if Figma mockup exists, ask for exported materials.
 - **Do not create memory files in root** — only in `Docs/` (DEV_CONFIG, GAME_DESIGN, DEV_STATE, DEV_PLAN, AGENT_MEMORY). Do not skip `Docs/AGENT_MEMORY.md`.
 - **Do not create log file without time in name** — only `Docs/DEV_LOG/iteration-NN-YYYYMMDD-HHMM.md`, not `iteration-NN.md`.
 - No hardcoded settings — all in SO.
 - Do not forget to update Docs/DEV_STATE, Docs/DEV_PLAN and iteration file in Docs/DEV_LOG.
+- Do not run with stale docs: when scope changes, update `Docs/DEV_PLAN.md` and `Docs/DEV_CONFIG.md` before coding.
+- Do not skip docs bootstrap: never start coding if `Docs baseline gate` is incomplete.
 - Do not bloat DEV_STATE (keep it small).
 - Do not block development on missing MCP; if MCP unavailable — ask: help set up or start without.
 - **Do not forget to save scene** after changes via Unity MCP (`manage_scene` action=save).
