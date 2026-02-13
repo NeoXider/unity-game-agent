@@ -36,6 +36,33 @@ Feature is done only when all are met:
 
 **Location: all memory and log files in `Docs/`.** Do not create DEV_CONFIG, GAME_DESIGN, DEV_STATE, DEV_PLAN, AGENT_MEMORY, ARCHITECTURE in project root; only `Docs/DEV_CONFIG.md`, `Docs/GAME_DESIGN.md`, etc.
 
+### Machine-readable profile
+
+Use `Docs/DEV_PROFILE.json` as persistent source of truth to avoid repeated intake questions.
+
+Recommended minimal schema:
+
+```json
+{
+  "dev_mode": "standard",
+  "skill_mode": "full_cycle",
+  "ui_mode": "enabled",
+  "ui_stack": "ugui",
+  "mcp_mode": "use",
+  "qa_per_feature": true,
+  "qa_final": true,
+  "screenshot_policy": "per_feature",
+  "reuse_first": true,
+  "library_policy": "discover_before_plan",
+  "project_frameworks": ["NeoxiderPages", "Neo.Cards"]
+}
+```
+
+Session start rule:
+- read profile first;
+- ask only delta questions;
+- update profile after approved changes.
+
 **On new session start** the agent reads files in this order (paths relative to project root):
 
 | File | Purpose | Size | When to update | Read at start |
@@ -117,6 +144,7 @@ When creating project from scratch the agent **must** create in **Docs/** (not i
 | `Docs/DEV_PLAN.md` | Task plan (after Plan mode) |
 | **`Docs/AGENT_MEMORY.md`** | **Required.** Long-term memory (empty from template or with first entry). Do not skip. |
 | `Docs/ARCHITECTURE.md` | As needed (Standard/Pro) |
+| `Docs/DEV_PROFILE.json` | Machine-readable persistent settings/profile |
 | Folder `Docs/DEV_LOG/` | For iteration files |
 | Folder `Docs/Screenshots/` | For screenshots by iteration (agent must review every screenshot) |
 | First log file | `Docs/DEV_LOG/iteration-01-YYYYMMDD-HHMM.md` (current date and time) |
@@ -180,6 +208,44 @@ Optional: space for QA comments after block.
 
 - Agent fills **“Agent check”** from own check (played, screenshots).
 - Agent leaves **“QA check”** empty and explicitly asks QA to fill after check (e.g. at top or end of file).
+
+---
+
+## Library Discovery Report template
+
+Create before plan approval (`discovery` state).
+
+```markdown
+# Library Discovery Report
+
+## Existing in project
+- [Library/System] — version / location / usage
+
+## Candidate solutions
+| Option | Source | Fits requirements | Risks | Decision |
+|--------|--------|-------------------|-------|----------|
+| Unity built-in ... | Built-in | Yes/No | ... | Use/Skip |
+| Package ... | UPM/GitHub/Asset Store | Yes/No | ... | Use/Skip |
+
+## Reuse Decision Matrix
+| Feature | Reuse option | Why chosen | Fallback |
+|---------|--------------|------------|----------|
+| ... | ... | ... | ... |
+```
+
+---
+
+## Iteration gate checklist (mandatory)
+
+Before moving to next feature/block:
+
+- [ ] Implement step done.
+- [ ] Self-check done.
+- [ ] Play Mode check done.
+- [ ] `read_console` checked (no new errors).
+- [ ] `Docs/DEV_STATE.md` updated.
+- [ ] `Docs/DEV_LOG/iteration-*.md` updated.
+- [ ] Screenshot saved/reviewed if policy is enabled.
 
 ---
 

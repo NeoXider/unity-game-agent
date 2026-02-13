@@ -12,7 +12,7 @@ Recommendations for using tools during Unity game development. Depth and frequen
 | **ComfyUI** | Visual asset generation: sprites, textures, backgrounds, icons | [comfyui.md](comfyui.md) |
 | **Design refs** | UI reference source (screenshots/mockups/style guide; Figma export if available) | [ui-builder.md](ui-builder.md) |
 | **Unity Editor** | Editor workflow: scenes, inspector, profiler, project settings | [unity-editor.md](unity-editor.md) |
-| **UI Builder** | UI only via UI Toolkit (UXML/USS); patterns, anti-patterns | [ui-builder.md](ui-builder.md) |
+| **UI Builder** | UI Toolkit path (UXML/USS) when selected by project/mode | [ui-builder.md](ui-builder.md) |
 | **Architecture by mode** | Architecture levels, scene hierarchy template, when bootstrap/DI/ServiceLocator is acceptable | [architecture-by-mode.md](architecture-by-mode.md) |
 | **C# / Code** | Code style: patterns, SO, async (UniTask), common packages, architecture — varies by mode | [code-writing.md](code-writing.md) |
 | **Core mechanics** | Core mechanics (input, movement, health, combat) for reusability and quick iteration without full rewrites | [core-mechanics.md](core-mechanics.md) |
@@ -31,20 +31,20 @@ Recommendations for using tools during Unity game development. Depth and frequen
 
 ## Tool usage by mode
 
-| Tool | Prototype | Standard | Fast | Pro |
-|------|-----------|----------|------|-----|
-| **Unity MCP** | Batch: Play Mode + console + screenshot at stage end/before handoff | Per feature: state, Play Mode, screenshot, console | Per feature blocks: Play/console/screenshot + before handoff | Full: per task/feature, batch_execute + pre-handoff check |
-| **ComfyUI** | Not needed (placeholders) | Optional: sprites for final | Optional | Full: all assets via generation |
-| **Design refs** | Minimal: 1–2 screen refs | Prefer: key screen mockups | Minimal: structure and target UX | Required: full UI kit/mockups |
-| **Unity Editor** | Minimal: scene + Play | Standard: scene, inspector, Play | Standard | Full: profiler, analysis, settings |
-| **UI Builder** | UI only via UI Builder (UXML/USS, UIDocument) | Same | Same | Same |
-| **C# / Code** | Hardcode + SO | Moderate: components + SO | Components + SO | Architecture + SO + tests + interfaces |
-| **Core mechanics** | When laying core: SO + separate components | When extending: events, input/damage interfaces | Same | Full contracts (IInput, IDamageReceiver), Core game-agnostic |
+| Tool | Prototype | Standard | Fast | Pro | NoUI |
+|------|-----------|----------|------|-----|------|
+| **Unity MCP** | Batch: Play Mode + console + screenshot at stage end/before handoff | Per feature: state, Play Mode, screenshot, console | Per feature blocks: Play/console/screenshot + before handoff | Full: per task/feature, batch_execute + pre-handoff check | Per feature/block checks, no UI pipeline |
+| **ComfyUI** | Not needed (placeholders) | Optional: sprites for final | Optional | Full: all assets via generation | Optional |
+| **Design refs** | Minimal: 1–2 screen refs | Prefer: key screen mockups | Minimal: structure and target UX | Required: full UI kit/mockups | Not required by default |
+| **Unity Editor** | Minimal: scene + Play | Standard: scene, inspector, Play | Standard | Full: profiler, analysis, settings | Standard |
+| **UI Builder** | If UI Toolkit selected | If UI Toolkit selected | If UI Toolkit selected | If UI Toolkit selected | Skipped by default |
+| **C# / Code** | Hardcode + SO | Moderate: components + SO | Components + SO | Architecture + SO + tests + interfaces | Components + SO, no UI tasks |
+| **Core mechanics** | When laying core: SO + separate components | When extending: events, input/damage interfaces | Same | Full contracts (IInput, IDamageReceiver), Core game-agnostic | Primary focus |
 
 ---
 
 ## When to use a tool
 
-> **Use a tool only if it speeds up the outcome in the current mode.** For UI default to UI Builder and ask the user for design refs (Figma export ok). Do not skip autotests in Pro.
+> **Use a tool only if it speeds up the outcome in the current mode.** UI stack must follow project/mode policy (including `no_ui`). Do not skip autotests in Pro.
 
 Details in each tool’s file.

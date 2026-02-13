@@ -1,6 +1,6 @@
 # UI Builder (UI Toolkit) — recommendations
 
-UI Builder is the visual UXML/USS editor for UI Toolkit. Per this skill **all UI is done only via UI Builder** (no Canvas/uGUI).
+UI Builder is the visual UXML/USS editor for UI Toolkit. Use this guide when project/UI mode is `UI Toolkit`.
 
 **Unity docs (current):**
 - [UI Toolkit](https://docs.unity3d.com/Manual/UIElements.html) — intro, UXML, USS, events, runtime.
@@ -11,7 +11,7 @@ UI Builder is the visual UXML/USS editor for UI Toolkit. Per this skill **all UI
 
 ## When to use
 
-- **Always:** UI is **only** via UI Builder (UXML, USS, UIDocument). Do not use Canvas/uGUI.
+- **When UI Toolkit stack is selected:** implement UI via UI Builder (UXML, USS, UIDocument).
 - **Check:** Unity 2021.1+ — UI Builder built-in (Window → UI Toolkit → UI Builder); 2020.x / 2019.4 — package `com.unity.ui.builder`. If the window opens — use it.
 - **Before starting UI:** ask the user for design reference (screenshots, mockup, style guide, exported assets/specs). If none — propose a basic UI shell and agree on screen list.
 
@@ -55,9 +55,9 @@ UI Builder is the visual UXML/USS editor for UI Toolkit. Per this skill **all UI
 
 ---
 
-## Anti-patterns
+## Anti-patterns (for UI Toolkit mode)
 
-- **Do not use Canvas/uGUI** — all UI via UI Builder (UIDocument + UXML/USS).
+- **Do not mix stacks unintentionally** — if current scope is UI Toolkit mode, avoid partial Canvas/uGUI unless explicitly required.
 - **Do not use raw Texture2D for UI images by default** — for icons, buttons, backgrounds use sprites; import textures as Sprite (2D and UI), Sprite Mode: Single (Multiple for atlases).
 - **Do not put multiple screens in one UXML** — one UXML per screen/panel.
 - **Do not leave complex UXML without USS** — either screen-specific USS or styles in common.uss.

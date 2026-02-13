@@ -2,7 +2,7 @@
 
 **An agent that drives Unity game development from idea to playable build — without chaos, with a clear plan and checks.**
 
-> **Repository description (GitHub/GitLab):** Cursor skill: agent-driven Unity game development in stages (sketch → plan → implement → verify). Modes: prototype, standard, fast, pro.
+> **Repository description (GitHub/GitLab):** Cursor skill: agent-driven Unity game development in stages (sketch → plan → implement → verify). Modes: prototype, standard, fast, pro, no_ui.
 
 ---
 
@@ -26,7 +26,7 @@ One loop for everything: **sketch → plan → implement → verify → report**
 |------|-------------|
 | **SKILL.md** | Main skill file: cycle, rules, links to the rest. |
 | **reference.md** | Templates for DEV_CONFIG, GAME_DESIGN, UI_BRIEF, DEV_STATE, DEV_PLAN and rules for project “memory”. |
-| **MODE_CHOICE.md** / **MODE_DETAILS.md** | Mode selection (Prototype / Standard / Fast / Pro) and details. |
+| **MODE_CHOICE.md** / **MODE_DETAILS.md** | Mode selection (Prototype / Standard / Fast / Pro / NoUI) and details. |
 | **modes/** | Rules per mode: plan depth, code style, checks. |
 | **tools/** | Unity MCP, ComfyUI, UI Builder, architecture-by-mode, code, editor — when to use what. |
 | **PROMPTS.md** | Ready-made prompts: start game, features, continue, QA. |

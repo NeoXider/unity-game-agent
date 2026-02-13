@@ -14,6 +14,7 @@ Mode affects outline size, stage detail, code style, when checks run, and state 
 | **Standard** | Small complete game | Moderate | Before plan + before feature | Per feature | Short outline → short stages with checklist → STATE/PLAN/LOG |
 | **Fast** | Quick to playable build | Components | Before plan (min.) | At the end | Outline + stages → big stages → STATE/PLAN brief |
 | **Pro** | Long project with foundation | Architecture, tests | Before plan + before feature | Per task and feature; autotests default | Full outline → detailed stages → full STATE/PLAN/LOG |
+| **NoUI** | Core gameplay/system implementation without UI | Minimal UI code (none by default) | Before plan (min.) | Per feature/block | Mechanics/data/scene flow without UI pipeline |
 
 ## Mode details
 
@@ -21,6 +22,7 @@ Mode affects outline size, stage detail, code style, when checks run, and state 
 - **Standard** — [details](modes/standard.md): small game, check per feature, moderate code style.
 - **Fast** — [details](modes/fast.md): faster to result, several features per pass, checks at end.
 - **Pro** — [details](modes/pro.md): full plan, checks per task and feature, autotests by default.
+- **NoUI** — [details](modes/no_ui.md): no UI intake/implementation, focus on mechanics and systems.
 
 Each mode has **complexity limits** (screens/mechanics/scenes/iteration size) — see `modes/*`.
 
@@ -32,4 +34,4 @@ QA checklists depend on `Docs/DEV_CONFIG.md`: **QA per feature** and **final QA 
 
 ---
 
-**Reply with the mode name: Prototype, Standard, Fast, or Pro — to start.**
+**Reply with the mode name: Prototype, Standard, Fast, Pro, or NoUI — to start.**

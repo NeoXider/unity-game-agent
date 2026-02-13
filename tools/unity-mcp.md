@@ -114,7 +114,9 @@ batch_execute:
 ## When NOT to use MCP
 
 - Editing `.cs` files — faster in Cursor directly (MCP for create/validate, not for editing large files).
-- MCP server not running or unreachable — ask user to help set up or proceed without MCP (files/code). Do not block development.
+- MCP server not running or unreachable:
+  - if project mode is `use MCP`: do **not** continue implementation, run setup assist until MCP works (or user explicitly changes MCP mode);
+  - if mode is `no MCP` or `try+fallback`: continue with file/code workflow according to selected policy.
 - Simple single-file ops — MCP overhead not justified.
 
 ---

@@ -1,0 +1,13 @@
+{
+  "dev_mode": "standard",
+  "skill_mode": "full_cycle",
+  "ui_mode": "enabled",
+  "ui_stack": "ui_toolkit",
+  "mcp_mode": "use",
+  "qa_per_feature": true,
+  "qa_final": true,
+  "screenshot_policy": "per_feature",
+  "reuse_first": true,
+  "library_policy": "discover_before_plan",
+  "project_frameworks": []
+}

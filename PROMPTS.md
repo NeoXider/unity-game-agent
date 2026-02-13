@@ -35,7 +35,7 @@ Project is already set up. Check Docs/DEV_CONFIG.md, Docs/DEV_STATE.md, Docs/AGE
 ### Change / clarify mode
 
 ```
-Switch dev mode to [Prototype / Standard / Fast / Pro]. Update Docs/DEV_CONFIG.md.
+Switch dev mode to [Prototype / Standard / Fast / Pro / NoUI]. Update Docs/DEV_CONFIG.md and Docs/DEV_PROFILE.json.
 ```
 
 ### Write to agent memory
@@ -47,6 +47,16 @@ Remember: [important info, preference, decision, convention]. Write to Docs/AGEN
 ---
 
 ## Working with features
+
+### Discovery before planning
+
+```
+Before finalizing the implementation plan, run library discovery:
+1) detect what frameworks/packages already exist in project,
+2) find ready solutions for this feature (Unity built-in, installed packages, GitHub/UPM/Asset Store),
+3) write Reuse Decision Matrix into Docs/DEV_PLAN.md,
+4) only then request plan approval.
+```
 
 ### Add new mechanic
 
