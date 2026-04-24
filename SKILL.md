@@ -8,6 +8,19 @@ description: "Unity Game Agent — autonomous game development pipeline: INTAKE 
 **Goal:** Autonomously build a complete, tested Unity game — from idea to playable build.
 Primary mode: agent builds the game end-to-end. Secondary: collaborative development with user.
 
+### Hardcoded Defaults (DO NOT ask user about these — just use them)
+
+| Question | Default | Override |
+|----------|---------|----------|
+| **Quick Fix or full pipeline?** | Small request (1-3 files, single fix/addition) = **Quick Fix [D]**. Large request (new system, multiple mechanics) = **full pipeline**. | User says "полный цикл" / "full pipeline" |
+| **MCP available?** | **Assume yes.** Try `mcpforunity://editor/state` first. If fails → switch to `file_only` but **tell user**: "MCP не обнаружен — работаю через файлы. Если хочешь полную автоматизацию (сцены, Play Mode, скриншоты) — включи MCP: Window → MCP for Unity → Start Server." | User says "без MCP" / "file only" |
+| **Which mode?** | If user doesn't specify: **fast** for prototypes/simple games, **standard** for "сделай игру" / "make a game". Ask only when ambiguous (e.g. "scalable RPG" → ask fast vs pro). | User specifies mode explicitly |
+| **UI mode?** | Detect from project: has UXML → `ui_toolkit`, has Canvas → `ugui`, nothing → `ui_toolkit`. | User says "ugui" / "no_ui" |
+| **Platform?** | **PC** (unless mobile/webgl clues in request). | User specifies platform |
+| **Auto mode?** | **Yes** — work autonomously, batch questions at end. | User says "спрашивай" / "ask me" |
+
+**Rule: When in doubt, DO something — don't ask.** Pick the simpler option and proceed. User will correct if wrong.
+
 ---
 
 ## CRITICAL: MCP Standard
@@ -19,12 +32,40 @@ Primary mode: agent builds the game end-to-end. Secondary: collaborative develop
 **MCP Detection (first thing every session):**
 1. Check if MCP tools are available (try reading `mcpforunity://editor/state`)
    - If MCP tools found → `mcp_mode = use` → proceed with steps 2-4
-   - If MCP tools NOT found → `mcp_mode = file_only` → agent writes code via files, skips MCP scene/object operations, tells user to setup MCP for full automation
+   - If MCP tools NOT found → `mcp_mode = file_only` → see fallback below
 2. Read `mcpforunity://custom-tools` → confirm available tools
 3. Read `mcpforunity://instances` → select instance if multiple
 4. Read `mcpforunity://project/info` → project name, version, packages
 
 **After any scene change via MCP → ALWAYS `manage_scene action=save`.**
+
+### file_only Fallback (when MCP is unavailable)
+
+**`REQUIRED` Agent MUST tell user immediately:**
+```
+⚠️ MCP not detected. Working in file-only mode.
+I can: write scripts, create SO, manage Docs/.
+I cannot: create scene objects, run Play Mode, take screenshots, read console.
+
+To enable full automation:
+1. Install com.coplaydev.unity-mcp (Package Manager → Add from git URL)
+2. Window → MCP for Unity → Start Server
+3. Restart this chat or say "retry MCP"
+```
+
+**What changes in file_only mode:**
+
+| Operation | mcp_mode=use | mcp_mode=file_only |
+|---|---|---|
+| Write/edit scripts | File tools | File tools (same) |
+| Create scene objects | MCP `manage_gameobject` | **SKIP** — tell user to create manually |
+| Add components | MCP `manage_components` | **SKIP** — document in DEV_STATE what to add |
+| Compile check | MCP `validate_script` | **SKIP** — tell user to check in Unity |
+| Read console | MCP `read_console` | **SKIP** — ask user for errors |
+| Play Mode test | MCP `manage_scene action=play` | **SKIP** — ask user to test |
+| Screenshot | MCP `manage_scene action=screenshot` | **SKIP** — ask user for screenshot |
+| Scene save | MCP `manage_scene action=save` | **SKIP** — remind user to save |
+| Install packages | MCP `manage_packages` | **SKIP** — tell user package + install URL |
 
 ---
 
@@ -58,6 +99,16 @@ The agent **should delegate tasks to sub-agents** when the platform supports it:
 
 **If sub-agents are not available:** orchestrator does all roles sequentially, but MUST still follow the verify-after-each-step pattern.
 
+### When to Use Sub-Agents (thresholds)
+
+| Condition | Use sub-agents? |
+|---|---|
+| Task touches 1-2 files | No — do it yourself |
+| Task touches 3+ files across 2+ systems | Yes — delegate coding |
+| Feature needs Play Mode QA + screenshot | Yes — delegate QA |
+| Docs need update after feature complete | Yes — delegate report |
+| Quick Fix (path [D]) | **Never** — always do yourself |
+
 ### Orchestrator Verification Checklist (after every sub-agent task)
 - [ ] Code compiles (`validate_script` or `refresh_unity` + `read_console`)
 - [ ] No new errors in console
@@ -69,33 +120,36 @@ The agent **should delegate tasks to sub-agents** when the platform supports it:
 
 ## Session Entry — Decision Tree (FIRST THING every session)
 
-**On EVERY session start, agent follows this decision tree:**
+**STEP 0: Quick Fix check (BEFORE anything else).**
+Read the user's first message. If it's a quick fix → go straight to `[D]`. No mode, no structure check.
 
 ```
 START
   │
-  ├─ 1. Check: Does Docs/DEV_STATE.md exist in project?
+  ├─ 0. Is user request a QUICK FIX?
+  │     (triggers: "fix", "почини", "поправь", "исправь", "ошибка",
+  │      "error", "bug", "NullReference", specific file + specific change,
+  │      "добавь звук к ...", "измени значение / настройку")
   │     │
-  │     ├─ YES → PROJECT IN PROGRESS → go to [A] Resume
+  │     ├─ YES → go to [D] Quick Fix  (skip everything below)
   │     │
-  │     └─ NO → Check: Does Assets/ exist?
-  │           │
-  │           ├─ YES → UNITY PROJECT WITHOUT AGENT STRUCTURE
-  │           │        → go to [B] New Agent on Existing Project
-  │           │
-  │           └─ NO → NOT A UNITY PROJECT or EMPTY
-  │                    → go to [C] New Project
+  │     └─ NO → continue ↓
   │
-  ├─ 2. Read user's first message:
+  ├─ 1. Does Docs/DEV_STATE.md exist?
   │     │
-  │     ├─ Quick fix / bug fix / specific edit → go to [D] Quick Fix
-  │     │   (examples: "почини ошибку", "добавь звук", "поправь UI",
-  │     │    "fix this NullReference", "измени скорость")
+  │     ├─ YES → go to [A] Resume
   │     │
-  │     ├─ Game idea / feature request → go to Pipeline Phase 1: INTAKE
-  │     │   (examples: "сделай платформер", "добавь систему инвентаря")
+  │     └─ NO → Does Assets/ exist?
+  │           │
+  │           ├─ YES → go to [B] New Agent on Existing Project
+  │           │
+  │           └─ NO → go to [C] New Project
+  │
+  ├─ 2. Classify user message:
   │     │
-  │     └─ "Continue" / "продолжай" → go to [A] Resume
+  │     ├─ Game idea / feature → Pipeline Phase 1: INTAKE
+  │     │
+  │     └─ "Continue" / "продолжай" → [A] Resume
   │
 ```
 
@@ -107,7 +161,7 @@ START
 3. Read Docs/DEV_STATE.md → last context, current task, blockers
 4. Read Docs/AGENT_MEMORY.md → decisions, gotchas
 5. Read Docs/DEV_PLAN.md → find next unchecked feature
-6. MCP Detection (see below)
+6. MCP Detection (see MCP Standard section)
 7. read_console → check for pre-existing errors
 8. Create new iteration: Docs/DEV_LOG/iteration-{N+1}-YYYYMMDD-HHMM.md
 9. Report to user:
@@ -149,7 +203,7 @@ User has a Unity project but no Docs/ structure. **Don't assume they want the fu
 
 ### [D] Quick Fix — No Pipeline
 
-For quick fixes, bug fixes, specific edits:
+For quick fixes, bug fixes, specific edits. **This path has NO mode selection, NO Docs, NO pipeline.**
 
 ```
 1. DO NOT create Docs/ structure
@@ -161,16 +215,34 @@ For quick fixes, bug fixes, specific edits:
    - validate_script or refresh_unity
    - read_console → verify clean
    - If MCP available: manage_scene action=save
-5. Report: "Fixed [issue]. Verified: compiles clean, no console errors."
+5. Quick Fix DoD (all REQUIRED):
+   ✅ Code compiles clean
+   ✅ No new console errors (read_console)
+   ✅ Changed files listed in report
+   ✅ Brief report to user
 6. Done. No state files needed.
 ```
 
-**Quick Fix triggers** (agent recognizes these as quick fixes, not full pipeline):
-- "fix", "почини", "поправь", "исправь"
-- "ошибка", "error", "bug", "NullReference"
-- Specific file mentioned + specific change
-- "добавь звук/музыку к ..." (small addition to existing feature)
-- "измени значение / настройку"
+**Report format for Quick Fix:**
+```
+✅ Fixed: [what was fixed]
+Changed files: [list]
+Verified: compiles clean, no new console errors.
+```
+
+---
+
+## Minimum Viable Path (by task type)
+
+| Task type | Minimum steps | Docs |
+|-----------|---------------|------|
+| **Quick Fix [D]** | Fix → compile → read_console → report | None |
+| **Direct task** | Implement → compile → Play Mode → screenshot → report | DEV_STATE only |
+| **fast mode game** | INTAKE(1msg) → brief PLAN → BUILD(batch) → VERIFY → report | DEV_STATE + brief LOG |
+| **standard game** | INTAKE → PLAN → BUILD(per feature) → VERIFY → SHIP | Full docs |
+| **pro game** | INTAKE → PLAN → BUILD(per task) → VERIFY+tests → SHIP | Full docs + ARCHITECTURE |
+
+Use POLICY_MATRIX.md for detailed cadences per mode.
 
 ---
 
@@ -182,6 +254,8 @@ INTAKE → PLAN → BUILD → VERIFY → SHIP
 
 
 ### Phase 1: INTAKE (fast — 1 message exchange max)
+
+> This phase runs ONLY for full game/feature requests. Quick Fixes skip directly to `[D]`.
 
 **Agent asks ONE structured block:**
 
@@ -199,12 +273,12 @@ Optional (I'll decide if you skip):
 ```
 
 **Rules:**
-- If user says "direct task" → skip to BUILD, ask only what's needed for the task
-- If user gives enough info → do NOT ask more questions, start PLAN
-- **Auto mode ON by default** — agent works autonomously, batches questions at end
-- **fast mode + auto_mode:** agent creates plan and starts BUILD without waiting for user approval
-- **standard / pro mode:** agent creates plan and waits for user approval before BUILD
-- Record in `Docs/DEV_CONFIG.md`
+- `REQUIRED` If user says "direct task" → skip to BUILD, ask only what's needed
+- `REQUIRED` If user gives enough info → do NOT ask more questions, start PLAN
+- `DEFAULT` Auto mode ON — agent works autonomously, batches questions at end
+- `DEFAULT` fast + auto_mode → agent creates plan and starts BUILD without user approval
+- `DEFAULT` standard / pro → agent waits for user approval before BUILD
+- `REQUIRED` Record in `Docs/DEV_CONFIG.md`
 
 ### Phase 2: PLAN (Cursor Plan Mode)
 
@@ -218,10 +292,12 @@ Optional (I'll decide if you skip):
 6. **Get user approval** → proceed to BUILD
 7. **Install libraries** — UniTask, DOTween, Newtonsoft.Json as needed
 
-**Mandatory before BUILD:**
-- Plan approved by user
-- MCP connection verified (if mcp_mode = use)
-- Docs baseline created (see [reference.md](reference.md))
+**Pre-Flight Checklist (REQUIRED before BUILD):**
+- [ ] Plan approved by user (fast + auto_mode: auto-approved)
+- [ ] MCP state checked (`mcpforunity://editor/state` → `ready_for_tools=true`)
+- [ ] `read_console` baseline → note pre-existing errors (if any)
+- [ ] Docs baseline created (see [reference.md](reference.md))
+- [ ] Scene saved (`manage_scene action=save`) — starting clean
 
 ### Phase 3: BUILD (main loop)
 
@@ -245,42 +321,65 @@ FOR EACH feature in DEV_PLAN:
      - Configure via MCP (manage_components action=configure)
      - If mcp_mode=file_only → skip MCP scene ops, user sets up scene manually
 
-  2. COMPILE CHECK (mandatory, every feature)
-     - validate_script → quick compile check (preferred after writing code)
-     - refresh_unity → full AssetDatabase refresh (use after creating/moving assets)
-     - read_console → MUST be clean
-     - If errors → fix immediately, re-check
+  2. COMPILE CHECK (REQUIRED — every feature, every mode, no exceptions)
+     - validate_script → quick compile check (use after writing/editing code)
+     - refresh_unity → full AssetDatabase refresh (use after creating/moving/deleting assets)
+     - read_console → compare with baseline (see Console Baseline below)
+     - If NEW errors → fix immediately, re-check
 
-  3. SCENE SAVE
-     - manage_scene action=save (ALWAYS after scene changes)
+  3. SCENE SAVE (if scene was changed)
+     - manage_scene action=save
 
-  4. PLAY MODE TEST
-     Frequency by mode:
-     - fast: after BATCH of 2-4 features (not each feature)
+  4. PLAY MODE TEST (frequency per POLICY_MATRIX.md)
+     - fast: after BATCH of 2-4 features
      - standard: after EACH feature
-     - pro: after each TASK within a feature + after each feature
+     - pro: after each TASK + after each feature
 
      Steps:
      - manage_scene action=play
      - read_console during play
      - manage_scene action=screenshot screenshot_file_name="Docs/Screenshots/iter-NN/feature_name"
-     - Try to interact (buttons, movement, flow)
      - manage_scene action=stop
      - read_console after play
-     - REVIEW screenshot (open and check content — is it blank? shows expected?)
+     - REVIEW screenshot (not blank? shows expected?)
 
-  5. UPDATE DOCS (every feature, not optional)
-     - Update Docs/DEV_STATE.md (progress, micro-plan, screenshot link)
-     - Update Docs/DEV_LOG/iteration-*.md (what was done)
+  5. UPDATE DOCS (scaled by mode)
+     - fast: DEV_STATE only (brief, after batch)
+     - standard: DEV_STATE + DEV_LOG (after each feature)
+     - pro: DEV_STATE + DEV_LOG + ARCHITECTURE (after each task)
 
-  6. NEXT FEATURE (only after compile + console + screenshot + docs pass)
+  6. NEXT FEATURE
+     Gate (must pass before next feature):
+     - Compile clean (REQUIRED all modes)
+     - No new console errors (REQUIRED all modes)
+     - Play Mode tested (REQUIRED — at batch/feature/task frequency per mode)
+     - Screenshot reviewed (DEFAULT — skip only if no visual change)
+     - Docs updated (at mode-specific frequency)
 ```
 
-**BUILD is blocked until:**
-- Previous feature compiles clean
-- Console has no new errors
-- Screenshot reviewed and shows expected result
-- Docs updated
+### Console Baseline Comparison
+
+**How to detect "new" errors:**
+```
+1. At session start / pre-flight: read_console → save as BASELINE
+2. After each compile/play: read_console → save as CURRENT
+3. Compare:
+   - NEW errors (not in BASELINE) → MUST fix before proceeding
+   - NEW warnings (not in BASELINE) → fix if related to current feature, else note in DEV_STATE
+   - Pre-existing errors (in BASELINE) → ignore (not your fault)
+   - Pre-existing warnings → ignore
+4. Update BASELINE after fixing errors
+```
+
+**Classification:**
+| Console level | New? | Action |
+|---|---|---|
+| Error | New | **BLOCK** — fix immediately |
+| Error | Pre-existing | Note in DEV_STATE, continue |
+| Warning | New + related | Fix if easy, else note |
+| Warning | New + unrelated | Note, continue |
+| Warning | Pre-existing | Ignore |
+| Log/Info | Any | Ignore |
 
 ### Phase 4: VERIFY (after all features done)
 
@@ -296,24 +395,43 @@ FOR EACH feature in DEV_PLAN:
 1. Final `manage_scene action=save` (all scenes)
 2. Update `Docs/DEV_STATE.md` — mark project done
 3. Update `Docs/DEV_LOG/` — final iteration summary
-4. Final report to user:
-   - What was built
-   - What to check in Unity
-   - Known limitations
-   - Screenshot gallery
+4. Final report to user (**standard format**):
+
+```
+## 🚀 Delivery Report
+
+### What was built
+- [Feature 1]: [brief description]
+- [Feature 2]: ...
+
+### How it was verified
+- Compile: ✅ clean
+- Console: ✅ no errors
+- Play Mode: ✅ tested [N] scenarios
+- Tests: ✅ passed / ⬜ not applicable
+
+### Screenshots
+- [link to Docs/Screenshots/iter-NN/...]
+
+### Known limitations / risks
+- [if any]
+
+### Manual checks recommended
+- [what user should test in Unity Editor]
+```
 
 ---
 
 ## Modes (3)
 
-**First question to user: choose mode.** After choice, read `modes/<mode>.md` for details.
+Mode is chosen during INTAKE (not during Quick Fix — Quick Fix has no mode). After choice, read `modes/<mode>.md` for details.
 
 | Aspect | fast | standard | pro |
 |--------|------|----------|-----|
 | **Goal** | Playable fast | Complete small game | Scalable project |
 | **Scope** | 1-4 mechanics, 1-3 scenes | 3-6 mechanics, 2-5 scenes | 6+ mechanics, 5+ scenes |
 | **Code style** | Components + SO, singletons OK | Separate scripts, events, SO | Interfaces, namespaces, DI, tests |
-| **Play Mode checks** | Batch (after stage) | Per feature | Per task + per feature |
+| **Play Mode checks** | Batch (after 2-4 features) | Per feature | Per task + per feature |
 | **Docs** | Brief DEV_STATE | Full DEV_STATE + PLAN + LOG | Everything + ARCHITECTURE |
 | **Questions** | 1-3 before plan, then none | Before plan + before feature if unclear | Detailed + before features |
 | **MCP batch** | Yes (batch_execute) | Per feature | Full per task |
@@ -393,6 +511,64 @@ When `ui_mode = no_ui`:
 | User provides mockup/screenshots | Implement from reference |
 | No design reference | Propose basic shell, confirm with user |
 
+### UI Migration (uGUI ↔ UI Toolkit)
+
+When project has one system and user wants the other:
+
+```
+1. DO NOT mix systems in the same screen
+2. Migrate screen-by-screen (not all at once)
+3. Migration order:
+   a) Create new screen in target system
+   b) Wire same data sources (SO, events)
+   c) Test new screen works
+   d) Delete old screen
+   e) Update references
+4. Keep null-safe pattern throughout migration
+5. Note in AGENT_MEMORY which screens migrated
+```
+
+**When NOT to migrate:**
+- Project has 5+ Canvas screens and user just wants "add one more" → stay on uGUI
+- Project uses custom uGUI components (ScrollRect, LayoutGroup chains) → stay on uGUI
+- Only migrate if user explicitly asks or project is early (1-2 screens)
+
+---
+
+## Performance Profiling Policy
+
+### When to Profile
+
+| Trigger | Action |
+|---|---|
+| fast mode | **Never** — unless Play Mode visibly lags |
+| standard mode | **VERIFY phase only** — quick FPS check |
+| pro mode | **After each major system** — profiler snapshot |
+| User reports lag | **Immediately** — profiler + frame debugger |
+| Mobile/WebGL target | **At VERIFY** — memory + FPS mandatory |
+
+### How to Profile (via MCP)
+
+```
+1. manage_profiler action=start areas="CPU,Memory"
+2. manage_scene action=play
+3. [wait 5-10 seconds of gameplay]
+4. manage_profiler action=get_frame_timing
+5. manage_profiler action=get_memory_stats
+6. manage_scene action=stop
+7. manage_profiler action=stop
+```
+
+### Performance Thresholds
+
+| Platform | Target FPS | Max frame time | GC per frame |
+|----------|-----------|----------------|-------------|
+| PC | 60+ | < 16ms | < 1KB |
+| Mobile | 30+ | < 33ms | < 512B |
+| WebGL | 30+ | < 33ms | < 256B |
+
+**If below target:** note in DEV_STATE as blocker, optimize before SHIP.
+
 ---
 
 ## ScriptableObject (all modes, mandatory)
@@ -419,6 +595,8 @@ Create SO assets via MCP: `manage_scriptable_object`.
 ---
 
 ## Code Rules (all modes)
+
+> **Single source of truth:** Core rules are HERE. `tools/code-writing.md` has only EXAMPLES and reference tables (no rule duplication). `modes/*.md` reference cadences only, no code-style duplication.
 
 ### Naming
 - **Role-based names** — `GameManager`, `PlayerMovement`, `RewardPanel` (NOT `TotalWarManager`, `MyGameHero`)
@@ -805,6 +983,7 @@ Key principles:
 
 ## Quick Reference Links
 
+- **Policy Matrix:** [POLICY_MATRIX.md](POLICY_MATRIX.md) — cadences, code quality, docs by mode
 - **MCP Commands:** [mcp-commands.md](mcp-commands.md)
 - **Templates:** [reference.md](reference.md)
 - **Ready Prompts:** [PROMPTS.md](PROMPTS.md)
@@ -813,3 +992,4 @@ Key principles:
 - **Libraries:** [tools/libraries-setup.md](tools/libraries-setup.md)
 - **Modes:** [modes/fast.md](modes/fast.md) · [modes/standard.md](modes/standard.md) · [modes/pro.md](modes/pro.md)
 - **Project Profiles:** `project-profiles/*.md`
+- **Changelog:** [CHANGELOG.md](CHANGELOG.md)

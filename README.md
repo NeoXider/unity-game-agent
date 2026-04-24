@@ -30,8 +30,7 @@ One pipeline for everything: **INTAKE → PLAN → BUILD → VERIFY → SHIP**.
 | **tools/** | Code rules (code-writing.md), core mechanics, library setup |
 | **templates/** | Full doc templates for project Docs/ folder |
 | **project-profiles/** | Project-specific presets (Neoxider, uGUI, UI Toolkit) |
-| **scripts/** | Automation: task completion, doc updates |
-| **setup_project.bat** | Bootstrap: creates Docs/, _source/, all templates |
+| **setup_project.bat** | Manual bootstrap: creates Docs/, _source/, all templates |
 
 ---
 
