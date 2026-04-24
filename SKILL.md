@@ -1,342 +1,815 @@
 ---
 name: unity-game-agent
-description: Unity Game Agent — build Unity games by stages (outline → plan → implementation → check). Use when the user asks to build or prototype a Unity game, implement features step-by-step, or use Unity MCP / other MCPs for scene and editor automation.
+description: "Unity Game Agent — autonomous game development pipeline: INTAKE → PLAN → BUILD → VERIFY → SHIP. Uses CoplayDev/unity-mcp for full Unity Editor control. Sub-agent architecture: orchestrator + coding agents + QA agent."
 ---
 
-# Unity Game Agent
-
-Build a Unity game in a cycle: **outline → stages → implementation → check → report**, using MCP (Unity MCP and others) where available.
-
-This file is intentionally **short** (save tokens). Details and templates are in:
-- **Project file templates + reference:** [reference.md](reference.md)
-- **Mode choice:** [MODE_CHOICE.md](MODE_CHOICE.md), details: [MODE_DETAILS.md](MODE_DETAILS.md), rules: `modes/*.md`
-- **Tools/code/Unity:** `tools/*.md`
-- **Ready prompts:** [PROMPTS.md](PROMPTS.md)
-
-## AutoUnity project goal
-
-**Current project goal:** provide **MCP set, ready prompts/skills, automation (bat) and ComfyUI** for **creating autonomous Unity games with AI**.
-
-Tool use rules:
-- **Files/folders/code:** do not use Unity MCP. Use file tools (IDE/file MCP/patches) or `setup_source_folders.bat`.
-- **Unity Editor** (scene/objects/components/PlayMode/screenshots/console): use Unity MCP.
-- **UI policy is project-aware:** detect existing stack first (uGUI/NeoxiderPages/UI Toolkit). Continue existing stack by default; offer migration only if user asks. Support `no_ui` mode for mechanics/system work without UI scope. Before UI layout always ask for design reference (screenshots, mockup link, style guide, Figma-exported refs). Details: [tools/ui-builder.md](tools/ui-builder.md).
-
-Use this goal when configuring and updating.
-
-## Project setup
-
-Briefly:
-- Open the current Unity project workspace (any path).
-- MCP configured in `.cursor/mcp.json`.
-- Details: [tools/unity-mcp.md](tools/unity-mcp.md) and [tools/comfyui.md](tools/comfyui.md).
-
-## When to use
-
-- Request to create/prototype a Unity game.
-- Request to implement mechanics step-by-step with editor checks.
-- Tasks that need an explicit outline and intermediate stages (not only final code).
-
-## Starting a new game (from scratch)
-
-- **First question to user (always, mandatory):**
-  - "Choose mode: **prototype / fast / standard / pro / no_ui**."
-  - Do not ask cycle/settings/MCP before user picks one of the 5 modes.
-  - After mode selection, read and follow the corresponding file in `modes/`.
-
-- **Second question to user (always):**  
-  "Use **full skill cycle** (settings → docs → plan → implementation) or **just do the current task** without full onboarding?"
-  - If **full skill cycle** — follow the rules below.
-  - If **direct task** — ask only minimal context for the current task; do not overload with settings.
-
-- **At start request two blocks:**
-  1. **Settings** — everything that goes into `Docs/DEV_CONFIG.md`: mode, platform(s), orientation, style, resolution, input, toggles (clarifying questions, search ready solutions, ComfyUI, QA per feature, final QA checklist, **Auto mode**). **Auto mode (save time):** ask if desired — when on, agent works as autonomously as possible and batches questions/check requests at the end. For UI separately ask **design source** (screenshots/mockup/ref). If design is from Figma — ask user for export (screenshots, specs, SVG/PNG, code snippet), do not require Figma MCP. Use structured request (AskQuestion or clear list).
-  2. **Game design** — asked separately: game idea, mechanics, screens (to fill `GAME_DESIGN.md`).
-- **MCP decision is mandatory at start:** ask explicitly "Use Unity MCP on this stage or work without MCP/fallback mode?" and record the choice in `Docs/DEV_CONFIG.md` and `Docs/DEV_PLAN.md`.
-- **QA decision is mandatory at start:** ask explicitly and record in `Docs/DEV_CONFIG.md`:
-  - "QA per feature: on/off?"
-  - "Final QA checklist before handoff: on/off?"
-- **Planning in Plan mode:** planning (outline → task plan, write to `GAME_DESIGN.md` and `DEV_PLAN.md`) in Cursor **Plan mode**: agent gathers data, forms implementation plan, user confirms plan, then move to implementation.
-
-### Task size triage (before start)
-
-| Size | Criteria | Process |
-|------|----------|---------|
-| Micro | ~30 min, local change | No full docs cycle; minimal context + implementation + check |
-| Feature | 1 feature/subsystem, several files | Docs light: `DEV_STATE` + `DEV_LOG` if needed |
-| Milestone | Large stage/several features/arch decisions | Full skill cycle: `DEV_CONFIG` / `GAME_DESIGN` / `DEV_PLAN` / `DEV_STATE` / `DEV_LOG` |
-
-## Dev mode
-
-Rule: **before starting** always ask for mode from 5 options (`prototype`, `fast`, `standard`, `pro`, `no_ui`) and show [MODE_CHOICE.md](MODE_CHOICE.md).  
-After choice — read the mode file from `modes/` and follow it.
-Only then ask cycle/settings/MCP.
-
-Common for all modes:
-- **All settings and data in ScriptableObject** (NpcData, UiData, GameFightData, etc.).
-- **Reuse-first (default):** before implementing **each** feature: (1) **check ready-made** — Unity built-in and installed packages; (2) if needed **search** for mechanics and libraries on **GitHub** and **web** (repos, open code, UPM). Priority: UPM → GitHub/open code → Asset Store → reference code. Do not start coding from scratch without checking. If the feature is very small and simple — code by hand. Toggle: `DEV_CONFIG.md` → "Search ready solutions". **Libraries:** install per [tools/libraries-setup.md](tools/libraries-setup.md) before development (UniTask, DOTween, Newtonsoft.Json and rest as needed).
-- Log format: `Debug.Log($"[Feature.Class.Method] ...")` (details and volume in [tools/code-writing.md](tools/code-writing.md)).
-- **Agent checks:** agent **must self-check** features: run Play Mode, take game screenshots, try to play (buttons, flow). **During and after Play Mode check console** (Unity MCP: `read_console`) for errors — do not consider check done with unfixed errors. In Standard/Pro — check **per feature** before next. In Fast and Prototype batch checks or one check at stage end are ok. **Before handoff in all modes:** Play Mode + `read_console` + current screenshot.
-- QA: writing QA checklists (per feature and final) **depends on `Docs/DEV_CONFIG.md`**. If off — do not write checklists; if on — use template from [reference.md](reference.md) → "QA checklist template".
-- Clarifying questions — per mode rules (`modes/*`); toggle in `DEV_CONFIG.md`.
-- **Complexity limits by mode:** in `modes/*` these are **guidelines**, not hard limits. Can exceed after explicit agreement with user.
-- **Input System policy:**  
-  Prototype/Standard: default `Old` or `Both`.  
-  Fast/Pro: default `New Input System`.  
-  Legacy project: fallback to `Both`/`Old` as needed.
-
-## Required cycle
-
-When **"full skill cycle"** is selected.
-
-Skeleton (details in `modes/*` and [reference.md](reference.md)):
-1. **Request mode selection** (one of 5: `prototype`, `fast`, `standard`, `pro`, `no_ui`) and record in docs.
-2. **Request settings and game design** — DEV_CONFIG and game idea (GAME_DESIGN). See "Starting a new game".
-3. **Request Unity MCP decision** (use MCP / no MCP / try + fallback), and include it into plan/docs.
-4. **Request QA decision** (QA per feature on/off, final QA on/off), and include it into `DEV_CONFIG.md`.
-5. Clarifying questions (if on and required by mode).
-6. Outline → write to `GAME_DESIGN.md`.
-7. **Plan (in Plan mode)** → form and write to `DEV_PLAN.md`; user confirms plan before implementation.
-8. **MCP preflight gate** (mandatory if user selected `use MCP`):
-   - verify Unity MCP connection and core commands availability before coding;
-   - if MCP is down, try to set up/fix it first;
-   - if still unavailable, **do not start implementation**; continue setup assistance until MCP works, or ask user to explicitly change MCP mode to `no MCP` / `try+fallback`.
-9. **Install libraries** — before implementation agent installs per **[tools/libraries-setup.md](tools/libraries-setup.md)**: UniTask, DOTween, Newtonsoft.Json (and rest from that file). Do not start implementation until install done (or confirmed packages already present/not needed).
-10. **Docs baseline gate** — verify and create required docs/log folders/files before coding.
-11. Implementation by tasks/features → update `DEV_STATE.md` and iteration log.
-12. Check (per mode) + required pre-handoff check (Play Mode + `read_console`) + QA per DEV_CONFIG.
-
-### Plan approval gate (mandatory)
-
-After creating/updating the plan and before implementing features/todos, the agent must explicitly ask for user approval and point to the plan file.
-
-Required behavior:
-- Ask a direct confirmation question and include plan path, e.g. `Docs/DEV_PLAN.md` (or current generated plan file path).
-- If user says **yes/approve**: start implementation.
-- If user says **no/not yet**: ask what to change, update plan/docs first, then request approval again.
-- Do not start implementation while plan is not explicitly approved.
-
-## Plan mode protocol (explicit)
-
-When Cursor is in **Plan mode**, the agent must produce a concrete implementation structure before coding.
-
-Required output structure in Plan mode:
-1. **Scope and assumptions** (what is in/out for current iteration).
-2. **Reuse map** (what ready scripts/systems are reused as-is, what wrappers are needed, what is custom code).
-3. **Architecture split by folders/files** (Domain/App/Infrastructure/Presentation or chosen mode architecture).
-4. **Step-by-step tasks** with done criteria for each step.
-5. **Validation plan** (PlayMode checks, console checks, screenshots, QA toggles).
-
-Mandatory Plan mode actions:
-- Write/update `Docs/GAME_DESIGN.md` (outline).
-- Write/update `Docs/DEV_PLAN.md` (task plan with stages).
-- Keep `Docs/DEV_STATE.md` minimal and current after moving to implementation.
-- Do not implement code until the user confirms the plan.
-- Explicitly ask user if the plan in `Docs/DEV_PLAN.md` is approved before starting feature/todo implementation.
-- If scope/requirements changed during discussion, update `Docs/DEV_PLAN.md` before implementation (no stale plan).
-
-For game projects with existing framework/tools, the plan must explicitly list reuse decisions first (framework pages/UI managers, card/deck systems, save systems, etc.), then only add missing logic.
-
-### Mandatory Library Discovery (before plan approval)
-
-Before asking plan approval, agent must run discovery and update `Docs/DEV_PLAN.md` with:
-- detected project libraries/frameworks already installed;
-- candidate ready solutions (Unity built-in, installed packages, GitHub/UPM/Asset Store);
-- selected approach, integration points, and fallback.
-
-Required artifact in plan/docs: **Reuse Decision Matrix**:
-- Option,
-- Availability in project,
-- Pros/cons for this task,
-- Decision and reason.
-
-### State-machine execution protocol (mandatory)
-
-Agent must run the process as explicit states with blocking gates:
-`intake -> discovery -> plan_draft -> plan_approval -> mcp_gate -> impl_iteration -> validation_iteration -> handoff`.
-
-For each state:
-- define input conditions;
-- produce required artifacts;
-- meet exit criteria before transition;
-- on failure move to fail-branch and resolve first.
-
-No transition to implementation is allowed until:
-- plan approved;
-- MCP gate satisfied according to selected MCP mode.
-
-If **"direct task"** — use simplified flow:
-1. Clarify goal and done criteria.
-2. Do the task.
-3. Check per mode/scope (for Unity: Play Mode + `read_console` before handoff).
-4. Short report.
-
-## Project files
-
-All memory and log files — **in `Docs/`**: `Docs/DEV_CONFIG.md`, `Docs/GAME_DESIGN.md`, `Docs/DEV_STATE.md`, `Docs/DEV_PLAN.md`, `Docs/AGENT_MEMORY.md`, `Docs/ARCHITECTURE.md`, `Docs/DEV_LOG/`, `Docs/Screenshots/`. Do not create them in project root. Read order, templates, rules — in [reference.md](reference.md).  
-**DEV_STATE** stays small; DEV_PLAN is full plan; iteration log file name **strictly** with date and time (`iteration-NN-YYYYMMDD-HHMM.md`).
-
-### Machine-readable profile (mandatory)
-
-To avoid repeated questions across sessions, keep a persistent profile in:
-- `Docs/DEV_PROFILE.json` (source of truth for automation defaults).
-
-Minimum keys:
-- `dev_mode`, `skill_mode`, `ui_mode`, `ui_stack`, `mcp_mode`,
-- `qa_per_feature`, `qa_final`, `screenshot_policy`,
-- `reuse_first`, `library_policy`, `project_frameworks`.
-
-At session start:
-- read `Docs/DEV_PROFILE.json` if exists;
-- ask only delta questions;
-- sync important changes back to profile and `Docs/DEV_CONFIG.md`.
-
-### Docs baseline gate (mandatory, always)
-
-Before implementation starts, agent must verify Docs baseline exists in project and create missing files/folders from templates.
-
-Required baseline:
-- `Docs/DEV_CONFIG.md`
-- `Docs/GAME_DESIGN.md`
-- `Docs/DEV_PLAN.md`
-- `Docs/DEV_STATE.md`
-- `Docs/AGENT_MEMORY.md`
-- `Docs/ARCHITECTURE.md`
-- `Docs/UI_BRIEF.md`
-- `Docs/DEV_LOG/iteration-NN-YYYYMMDD-HHMM.md` (at least one iteration file)
-- `Docs/Screenshots/iter-01/` (or current iteration folder)
-
-Rules:
-- If any baseline item is missing, create it immediately before coding.
-- If scope/settings changed, update relevant docs before continuing (`DEV_CONFIG`, `DEV_PLAN`, `DEV_STATE`, log).
-- Do not report feature implementation complete without docs/log updates.
-
-### Bootstrap scripts (safe usage)
-
-- Prefer:
-  - `setup_project.bat "<project-root>"`
-  - `setup_source_folders.bat "<project-root>"`
-- If no path is passed, scripts try current working directory.
-- Scripts validate Unity root (`Assets` + `ProjectSettings`) before creating files.
-- Never rely on relative traversal from skill folder for target project selection.
-
-### Docs/DEV_STATE.md format
-
-- **Emoji and structure (required):** use sections with emoji: 🧠 Context · ⚙️ In progress · ⏭️ Next tasks · ⚠️ Blockers · 📸 Last screenshot · 📈 Progress · 📊 Info. At top — **Legend** (🧭): status 🟦 in progress, 🟨 review, 🟥 blocker, 🟩 done; markers `[x]` done, `[ ]` todo, `←` current step.
-- **Progress (required):** **📈 Progress** block always: **Feature (current)** — % or micro-plan steps (K / N), status 🟦/🟨/🟥/🟩; **Project (overall)** — M / T tasks from DEV_PLAN, %. Can add bars e.g. `|████░░░░|`.
-- **In progress:** current task with micro-plan (numbered list, steps with [x]/[ ] and ← on current). Update on each action.
-- Full template — [reference.md](reference.md) → "Docs/DEV_STATE.md template".
-
-## MCP use
-
-Unity MCP and ComfyUI are accelerators.
-
-If user selected `use MCP`, treat MCP as required preflight:
-- before implementation, verify MCP connection and required editor checks workflow;
-- if unavailable, try to configure/fix MCP first;
-- do not implement until MCP works or user explicitly changes MCP mode.
-
-If user selected `no MCP`, continue file/code workflow without MCP.
-
-Details: [tools/unity-mcp.md](tools/unity-mcp.md), [tools/comfyui.md](tools/comfyui.md).
-
-## UI creation
-
-Use project-aware UI strategy:
-- if project already uses a UI stack (uGUI/NeoxiderPages/UI Toolkit), keep it by default;
-- if no stack is set, propose UI Toolkit as default option;
-- if mode is `no_ui`, skip UI creation pipeline entirely.
-
-Details: [tools/ui-builder.md](tools/ui-builder.md). Dynamic elements at runtime — via selected stack API.
-
-Before implementing UI:
-- Clarify if design exists (mockup/screenshots/guide).
-- If no design — propose basic UI Builder template and ask minimal screen requirements.
-- If design in Figma — ask user for exported materials (assets, sizes, typography, colors, code snippet if needed), then implement via UI Builder.
-
-UI intake template: [reference.md](reference.md) → `Docs/UI_BRIEF.md`.  
-In `Docs/UI_BRIEF.md` always set `UI Quality Mode` (`quick` / `standard` / `production`).
-
-### UI Toolkit best practices (web-validated)
-
-- Split UI into small UXML screens and reusable components; keep behavior logic in C#.
-- For frequently toggled panels, use `display: none` / `display: flex` instead of constant remove/create cycles.
-- Cache `Q<T>(name)` references once during page initialization.
-- Prefer `transform` / `opacity`-based animations and minimize expensive layout changes per frame.
-- Keep shared styles in a common USS, and move screen-specific styling into dedicated USS files.
-- Centralize event subscribe/unsubscribe in `OnShow` / `OnHide` / `Dispose` to avoid leaks.
-- Build recurring UI blocks as templates (`VisualTreeAsset` + controller), not UXML copy-paste.
-- For rare and heavy panels, allow lazy loading (load on demand).
-
-### UI decision table
+# Unity Game Agent — Power Pipeline
+
+**Goal:** Autonomously build a complete, tested Unity game — from idea to playable build.
+Primary mode: agent builds the game end-to-end. Secondary: collaborative development with user.
+
+---
+
+## CRITICAL: MCP Standard
+
+**Package:** `com.coplaydev.unity-mcp` (CoplayDev/unity-mcp v9.6+)
+**Install:** `https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity`
+**Full command catalog:** [mcp-commands.md](mcp-commands.md) (42+ tools)
+
+**MCP Detection (first thing every session):**
+1. Check if MCP tools are available (try reading `mcpforunity://editor/state`)
+   - If MCP tools found → `mcp_mode = use` → proceed with steps 2-4
+   - If MCP tools NOT found → `mcp_mode = file_only` → agent writes code via files, skips MCP scene/object operations, tells user to setup MCP for full automation
+2. Read `mcpforunity://custom-tools` → confirm available tools
+3. Read `mcpforunity://instances` → select instance if multiple
+4. Read `mcpforunity://project/info` → project name, version, packages
+
+**After any scene change via MCP → ALWAYS `manage_scene action=save`.**
+
+---
+
+## Sub-Agent Architecture (RECOMMENDED)
+
+The agent **should delegate tasks to sub-agents** when the platform supports it:
+
+### Orchestrator (Main Agent)
+- Owns the pipeline and state (`DEV_STATE`, `DEV_PLAN`)
+- Assigns tasks to sub-agents
+- **VERIFIES every sub-agent output** before accepting
+- Makes architectural decisions
+- Never trusts sub-agent output blindly — always checks: compile, console, screenshot
+
+### Coding Sub-Agent
+- Receives: task description, file paths, SO specs, architecture rules
+- Returns: created/modified files, compile status
+- Orchestrator verifies: `refresh_unity` → `validate_script` → `read_console`
+
+### QA Sub-Agent
+- Receives: feature name, expected behavior, test scenario
+- Runs: Play Mode → `read_console` → screenshot → tries to interact
+- Returns: pass/fail, screenshot, console output, found issues
+- Orchestrator reviews screenshot and report before marking feature done
+
+### Report Sub-Agent
+- Receives: completed task info
+- Updates: `Docs/DEV_STATE.md`, `Docs/DEV_LOG/iteration-*.md`
+- Takes and reviews screenshots
+- Orchestrator verifies docs are updated
+
+**If sub-agents are not available:** orchestrator does all roles sequentially, but MUST still follow the verify-after-each-step pattern.
+
+### Orchestrator Verification Checklist (after every sub-agent task)
+- [ ] Code compiles (`validate_script` or `refresh_unity` + `read_console`)
+- [ ] No new errors in console
+- [ ] Feature works in Play Mode (tested)
+- [ ] Screenshot taken and reviewed (not blank, shows expected)
+- [ ] Docs updated (DEV_STATE, DEV_LOG)
+
+---
+
+## Session Entry — Decision Tree (FIRST THING every session)
+
+**On EVERY session start, agent follows this decision tree:**
+
+```
+START
+  │
+  ├─ 1. Check: Does Docs/DEV_STATE.md exist in project?
+  │     │
+  │     ├─ YES → PROJECT IN PROGRESS → go to [A] Resume
+  │     │
+  │     └─ NO → Check: Does Assets/ exist?
+  │           │
+  │           ├─ YES → UNITY PROJECT WITHOUT AGENT STRUCTURE
+  │           │        → go to [B] New Agent on Existing Project
+  │           │
+  │           └─ NO → NOT A UNITY PROJECT or EMPTY
+  │                    → go to [C] New Project
+  │
+  ├─ 2. Read user's first message:
+  │     │
+  │     ├─ Quick fix / bug fix / specific edit → go to [D] Quick Fix
+  │     │   (examples: "почини ошибку", "добавь звук", "поправь UI",
+  │     │    "fix this NullReference", "измени скорость")
+  │     │
+  │     ├─ Game idea / feature request → go to Pipeline Phase 1: INTAKE
+  │     │   (examples: "сделай платформер", "добавь систему инвентаря")
+  │     │
+  │     └─ "Continue" / "продолжай" → go to [A] Resume
+  │
+```
+
+### [A] Resume — Project in Progress
+
+```
+1. Read Docs/DEV_PROFILE.json → mode, settings (DO NOT re-ask)
+2. Read Docs/DEV_CONFIG.md → verify mode, toggles
+3. Read Docs/DEV_STATE.md → last context, current task, blockers
+4. Read Docs/AGENT_MEMORY.md → decisions, gotchas
+5. Read Docs/DEV_PLAN.md → find next unchecked feature
+6. MCP Detection (see below)
+7. read_console → check for pre-existing errors
+8. Create new iteration: Docs/DEV_LOG/iteration-{N+1}-YYYYMMDD-HHMM.md
+9. Report to user:
+   "📍 Resuming: [last context from DEV_STATE]
+    Next feature: [name from DEV_PLAN]
+    Proceeding with BUILD."
+10. Continue BUILD from next unchecked feature
+```
+
+### [B] New Agent on Existing Project
+
+User has a Unity project but no Docs/ structure. **Don't assume they want the full pipeline.**
+
+```
+1. Ask user:
+   "I see a Unity project but no agent docs (Docs/ folder).
+    What do you need?
+    
+    a) 🎮 Full game development — I'll setup the pipeline and start building
+    b) 🔧 Add a feature/mechanic — I'll do it directly, quick setup
+    c) 🐛 Fix a bug / quick edit — I'll fix it now, no pipeline needed
+    
+    Which one?"
+
+2. If (a) → Create Docs/ structure (bootstrap) → go to INTAKE
+3. If (b) → Create minimal Docs/DEV_STATE.md + Docs/AGENT_MEMORY.md
+           → go to "direct task" mode (skip INTAKE, minimal PLAN)
+4. If (c) → go to [D] Quick Fix
+```
+
+### [C] New Project
+
+```
+1. This is a new or empty project
+2. Ask: "Starting a new Unity game project. What's the game idea?"
+3. → Go to Pipeline Phase 1: INTAKE (full cycle)
+4. Bootstrap Docs/ after INTAKE (before PLAN)
+```
+
+### [D] Quick Fix — No Pipeline
+
+For quick fixes, bug fixes, specific edits:
+
+```
+1. DO NOT create Docs/ structure
+2. DO NOT ask about mode/platform/ui
+3. Read the user's request
+4. Fix the issue directly:
+   - Read relevant code
+   - Make the fix
+   - validate_script or refresh_unity
+   - read_console → verify clean
+   - If MCP available: manage_scene action=save
+5. Report: "Fixed [issue]. Verified: compiles clean, no console errors."
+6. Done. No state files needed.
+```
+
+**Quick Fix triggers** (agent recognizes these as quick fixes, not full pipeline):
+- "fix", "почини", "поправь", "исправь"
+- "ошибка", "error", "bug", "NullReference"
+- Specific file mentioned + specific change
+- "добавь звук/музыку к ..." (small addition to existing feature)
+- "измени значение / настройку"
+
+---
+
+## Pipeline: 5 Phases
+
+```
+INTAKE → PLAN → BUILD → VERIFY → SHIP
+```
+
+
+### Phase 1: INTAKE (fast — 1 message exchange max)
+
+**Agent asks ONE structured block:**
+
+```
+I need to know:
+1. Game idea (genre, core mechanic, brief description)
+2. Mode: fast / standard / pro
+3. Platform: PC / Mobile / WebGL
+4. UI mode: ui_toolkit (default) / ugui / no_ui
+
+Optional (I'll decide if you skip):
+- Art style, resolution, orientation
+- MCP available? (default: yes)
+- Auto mode? (default: yes — I work autonomously, report results)
+```
+
+**Rules:**
+- If user says "direct task" → skip to BUILD, ask only what's needed for the task
+- If user gives enough info → do NOT ask more questions, start PLAN
+- **Auto mode ON by default** — agent works autonomously, batches questions at end
+- **fast mode + auto_mode:** agent creates plan and starts BUILD without waiting for user approval
+- **standard / pro mode:** agent creates plan and waits for user approval before BUILD
+- Record in `Docs/DEV_CONFIG.md`
+
+### Phase 2: PLAN (Cursor Plan Mode)
+
+1. **Detect project structure** — scan `Assets/`, `Packages/manifest.json`
+   - If existing structure found (e.g. `Assets/Neoxider/`) → use it, do NOT impose `_source/`
+   - If empty project → create `Assets/_source/` structure
+2. **Library discovery** — check installed packages, search for ready solutions
+3. **Create `Docs/GAME_DESIGN.md`** — outline: mechanics, screens, SO data
+4. **Create `Docs/DEV_PLAN.md`** — task list with stages
+5. **Reuse Decision Matrix** — what exists vs what to build
+6. **Get user approval** → proceed to BUILD
+7. **Install libraries** — UniTask, DOTween, Newtonsoft.Json as needed
+
+**Mandatory before BUILD:**
+- Plan approved by user
+- MCP connection verified (if mcp_mode = use)
+- Docs baseline created (see [reference.md](reference.md))
+
+### Phase 3: BUILD (main loop)
+
+**Feature decomposition (ALL modes, mandatory):**
+Every plan MUST be split into **features** (logical blocks). Each feature = independent deliverable.
+
+| Mode | Feature granularity | Example |
+|------|-------------------|---------|
+| fast | 2-4 big features | "Player movement", "Level + enemies", "UI + GameOver" |
+| standard | 4-8 features | "Player movement", "Shooting", "Enemy waves", "HUD", "Menu", "GameOver" |
+| pro | 8+ features with sub-tasks | "Combat system → TurnSystem, Abilities, Effects, Battle UI" |
+
+Architecture differs by mode, but **the decomposition into features is the same pattern everywhere.**
+
+```
+FOR EACH feature in DEV_PLAN:
+  1. IMPLEMENT
+     - Write scripts (files, SO definitions) → create via file tools
+     - Create folders via file system (mkdir), NOT MCP
+     - Create scene objects via MCP (manage_gameobject, manage_components)
+     - Configure via MCP (manage_components action=configure)
+     - If mcp_mode=file_only → skip MCP scene ops, user sets up scene manually
+
+  2. COMPILE CHECK (mandatory, every feature)
+     - validate_script → quick compile check (preferred after writing code)
+     - refresh_unity → full AssetDatabase refresh (use after creating/moving assets)
+     - read_console → MUST be clean
+     - If errors → fix immediately, re-check
+
+  3. SCENE SAVE
+     - manage_scene action=save (ALWAYS after scene changes)
+
+  4. PLAY MODE TEST
+     Frequency by mode:
+     - fast: after BATCH of 2-4 features (not each feature)
+     - standard: after EACH feature
+     - pro: after each TASK within a feature + after each feature
+
+     Steps:
+     - manage_scene action=play
+     - read_console during play
+     - manage_scene action=screenshot screenshot_file_name="Docs/Screenshots/iter-NN/feature_name"
+     - Try to interact (buttons, movement, flow)
+     - manage_scene action=stop
+     - read_console after play
+     - REVIEW screenshot (open and check content — is it blank? shows expected?)
+
+  5. UPDATE DOCS (every feature, not optional)
+     - Update Docs/DEV_STATE.md (progress, micro-plan, screenshot link)
+     - Update Docs/DEV_LOG/iteration-*.md (what was done)
+
+  6. NEXT FEATURE (only after compile + console + screenshot + docs pass)
+```
+
+**BUILD is blocked until:**
+- Previous feature compiles clean
+- Console has no new errors
+- Screenshot reviewed and shows expected result
+- Docs updated
+
+### Phase 4: VERIFY (after all features done)
+
+1. Full Play Mode walkthrough — test complete game flow
+2. `read_console` — must be completely clean
+3. Final screenshot series (all key screens)
+4. Review all screenshots
+5. Fix any remaining issues
+6. Run tests if Pro mode (`run_tests`)
+
+### Phase 5: SHIP
+
+1. Final `manage_scene action=save` (all scenes)
+2. Update `Docs/DEV_STATE.md` — mark project done
+3. Update `Docs/DEV_LOG/` — final iteration summary
+4. Final report to user:
+   - What was built
+   - What to check in Unity
+   - Known limitations
+   - Screenshot gallery
+
+---
+
+## Modes (3)
+
+**First question to user: choose mode.** After choice, read `modes/<mode>.md` for details.
+
+| Aspect | fast | standard | pro |
+|--------|------|----------|-----|
+| **Goal** | Playable fast | Complete small game | Scalable project |
+| **Scope** | 1-4 mechanics, 1-3 scenes | 3-6 mechanics, 2-5 scenes | 6+ mechanics, 5+ scenes |
+| **Code style** | Components + SO, singletons OK | Separate scripts, events, SO | Interfaces, namespaces, DI, tests |
+| **Play Mode checks** | Batch (after stage) | Per feature | Per task + per feature |
+| **Docs** | Brief DEV_STATE | Full DEV_STATE + PLAN + LOG | Everything + ARCHITECTURE |
+| **Questions** | 1-3 before plan, then none | Before plan + before feature if unclear | Detailed + before features |
+| **MCP batch** | Yes (batch_execute) | Per feature | Full per task |
+| **Namespaces** | No | No | Yes (Game.Combat, etc.) |
+| **Tests** | No | No | Yes (auto) |
+
+Details: [modes/fast.md](modes/fast.md) · [modes/standard.md](modes/standard.md) · [modes/pro.md](modes/pro.md)
+
+---
+
+## UI Strategy
+
+### Priority Order
+1. **UI Toolkit** (default) — UXML/USS, UIDocument
+2. **uGUI (Canvas)** — when project already uses it or user requests
+3. **NoUI** — mechanics only, no visual UI
+
+### UI Toolkit Rules
+- One UXML per screen (MainMenu.uxml, GameHUD.uxml, etc.)
+- Shared styles in `common.uss`, screen-specific in `<Screen>.uss`
+- Switch screens by changing UIDocument `sourceAsset`
+- Use `display: none/flex` for panel toggling (not create/destroy)
+- Cache `Q<T>(name)` references once at init
+- Meaningful element names for code queries
+- Data from ScriptableObject, not hardcoded in UXML
+- Performance: ListView for long lists, pooling for repeated elements
+
+### uGUI (Canvas) Rules
+- **NEVER use legacy `Text` — ALWAYS `TextMeshPro` (`TextMeshProUGUI`)**
+- `using TMPro;` for all text references
+- `TMP_Text` for generic text references
+- Scene must have `EventSystem` + `StandaloneInputModule` (or `InputSystemUIInputModule`)
+- Buttons: `Image` + `Button` component. Child text `raycastTarget = false`
+- `GraphicRaycaster` on Canvas
+- **Null-safe pattern (mandatory for uGUI):** ALL `[SerializeField]` UI references must be null-checked before access:
+  ```csharp
+  public class GameHUD : MonoBehaviour
+  {
+      [SerializeField] private TMP_Text _scoreText;
+      [SerializeField] private TMP_Text _healthText;
+      [SerializeField] private Button _pauseButton;
+
+      public void UpdateScore(int score)
+      {
+          if (_scoreText != null) _scoreText.text = $"Score: {score}";
+      }
+
+      public void UpdateHealth(int hp)
+      {
+          if (_healthText != null) _healthText.text = $"HP: {hp}";
+      }
+
+      public void SetPauseInteractable(bool value)
+      {
+          if (_pauseButton != null) _pauseButton.interactable = value;
+      }
+  }
+  ```
+- This prevents NullReferenceException when references are not yet assigned, during tests, or in headless mode
+
+### NoUI Mode
+When `ui_mode = no_ui`:
+- **Do NOT create any UI screens or layouts**
+- **DO create view stubs** — MonoBehaviours with same null-safe pattern as uGUI (see above)
+- All public methods check for null before accessing UI elements
+- This ensures: code compiles, game runs, nothing breaks, UI can be added later
+- Skip UI intake questions, skip UI layout work
+
+### UI Decision Table
 
 | Situation | Agent action |
-|-----------|--------------|
-| Has design (mockup/screenshots/UI kit) | Fill `Docs/UI_BRIEF.md` from it, layout via selected project stack, check in Play Mode + `read_console`. |
-| Only text spec | Fill `Docs/UI_BRIEF.md` first (screens, states, interactions), agree unclear points, then implement. |
-| No refs and no spec | Fallback: basic UI shell (MainMenu + GameplayHUD + Pause/GameOver), document assumptions in `Docs/UI_BRIEF.md`, show result and ask for changes. |
-| Mode = `no_ui` | Skip UI intake and UI implementation; focus on mechanics/systems only. |
+|---|---|
+| Project has UIDocument/UXML | Use UI Toolkit, extend existing |
+| Project has Canvas/uGUI | Use uGUI + TMP_Pro, extend existing |
+| New project, no preference | Use UI Toolkit (default) |
+| User says `no_ui` | Create null-safe stubs only |
+| User provides mockup/screenshots | Implement from reference |
+| No design reference | Propose basic shell, confirm with user |
 
-### Project profiles / presets
+---
 
-Project-specific rules should live in separate presets under `project-profiles/` (for example `neoxider-pages.md`, `plain-ugui.md`, `ui-toolkit.md`).
+## ScriptableObject (all modes, mandatory)
 
-Selection rule:
-- detect available framework/libraries in project;
-- choose matching preset and record in `Docs/DEV_PROFILE.json`;
-- if no preset fits, use generic base rules.
+**ALL settings and data in ScriptableObject.** No hardcoding in MonoBehaviour.
 
-### Iteration cycle enforcement (mandatory)
+```csharp
+[CreateAssetMenu(fileName = "NewEnemyData", menuName = "GameData/EnemyData")]
+public sealed class EnemyData : ScriptableObject
+{
+    [Header("Stats")]
+    public int health = 50;
+    public float speed = 3f;
+    public float damage = 10f;
 
-For each feature (or allowed feature block by mode), agent must complete all steps before moving on:
-1. Implement.
-2. Self-check.
-3. Unity check (Play Mode + `read_console`).
-4. Artifacts update (`Docs/DEV_STATE.md`, `Docs/DEV_LOG/iteration-*.md`, optional screenshots by policy).
-5. Iteration report.
+    [Header("Visual")]
+    public Sprite sprite;
+    public Color tintColor = Color.white;
+}
+```
 
-Blocking gate: no next feature until required checks and docs updates are done.
+Create SO assets via MCP: `manage_scriptable_object`.
 
-Frequency:
-- `standard` / `pro` / `no_ui`: per feature.
-- `fast` / `prototype`: batched checks allowed, but block size must follow mode limits.
+---
 
-## Scene hierarchy and bootstrap
+## Code Rules (all modes)
 
-- **Generally do not use bootstrap.** Only for specific goals (diagnostics, hypothesis checks, separate tech task); not default architecture.
-- For Prototype, Fast, Standard — prefer **manual object creation** via Unity Editor/MCP and explicit inspector references.
-- Complex containers and DI — only with clear need (usually Pro).
-- Architecture levels and hierarchy template: [tools/architecture-by-mode.md](tools/architecture-by-mode.md).
-- Before introducing DI/LifetimeScope/ServiceLocator document a short `why` in `Docs/ARCHITECTURE.md`.
+### Naming
+- **Role-based names** — `GameManager`, `PlayerMovement`, `RewardPanel` (NOT `TotalWarManager`, `MyGameHero`)
+- Classes: `PascalCase`. Private fields: `_camelCase`. Constants: `UPPER_SNAKE` or `PascalCase`
+- SO assets: `PascalCase` with suffix — `EnemyData_Goblin`
 
-## Unity/C# practices
+### Basics
+- One script = one responsibility (`PlayerMovement` ≠ `PlayerHealth`)
+- `[SerializeField]` instead of `public` for Inspector fields
+- No `Find`/`FindObjectOfType` in `Update` — cache in `Awake`/`Start`
+- Null-check references
+- **Async:** use UniTask when available (zero alloc, WebGL safe). Coroutines for simple delays only.
+- **No obvious comments.** No `// increment counter`, `// get component`, `// call method`. Code must be self-documenting.
+  - ✅ Allowed: **XML docs** (`/// <summary>`), `// TODO:`, `// HACK:`, `// WORKAROUND:`
+  - ❌ Banned: `// calculate damage`, `// check if dead`, `// set position`
+- **Logging (all modes):** `Debug.Log($"[Feature.Class.Method] description")` — use to explain logic at runtime
+- **Logging volume:** fast = key events only, standard = plenty, pro = plenty + params
 
-All style/patterns/logging/comments: **[tools/code-writing.md](tools/code-writing.md)**.
+### Code by mode
 
-## Error handling
+| Rule | fast | standard | pro |
+|------|------|----------|-----|
+| Namespaces | No | No | Yes |
+| XML docs | No | Public methods | All public |
+| `//` comments | **No** | **No** | **No** |
+| Debug.Log | Key events | Plenty | Plenty + params |
+| Singleton | Yes | OK | DI/ServiceLocator |
+| Interfaces | No | No | Yes |
+| Tests | No | No | Yes (auto) |
+| Events | Optional | Yes | Yes |
 
-Briefly: compilation must be clean; MCP may fail; verify scene objects via editor state and screenshot.  
-Details: [reference.md](reference.md) → "Error handling and common issues".
+### Reuse-First (default, all modes)
+Before implementing ANY feature:
+1. Check Unity built-in
+2. Check installed packages
+3. Search GitHub/web for ready solutions
+4. Only then code from scratch
 
-## Anti-patterns
+Toggle: `DEV_CONFIG.md` → "Search ready solutions".
 
-Briefly (details in [tools/code-writing.md](tools/code-writing.md) and `modes/*`):
-- **Do not start without choosing launch mode** — first choose: "full skill cycle" or "direct task". For full cycle ask settings and game design; for direct task ask only minimal context.
-- **Do not start implementing a feature without checking ready-made** — check Unity built-in and installed packages first; with Reuse-first on — search GitHub and web for mechanics/libraries. Do not write from scratch what exists in project, package, or open source.
-- **Do not skip pre-handoff check** — before handoff always Play Mode + `read_console` + reviewed screenshot.
-- **Do not skip MCP setup when user requested it** — if user said `use MCP`, first try to configure/fix MCP and verify it works; do not silently continue as if checks were done.
-- **Do not bypass MCP gate** when `use MCP` is selected — implementation is blocked until MCP is confirmed working, unless user explicitly changes MCP mode.
-- **Do not add global ServiceLocator in Prototype/Fast without clear reason** — prefer direct refs and simple composition.
-- **Do not require Figma MCP** — ask user for design reference and implement via UI Builder; if Figma mockup exists, ask for exported materials.
-- **Do not create memory files in root** — only in `Docs/` (DEV_CONFIG, GAME_DESIGN, DEV_STATE, DEV_PLAN, AGENT_MEMORY). Do not skip `Docs/AGENT_MEMORY.md`.
-- **Do not create log file without time in name** — only `Docs/DEV_LOG/iteration-NN-YYYYMMDD-HHMM.md`, not `iteration-NN.md`.
-- No hardcoded settings — all in SO.
-- Do not forget to update Docs/DEV_STATE, Docs/DEV_PLAN and iteration file in Docs/DEV_LOG.
-- Do not run with stale docs: when scope changes, update `Docs/DEV_PLAN.md` and `Docs/DEV_CONFIG.md` before coding.
-- Do not skip docs bootstrap: never start coding if `Docs baseline gate` is incomplete.
-- Do not bloat DEV_STATE (keep it small).
-- Do not continue implementation with broken MCP when mode is `use MCP`.
-- **Do not forget to save scene** after changes via Unity MCP (`manage_scene` action=save).
-- **Screenshots:** save in **Docs/Screenshots/** (iter-01, iter-02, …). Agent **must review** every screenshot (open image and check content). Do not report success from a screenshot without checking it; if image is wrong — note issue, retake or fix scene.
-- **UI at runtime:** when creating UI from code ensure EventSystem in scene; add Button component to buttons and set child Text `raycastTarget = false` (see [tools/code-writing.md](tools/code-writing.md) → "Unity UI (runtime creation)").
-- **Script/class/file names:** do not use game or project-specific names (TotalWar, MyGame, etc.) — use role names: GameManager, MainMenuController, RewardPanel, UiData. Details: [tools/code-writing.md](tools/code-writing.md) → "Naming".
+---
+
+## Architecture by Mode
+
+### fast
+- MonoBehaviour-first, minimal abstraction
+- Direct `[SerializeField]` references
+- Singleton for managers (`GameManager.Instance`)
+- No ServiceLocator/DI
+
+### standard
+- Separate components per responsibility
+- Events / UnityEvents for cross-system communication
+- Feature nodes in hierarchy (`Feature_Player`, `Feature_Enemies`)
+- No DI unless clearly needed
+
+### pro
+- Logic in services/classes, MonoBehaviour as view/entry
+- Interfaces for key systems (`IDamageable`, `IInteractable`)
+- DI (VContainer/Zenject) when justified
+- Document DI decisions in `Docs/ARCHITECTURE.md`
+
+### Scene Hierarchy Template
+```
+SceneRoot
+├── --- Managers ---
+│   ├── GameManager
+│   └── AudioManager
+├── --- Environment ---
+│   ├── Ground
+│   └── Platforms
+├── --- Characters ---
+│   ├── Player
+│   └── Enemies
+├── --- UI ---
+│   └── UIDocument (or Canvas)
+├── --- Cameras ---
+│   └── Main Camera
+└── --- Runtime ---
+    └── (pools, spawned objects)
+```
+
+---
+
+## Screenshots & Reports (CONSTANT updates)
+
+**Agent MUST update docs and take screenshots continuously, not just at the end.**
+
+### Screenshot Rules
+- Save in `Docs/Screenshots/iter-NN/`
+- After EVERY Play Mode test → screenshot
+- **ALWAYS review the screenshot** — open image, check content
+- If screenshot is blank/wrong → note issue, retake, fix scene
+- Link screenshot in `Docs/DEV_STATE.md`
+- Never report "feature done" without reviewed screenshot
+
+### Doc Update Frequency
+| Event | Update DEV_STATE | Update DEV_LOG | Screenshot |
+|-------|-----------------|----------------|------------|
+| Start feature | ✅ (in progress) | ✅ (started) | — |
+| Mid-feature checkpoint | ✅ (micro-plan) | — | Optional |
+| Feature done | ✅ (progress %) | ✅ (completed) | ✅ Required |
+| Stage done | ✅ (next stage) | ✅ (summary) | ✅ Required |
+| Error found/fixed | ✅ (blocker) | ✅ (fix) | If relevant |
+| End of session | ✅ (context) | ✅ (summary) | ✅ Final |
+
+---
+
+## Input System Policy
+
+| Mode | Default |
+|------|---------|
+| fast | `Old` or `Both` |
+| standard | `Old` or `Both` |
+| pro | `New Input System` |
+| Legacy project | Keep existing |
+
+---
+
+## Libraries (install before BUILD)
+
+**Install by default (all projects):**
+- **UniTask** — `git+https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask`
+- **DOTween** — Asset Store or developer site (if available)
+- **Newtonsoft.Json** — `com.unity.nuget.newtonsoft-json`
+
+**As needed:** Unity Localization, VContainer, Cinemachine, Input System.
+
+Check `Packages/manifest.json` first — don't install what's already there.
+Use `manage_packages action=install` via MCP when possible.
+
+Details: [tools/libraries-setup.md](tools/libraries-setup.md)
+
+---
+
+## Project Files (Docs/)
+
+All memory files in `Docs/` folder. NEVER in project root.
+
+| File | Purpose | Size | Update frequency |
+|------|---------|------|-----------------|
+| `Docs/DEV_CONFIG.md` | Settings, mode, toggles | Small | When settings change |
+| `Docs/GAME_DESIGN.md` | Game design, mechanics, screens | Medium | When outline approved |
+| `Docs/DEV_STATE.md` | Current state, progress, blockers | **Small (always)** | **Every action** |
+| `Docs/AGENT_MEMORY.md` | Long-term memory, decisions | Small-medium | When important |
+| `Docs/DEV_PLAN.md` | Full plan, task checkboxes | Medium | When planning |
+| `Docs/ARCHITECTURE.md` | Architecture decisions | Medium | When implementing |
+| `Docs/DEV_LOG/` | Iteration logs (iteration-NN-YYYYMMDD-HHMM.md) | Each small | On task completion |
+| `Docs/Screenshots/` | Screenshots by iteration (iter-01/, iter-02/) | Grows | Every Play Mode test |
+
+**Session start read order:** DEV_CONFIG → GAME_DESIGN → DEV_STATE → AGENT_MEMORY → DEV_PLAN → ARCHITECTURE
+
+Templates: [reference.md](reference.md) and `templates/` folder.
+
+### Agent Bootstrap (create Docs/ directly — do NOT rely on bat scripts)
+
+When starting a new project, the agent **creates all Docs/ files directly** using file tools:
+
+1. Create `Docs/` folder
+2. Create `Docs/DEV_CONFIG.md` from template
+3. Create `Docs/GAME_DESIGN.md` from template
+4. Create `Docs/DEV_STATE.md` from template (with emoji sections)
+5. Create `Docs/DEV_PLAN.md` from template
+6. Create `Docs/AGENT_MEMORY.md` from template (**never skip**)
+7. Create `Docs/ARCHITECTURE.md` from template (standard/pro)
+8. Create `Docs/DEV_PROFILE.json` with current settings
+9. Create `Docs/DEV_LOG/` folder
+10. Create `Docs/DEV_LOG/iteration-01-YYYYMMDD-HHMM.md` (first iteration)
+11. Create `Docs/Screenshots/iter-01/` folder
+
+**For manual bootstrap (users without agent):** `setup_project.bat "<project-root>"`
+
+### Machine-readable profile
+`Docs/DEV_PROFILE.json` — persistent defaults:
+```json
+{
+  "dev_mode": "standard",
+  "ui_mode": "ui_toolkit",
+  "mcp_mode": "use",
+  "qa_per_feature": true,
+  "reuse_first": true,
+  "auto_mode": true
+}
+```
+
+---
+
+## Definition of Done (per feature)
+
+Feature is DONE only when ALL are met:
+
+- [ ] Code compiles clean (`validate_script` or `refresh_unity` + `read_console`)
+- [ ] Play Mode smoke test passed (basic scenario works)
+- [ ] `read_console` clean — no new errors
+- [ ] Scene saved (`manage_scene action=save`)
+- [ ] Screenshot taken, reviewed, shows expected result
+- [ ] `Docs/DEV_STATE.md` updated (progress, micro-plan)
+- [ ] `Docs/DEV_LOG/iteration-*.md` updated (completed entry)
+
+**Do NOT move to next feature until all boxes checked.**
+
+---
+
+## DEV_PLAN Feature Format (example)
+
+DEV_PLAN must ALWAYS use feature decomposition. Example for a 2D platformer (standard mode):
+
+```markdown
+# DEV_PLAN — 2D Platformer
+
+## Stage 1: Core
+
+### Feature 1: Player Movement
+- [x] Create PlayerData SO (speed, jumpForce, gravity)
+- [x] Create PlayerMovement.cs (run, jump, ground check)
+- [x] Setup scene: Player GO + Rigidbody2D + Collider + Sprite
+- [x] Play Mode test + screenshot
+
+### Feature 2: Level
+- [x] Create level layout (platforms, ground, walls)
+- [x] Add colliders to all platforms
+- [x] Camera follow player
+- [ ] Play Mode test + screenshot
+
+### Feature 3: Enemies
+- [ ] Create EnemyData SO (speed, damage, health)
+- [ ] Create EnemyController.cs (patrol, chase, attack)
+- [ ] Spawn 3 enemies in level
+- [ ] Play Mode test + screenshot
+
+## Stage 2: Game Loop
+
+### Feature 4: Health & Damage
+- [ ] Create HealthComponent.cs (take damage, die)
+- [ ] Player-enemy collision → damage
+- [ ] Death → GameOver
+- [ ] Play Mode test + screenshot
+
+### Feature 5: HUD
+- [ ] Create GameHUD (health bar, score)
+- [ ] Wire to HealthComponent and ScoreManager
+- [ ] Play Mode test + screenshot
+
+### Feature 6: Menu & GameOver
+- [ ] MainMenu scene (Play button)
+- [ ] GameOver screen (Restart, Quit)
+- [ ] Scene transitions
+- [ ] Play Mode test + screenshot
+
+## Progress: 1.5 / 6 features (25%)
+```
+
+**Key rules:**
+- Each feature ends with "Play Mode test + screenshot"
+- Tasks within feature are concrete (file names, SO names)
+- `[x]` / `[ ]` checkboxes tracked
+- Progress % at bottom
+
+---
+
+## Agent First Message (example)
+
+When user says "Сделай 2D платформер" and nothing else, agent responds:
+
+```
+🎮 Starting a 2D platformer!
+
+I need a few details:
+1. **Mode:** fast (quick playable) / standard (complete game) / pro (scalable)?
+   → Default: standard
+2. **Platform:** PC / Mobile / WebGL?
+   → Default: PC
+3. **UI:** ui_toolkit / ugui / no_ui?
+   → Default: ui_toolkit
+
+If you skip, I'll use the defaults and start building.
+```
+
+When user confirms or says "давай" / "го" / just picks mode:
+
+```
+✅ Mode: standard | Platform: PC | UI: ui_toolkit
+
+Starting PLAN phase. Scanning project structure...
+[reads manifest.json, checks packages, detects structure]
+
+Creating DEV_PLAN with feature decomposition...
+[outputs plan]
+
+Approve the plan? Then I start BUILD.
+```
+
+---
+
+## Error Recovery
+
+### Compilation fails
+```
+Attempt 1: Fix error based on read_console output
+Attempt 2: Fix differently (check imports, typos, missing references)
+Attempt 3: Revert last change, try simpler approach
+Attempt 4: Ask user for help — show error, explain what was tried
+```
+
+### Play Mode crash
+```
+1. manage_scene action=stop (force exit)
+2. read_console → find crash cause
+3. Fix → recompile → retry Play Mode
+4. If same crash → revert feature, rebuild step by step
+```
+
+### MCP not responding
+```
+1. Retry the operation (1 time)
+2. Read mcpforunity://editor/state → check advice
+3. If ready_for_tools=false → wait recommended_retry_after_ms, retry
+4. If still fails → tell user: "MCP not responding. Check: Window → MCP for Unity → is server running?"
+5. Switch to file-only mode if user confirms MCP is unavailable
+```
+
+### Screenshot is blank or wrong
+```
+1. Check Camera position and rotation
+2. Check Game view resolution (not Free Aspect if fixed)
+3. Check if objects are in camera frustum (find_gameobjects → check positions)
+4. Retake screenshot
+5. If still blank → note in DEV_STATE, continue (don't block on screenshot)
+```
+
+### Feature doesn't work after 3 attempts
+```
+1. Revert to last working state
+2. Simplify the approach (less ambitious implementation)
+3. Note in AGENT_MEMORY what didn't work and why
+4. If still stuck → ask user for guidance
+```
+
+---
+
+## Anti-Patterns (NEVER do these)
+
+- ❌ Start coding without mode selection
+- ❌ Start coding without plan approval (full cycle)
+- ❌ Skip compile check after writing code
+- ❌ Skip `read_console` after Play Mode
+- ❌ Report "done" without reviewing screenshot
+- ❌ Use legacy `UnityEngine.UI.Text` — ALWAYS `TextMeshPro`
+- ❌ Create memory files in project root (only `Docs/`)
+- ❌ Log file without datetime: `iteration-01.md` (must be `iteration-01-YYYYMMDD-HHMM.md`)
+- ❌ Hardcode settings in MonoBehaviour (use SO)
+- ❌ Use `Find`/`FindObjectOfType` in Update
+- ❌ Add DI/ServiceLocator in fast mode without clear reason
+- ❌ Use game-specific names in scripts (`TotalWar`, `MyGame`)
+- ❌ Skip scene save after MCP changes
+- ❌ Continue BUILD with broken MCP when `mcp_mode = use`
+- ❌ Trust sub-agent output without verification
+- ❌ Forget to update DEV_STATE and DEV_LOG
+- ❌ Leave UI references without null checks in NoUI mode
+- ❌ Impose `_source/` structure on projects that already have their own
+
+---
+
+## Core Mechanics Patterns
+
+For reusable mechanics across projects: [tools/core-mechanics.md](tools/core-mechanics.md)
+
+Key principles:
+- Data in SO, logic in components
+- One component, one mechanic
+- Events over hard links
+- Contracts (interfaces) where variants exist
+
+---
+
+## VCS Safety (Unity)
+
+- Move/rename assets **only in Unity Editor** (`.meta` must travel with files)
+- `.meta` files in VCS (never exclude)
+- No spaces in file/folder names (`CamelCase` / `snake_case`)
+- Keep sandbox scenes separate from production
+
+---
+
+## Quick Reference Links
+
+- **MCP Commands:** [mcp-commands.md](mcp-commands.md)
+- **Templates:** [reference.md](reference.md)
+- **Ready Prompts:** [PROMPTS.md](PROMPTS.md)
+- **Code Rules:** [tools/code-writing.md](tools/code-writing.md)
+- **Core Mechanics:** [tools/core-mechanics.md](tools/core-mechanics.md)
+- **Libraries:** [tools/libraries-setup.md](tools/libraries-setup.md)
+- **Modes:** [modes/fast.md](modes/fast.md) · [modes/standard.md](modes/standard.md) · [modes/pro.md](modes/pro.md)
+- **Project Profiles:** `project-profiles/*.md`

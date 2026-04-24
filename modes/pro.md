@@ -1,91 +1,121 @@
-# Mode: Pro (long-term)
+# Mode: Pro
 
-**For:** scalable project, long development with extensibility, tests, and full state tracking.
+**For:** Scalable project, long development, architecture, tests, full state tracking.
 
-## Goal
+## Scope Limits (guidelines, not hard limits)
+- Mechanics: **6+** or systemic gameplay
+- Screens: **6+** (0 if `ui_mode = no_ui`)
+- Scenes: **5+**
+- Features per iteration: **1** (deep implementation + full check)
 
-Long project with foundation. Full outline, detailed stages with acceptance criteria, architecture, tests. Full state files: Docs/DEV_STATE (current + context), Docs/DEV_PLAN (plan), Docs/DEV_LOG/ (iterations with iteration-NN-YYYYMMDD-HHMM.md, screenshots).
+## Pipeline Adjustments
 
-## Complexity limits
+### INTAKE
+- **Detailed questions:** genre, all mechanics, screens, systems, style, platform, extensibility, priorities.
+- Ask: "Autotests on by default; disable?" Record in DEV_CONFIG.
+- Ask about QA per feature and final QA checklist.
 
-> Default guidelines, not hard limits. Can exceed with user agreement.
+### PLAN
+- Full outline: systems, screens, data, extensibility.
+- Detailed stages with acceptance criteria per stage.
+- Library discovery with Reuse Decision Matrix (compare 1–3 options).
+- Record choices in ARCHITECTURE.md.
+- **Before each feature — ask if in doubt.** Clarify edge cases, behavior, SO structure.
 
-- Screens: **6+** (or cross-scene UI).
-- Mechanics: **6+** or systemic gameplay.
-- Scenes: **5+**.
-- New features per iteration: usually **1** (deep implementation and check).
+### BUILD
+- **Per task checks** within a feature + **per feature checks.**
+- After each task in feature: compile + `read_console`.
+- After each feature: full Play Mode + `read_console` + screenshot + try to play.
+- Scene save after every task.
+- DEV_STATE + DEV_LOG update after every task.
+- **Run autotests** after features (if enabled).
 
-## Clarifying questions
+### VERIFY
+- Full Play Mode walkthrough of all game paths.
+- `read_console` — completely clean.
+- Run full test suite (`run_tests`).
+- Final screenshot series.
+- Performance check (`manage_profiler` if needed).
+- Final QA checklist if enabled.
 
-- **Before plan:** yes, detailed. Clarify genre, all mechanics, screens, systems, style, platform, extensibility, priorities.
-- **Before feature:** yes **if in doubt**. Clarify implementation details, behavior, edge cases, what data in SO, what UI. If clear from plan — do without asking.
-- **During:** when unclear — ask. Better ask than redo.
-- Can be turned off/on at user request.
+### SHIP
+- Full report with test results, screenshot gallery, known issues.
+- All docs complete and current.
 
-## Workflow
-
-1. Detailed clarifying questions → full project understanding.
-2. Full outline (systems, screens, data, extensibility).
-3. Detailed stages with checklists and acceptance criteria.
-4. Reuse-first (default): before implementing feature (1) check Unity built-in and packages; (2) if needed search GitHub and web. Compare 1–3 options and choose. If feature small/simple — code by hand. **Before each feature — ask if in doubt.**
-5. Full state files: Docs/DEV_STATE + Docs/DEV_PLAN + Docs/DEV_LOG/ (iterations).
-
-## Reuse-first
-
-- **On by default** (toggle in `Docs/DEV_CONFIG.md` → “Search ready solutions”).
-- Check ready-made (Unity + packages) first, then GitHub and web if needed. Priority: **UPM/package** → **GitHub/open code** → asset → reference code.
-- Choice criteria (required): license, support/updates, Unity/platform compatibility, dependency size/risks.
-- Record: write to `Docs/ARCHITECTURE.md` (what chosen and why) + current iteration file in `Docs/DEV_LOG/` (what was done).
-
-## Input policy
-
-- Default `New Input System`.
-- Use `Both`/`Old` only for confirmed legacy limits; document reason.
-
-## Checks and tests
-
-- **Agent must check:** per task in feature + per feature. Play Mode, game screenshots (not only scene), try to play (buttons, flow), console via `read_console` during/after Play Mode. Editor + screenshots + checklists.
-- **Before stage/project handoff:** Play Mode + `read_console` + final screenshot.
-- **Autotests on by default.** User can disable. At Pro start ask: “Autotests on by default; disable?”
-- **QA per feature:** on/off in `Docs/DEV_CONFIG.md`. If on — after each feature agent writes QA checklist (steps + expected + edge cases + “Agent check” + “QA check”) and waits for user OK.
-- **Final QA checklist:** only if enabled in `Docs/DEV_CONFIG.md`. See reference.md → “QA checklist template”.
-
-## Outline
-
-Full: genre, mechanics, all screens/scenes, main systems (input, saves, UI, audio), data and extensibility.
-
-## Stages
-
-Detailed stages with checklists and acceptance criteria. Per stage — files/scenes/prefabs, check checklist, “done” criteria.
-
-## State files
-
-Full format. `Docs/DEV_STATE.md` — context + current task + blockers + next (update on each action). `Docs/DEV_PLAN.md` — all tasks with checkboxes, stats. `Docs/DEV_LOG/iteration-NN-YYYYMMDD-HHMM.md` — full entries: date, result, files, screenshots with descriptions. Update on each action.
-
-## Code style
-
-**Architecture** — SO for all data + services/interfaces, refactor, extensibility. Unit/autotests on by default. **All settings in SO** (NpcData, GameFightData, UiData, etc.). See [SKILL.md](../SKILL.md) — “settings only in SO”.
-- **C# namespaces** — use namespaces by system (e.g. `Game.Combat`, `Game.UI`). Pro is the only mode where namespaces are used; see [tools/code-writing.md](../tools/code-writing.md).
-- **Composition:** main logic mostly in classes/services; MonoBehaviour — mainly view/entry points. Use DI/LifetimeScope when project really needs scalable composition.
-- **Architecture:** [tools/architecture-by-mode.md](../tools/architecture-by-mode.md).
-
-### Code comments (Pro)
-
+## Code Style
+- **Architecture-first** — SO for data, services for logic, MonoBehaviour as view/entry.
+- **Interfaces** for key systems: `IDamageable`, `IInteractable`, `ISaveable`, `IInputProvider`.
+- **Namespaces** by system: `Game.Combat`, `Game.Inventory`, `Game.UI`.
+- **Services** via ServiceLocator or DI (VContainer / Zenject) when justified.
+- Data vs logic: SO for data, MonoBehaviour for Unity binding, POCO for pure logic.
+- Events / Observer for cross-system communication.
 - **XML docs required** for: classes, public methods, public fields/properties, interfaces.
-- **No plain `//` comments.** Code must be self-documenting.
-- **Only:** `// TODO:`, `// HACK:` / `// WORKAROUND:`, `// NOTE:` (non-obvious), SO field explanations (`[Tooltip]` or `//`).
-- **No** “obvious” comments like `// increment counter`, `// call method`.
+- **No plain `//` comments.** Code self-documenting. Only: `// TODO:`, `// HACK:`, `// NOTE:`.
+- `[SerializeField]`, cache components, null checks.
+- Assembly Definitions for compile speed.
+- Object pool for frequent create/destroy.
+- State machine for complex behavior.
 
-### Logging (Pro)
+## Logging
+- **No `//` comments.** Use `Debug.Log` instead — plenty, with params and state info.
+- Format: `Debug.Log($"[Feature.Class.Method] Damage={amount}, HP={_currentHealth}")`
+- `Debug.LogError` for errors, `Debug.LogWarning` for suspicious cases.
 
-- **Plenty and relevant.** Log key events, state changes, actions, errors, warnings.
-- Format: `Debug.Log($"[Feature.Class.Method] description with params")`. Example: `Debug.Log($"[Combat.HealthComponent.TakeDamage] Damage={amount}, HP={_currentHealth}")`.
-- `Debug.LogError` — errors. `Debug.LogWarning` — suspicious cases.
-- Do not log every frame in Update.
+## Testing
+- **Autotests ON by default.** User can disable.
+- EditMode tests for pure logic (combat math, inventory add/remove).
+- PlayMode tests for integration (scene load, interaction flow).
+- Run via MCP: `run_tests mode="EditMode"` → `get_test_job id=<id>`.
+- Tests must pass before feature is done.
 
-Details and examples: [tools/code-writing.md](../tools/code-writing.md).
+## Docs
+- **Everything required.** DEV_STATE, DEV_PLAN, DEV_LOG, AGENT_MEMORY, ARCHITECTURE.
+- Full format: detailed entries with timestamps, screenshots, file lists.
+- Update on every action — not optional.
 
-## Example outline (Pro)
+## Architecture
+- Main logic in classes/services.
+- MonoBehaviour mainly as view/entry points.
+- DI/LifetimeScope when composition justifies it.
+- **Document DI decisions** in ARCHITECTURE.md: what problem, why needed, benefit, risks.
+- Architecture escalation: simple components → service layer → DI.
+
+## Input
+- Default: `New Input System`.
+- `Both`/`Old` only for confirmed legacy limits. Document reason.
+
+## QA
+- **QA per feature:** on/off in DEV_CONFIG. If on → agent writes QA checklist with edge cases, waits for user OK.
+- **Final QA:** if enabled — full checklist including performance.
+
+## MCP Usage
+- **Full MCP every step:**
+  - Before task: `mcpforunity://editor/state` → note initial state.
+  - After task: `read_console` + screenshot.
+  - After feature: full Play Mode check + screenshot.
+- `validate_script` — after each script edit (strict compile check).
+- `batch_execute` — for complex operations (creating object systems).
+- `manage_prefabs` — create prefabs immediately.
+- `manage_profiler` — performance checks.
+- `run_tests` — after features.
+
+## Checklist
+
+- [ ] Detailed questions → full outline (systems, screens, data)
+- [ ] Clarify: autotests? QA per feature? Final QA? Write to DEV_CONFIG
+- [ ] Detailed stages with acceptance criteria
+- [ ] Before each feature — ask if in doubt or ambiguous
+- [ ] Implement: architecture + SO + tests
+- [ ] After each task: compile + `read_console`
+- [ ] After each feature: Play Mode + `read_console` + screenshot + tests
+- [ ] Screenshot reviewed (not blank, shows expected)
+- [ ] DEV_STATE + DEV_LOG updated after every action
+- [ ] All text uses TextMeshPro (never legacy Text)
+- [ ] Autotests pass (unless disabled)
+- [ ] Before handoff: full Play Mode + tests + final screenshot
+- [ ] Final QA checklist if enabled
+
+## Example
 
 ```
 Genre: RPG with turn-based combat.
@@ -98,42 +128,18 @@ Systems:
 - Progression: levels, XP. SO: LevelCurveData.
 
 Screens: MainMenu, WorldMap, Battle, Inventory, Dialogue, Settings.
-
-Data: all combat, items, NPC, quest, UI params in SO.
-Extensibility: new enemy = new EnemyData asset, new quest = new QuestData asset.
 Tests: combat, inventory, progression.
-```
 
-## Example stages (Pro)
-
-```
 Stage 1: Architecture — GameManager, SceneLoader, ServiceLocator.
   Criteria: scenes switch, services available. Test: SceneLoadTest.
-
 Stage 2: Combat system.
   2.1: Combat model (BattleManager, TurnSystem). Test: TurnOrderTest.
   2.2: Abilities (AbilitySystem + AbilityData SO). Test: DamageCalcTest.
-  2.3: Battle UI (HP bars, ability choice). Editor check.
-  Feature criteria: combat runs start to end, params from SO.
-
+  2.3: Battle UI. Editor check.
 Stage 3: Inventory.
   3.1: Model (Inventory, ItemData SO). Test: InventoryAddRemoveTest.
   3.2: Inventory UI. Editor check.
-  Criteria: add/remove items, data from SO.
-
-Stage 4: Dialogue and quests (DialogueSystem, QuestSystem, SO data).
+Stage 4: Dialogue and quests.
 Stage 5: World, navigation, integrate all systems.
-Stage 6: Polish, balance via SO, final tests.
+Stage 6: Polish, balance, final tests.
 ```
-
-## Pro mode checklist
-
-- [ ] Detailed clarifying questions → full outline (systems, screens, data). Clarify: autotests? Questions? QA per feature? Final QA checklist? Write to Docs/DEV_CONFIG.md.
-- [ ] Detailed plan: stages with checklists and acceptance criteria.
-- [ ] **Before each feature** — if in doubt or ambiguous, ask user.
-- [ ] Implement by stages: architecture, SO, tests. **Check per task in feature and per feature.**
-- [ ] After each feature/task agent checks: Play Mode, `read_console`, game screenshots, try to play. If QA per feature on — write QA steps, wait for OK.
-- [ ] Before stage/project handoff: Play Mode + `read_console` + final screenshot.
-- [ ] Run autotests as you go (unless user disabled).
-- [ ] State files (DEV_STATE/PLAN/LOG) in full format; update on each action; screenshots with dates.
-- [ ] Final QA checklist only if enabled in `Docs/DEV_CONFIG.md`.

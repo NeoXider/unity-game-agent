@@ -1,103 +1,92 @@
 # Mode: Fast
 
-**For:** get to playable build faster with simpler process (fewer reports and screenshots). Game size can be medium or large.
+**For:** Validate idea quickly OR get to playable build fast. Merges former Prototype and Fast modes.
 
-## Goal
+## Scope Limits (guidelines, not hard limits)
+- Mechanics: **1–4**
+- Screens: **1–4** (0 if `ui_mode = no_ui`)
+- Scenes: **1–3**
+- Features per iteration: **up to 4** (batch check)
 
-Quick to playable result. Simplified process: less docs, fewer screenshots, bigger stages. **Several features per pass** is ok.
+## Pipeline Adjustments
 
-## Complexity limits
+### INTAKE
+- Questions: **1–3 max** before plan. No questions during BUILD.
+- If user gives enough info → start immediately.
 
-> Default guidelines, not hard limits. Can exceed with user agreement.
+### PLAN
+- Minimal outline: genre, key mechanics, screens (if any), SO list.
+- Big stages (2–3), no detailed checklists per stage.
+- Reuse-first: quick check (1–5 min), if nothing obvious → code by hand.
 
-- Screens: usually **2–4**, max **5**.
-- Mechanics: **2–4** key.
-- Scenes: usually **1–2**, max **3**.
-- New features per iteration: **up to 4** (with batch check).
+### BUILD
+- **Batch checks allowed:** can implement 2–4 features, then do one Play Mode check for the batch.
+- Compile check (`refresh_unity` + `read_console`) still required after EVERY feature.
+- Scene save after every batch.
+- Screenshots after each batch (not each feature).
+- DEV_STATE update after each batch.
 
-## Clarifying questions
+### VERIFY
+- Play Mode + `read_console` + final screenshot — **required before handoff**.
+- No skipping the final verification even in fast mode.
 
-- **Before plan:** yes, minimum (1–3). Clarify basics and move on.
-- **Before feature:** no. Decide on your own — speed matters.
-- **During:** no.
-- Can be turned off/on at user request.
+### SHIP
+- Brief report. Screenshot gallery.
 
-## Workflow
+## Code Style
+- Components + SO. Fast scripts, few abstractions.
+- **Singletons OK** (`GameManager.Instance`, `AudioManager.Instance`).
+- `[SerializeField]` for Inspector fields.
+- No C# namespaces.
+- No XML docs (except non-obvious).
+- Magic numbers OK **except settings** (those in SO always).
+- **No DI/ServiceLocator** without clear reason.
 
-1. Clarifying questions (min, 1–3).
-2. Outline + stage list.
-3. Big stages, fewer screenshots and detail.
-4. Reuse-first (default): check Unity built-in and packages; if needed quick search on **GitHub** and **web** (mechanics, libraries, assets). If feature small/simple — code by hand.
-5. Implement (components, SO); several features per pass ok.
-6. State files brief, no heavy history.
+## Logging
+- **No `//` comments.** Use `Debug.Log` instead — key events only.
+- Format: `Debug.Log($"[Feature.Class.Method] ...")` when used.
 
-## Reuse-first
+## Docs
+- `Docs/DEV_STATE.md` — context + current + next. Brief.
+- `Docs/DEV_PLAN.md` — optional, brief if created.
+- `Docs/DEV_LOG/` — brief entries on batch completion.
+- `Docs/AGENT_MEMORY.md` — important decisions only.
 
-- **On by default** (toggle in `Docs/DEV_CONFIG.md` → “Search ready solutions”).
-- Check ready-made (Unity + packages) first, then GitHub and web if needed. Priority: **UPM/package** → **GitHub/open code** → asset → reference code.
-- In Fast: **quick choice**. Do not add heavy deps for small gains.
+## Architecture
+- MonoBehaviour-first, minimal abstraction.
+- Direct `[SerializeField]` references between components.
+- No ServiceLocator, no DI.
+- Manual scene setup (Unity Editor / MCP).
 
-## Input policy
+## Input
+- Default: `Old` or `Both`.
+- Keep existing if project uses `New Input System`.
 
-- Default `New Input System`.
-- Legacy projects: `Both` or `Old` ok per project limits.
+## MCP Usage
+- `batch_execute` — **recommended** (multiple objects/components at once).
+- `read_console` — after each batch, not each feature.
+- Screenshot — after batch or stage, not each feature.
+- `manage_scene action=save` — after each batch.
 
-## Checks and tests
+## Checklist
 
-- **Agent must check**, but **not after every feature**: can check several features in a row or one check at stage end. When checking: Play Mode, try to play (buttons, flow), game screenshots, console via `read_console` during/after Play Mode.
-- **Before stage/project handoff:** Play Mode + `read_console` + final screenshot.
-- No tests required.
-- **QA checklists:** only if enabled in `Docs/DEV_CONFIG.md`. See reference.md → “QA checklist template”.
+- [ ] 1–3 questions → minimal outline
+- [ ] 2–3 big stages, no detailed checklists
+- [ ] Implement in batches (2–4 features), all data in SO
+- [ ] Compile check after each feature
+- [ ] Play Mode + `read_console` + screenshot after each batch
+- [ ] Before handoff: Play Mode + `read_console` + final screenshot
+- [ ] DEV_STATE updated after each batch
+- [ ] All text uses TextMeshPro (never legacy Text)
 
-## Outline
-
-Outline and stage list. Less detail than Standard.
-
-## Stages
-
-Big stages. Fewer screenshots and detail in reports.
-
-## State files
-
-Keep brief. `Docs/DEV_STATE.md` — context + current task + next. `Docs/DEV_PLAN.md` — all tasks with checkboxes (brief). `Docs/DEV_LOG/iteration-NN-YYYYMMDD-HHMM.md` — when finishing tasks (no long descriptions).
-
-## Code style
-
-**Components** — one component one responsibility, data in SO (NpcData, UiData, LevelSettings). Fewer layers, faster to write. **All settings in SO.** See [SKILL.md](../SKILL.md) — “settings only in SO”.
-- **No C# namespaces** — keep scripts in default (global) scope. Namespaces only in Pro mode; see [tools/code-writing.md](../tools/code-writing.md).
-- **Hierarchy/scene:** prefer manual object setup (Unity Editor/Unity MCP). Do not use bootstrap unless for narrow checks/tech tasks.
-- **MonoBehaviour:** fewer “kitchen sink” scripts; split into components with explicit refs.
-- **Architecture:** [tools/architecture-by-mode.md](../tools/architecture-by-mode.md).
-- **Anti-pattern:** do not add global ServiceLocator without clear reason.
-
-### Logging (Fast)
-
-- **Moderate.** `Debug.LogError` and `Debug.LogWarning` — required. `Debug.Log` — as needed, not excessive.
-- Same format: `Debug.Log($"[Feature.Class.Method] description")`.
-
-## Example outline (Fast)
-
-```
-Genre: Runner.
-Mechanics: run forward, dodge (swipe/arrows), collect coins, obstacles.
-Screens: Gameplay, GameOver with Restart.
-SO: RunnerSettings (speed, laneDistance), ObstacleData, CoinValue.
-```
-
-## Example stages (Fast)
+## Example
 
 ```
-Stage 1: Character + endless move + dodge + camera. SO: RunnerSettings.
-Stage 2: Obstacles + coins + spawner + Game Over. SO: ObstacleData, CoinValue.
-Stage 3: UI (score, GameOver, Restart) + polish + check.
+Genre: 2D platformer.
+Mechanics: run + jump.
+One level, no menu.
+
+Stage 1: Scene + character with controls. SO: PlayerSettings (speed, jumpForce).
+Stage 2: Level (platforms, collisions) + camera.
+Stage 3: Check, screenshot, final tweaks.
 ```
-
-## Fast mode checklist
-
-- [ ] Clarifying questions → outline + stage list.
-- [ ] Big stages; can combine several features in one pass.
-- [ ] Implement (components, SO); Unity editor (refresh, scene, inspector) as needed.
-- [ ] Checks per feature block: Play Mode + `read_console` + screenshots.
-- [ ] Before handoff: Play Mode + `read_console` + final screenshot.
-- [ ] QA checklists only if enabled in `Docs/DEV_CONFIG.md`.
-- [ ] State files (DEV_STATE/PLAN/LOG) brief, no heavy history.

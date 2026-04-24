@@ -1,61 +1,69 @@
 # Unity Game Agent
 
-**An agent that drives Unity game development from idea to playable build — without chaos, with a clear plan and checks.**
+**An autonomous agent that builds Unity games from idea to playable build — with a strict pipeline, MCP integration, and sub-agent architecture.**
 
-> **Repository description (GitHub/GitLab):** Cursor skill: agent-driven Unity game development in stages (sketch → plan → implement → verify). Modes: prototype, standard, fast, pro, no_ui.
-
----
-
-## Why this exists
-
-Want the AI to act like a developer — ask for settings and game design, lock in a plan, implement step by step, and report back — instead of just dumping code?  
-**Unity Game Agent** is a Cursor skill that turns the agent into a predictable partner for making games: with stages, modes, and a single project “memory” (DEV_CONFIG, GAME_DESIGN, DEV_PLAN, DEV_STATE, iteration logs).
-
-- **Prototype in a couple of hours** — minimal planning, quick idea validation.  
-- **A small, coherent game** — standard mode with checks on every feature.  
-- **Fast to a playable build** — big milestones, checks at the end.  
-- **Serious project** — full plan, tests, architecture.
-
-One loop for everything: **sketch → plan → implement → verify → report**. Planning happens in Plan mode so you see and approve the plan before any code.
+> **Repository description:** Cursor skill: autonomous Unity game development. Pipeline: INTAKE → PLAN → BUILD → VERIFY → SHIP. Modes: fast / standard / pro. Full CoplayDev/unity-mcp integration (42+ tools).
 
 ---
 
-## What’s inside
+## What it does
 
-| Part | Description |
+The agent acts as a **game developer** — asks for game design, locks in a plan, implements step by step, verifies in Play Mode, and delivers a tested build.
+
+- **Fast mode** — prototype or playable build in hours
+- **Standard mode** — small complete game with quality checks per feature
+- **Pro mode** — scalable project with architecture, tests, and full documentation
+
+One pipeline for everything: **INTAKE → PLAN → BUILD → VERIFY → SHIP**.
+
+---
+
+## What's inside
+
+| File | Description |
 |------|-------------|
-| **SKILL.md** | Main skill file: cycle, rules, links to the rest. |
-| **reference.md** | Templates for DEV_CONFIG, GAME_DESIGN, UI_BRIEF, DEV_STATE, DEV_PLAN and rules for project “memory”. |
-| **MODE_CHOICE.md** / **MODE_DETAILS.md** | Mode selection (Prototype / Standard / Fast / Pro / NoUI) and details. |
-| **modes/** | Rules per mode: plan depth, code style, checks. |
-| **tools/** | Unity MCP, ComfyUI, UI Builder, architecture-by-mode, code, editor — when to use what. |
-| **PROMPTS.md** | Ready-made prompts: start game, features, continue, QA. |
-| **setup_source_folders.bat** | Project folder structure automation. |
+| **SKILL.md** | Main file: pipeline, rules, modes, UI strategy, code rules, sub-agent architecture |
+| **mcp-commands.md** | Full catalog of 42+ CoplayDev/unity-mcp tools with examples |
+| **reference.md** | Templates for project docs (DEV_STATE, DEV_PLAN, etc.) and doc rules |
+| **PROMPTS.md** | Ready-made prompts for common tasks |
+| **modes/** | Mode-specific rules: fast.md, standard.md, pro.md |
+| **tools/** | Code rules (code-writing.md), core mechanics, library setup |
+| **templates/** | Full doc templates for project Docs/ folder |
+| **project-profiles/** | Project-specific presets (Neoxider, uGUI, UI Toolkit) |
+| **scripts/** | Automation: task completion, doc updates |
+| **setup_project.bat** | Bootstrap: creates Docs/, _source/, all templates |
 
-Settings and data live in **ScriptableObjects**. On start the agent asks for **settings** (mode, platform, orientation, style, design references, ComfyUI, etc.) and **game design**. If MCP aren’t available, it asks: help set up or start without them.
+---
+
+## Key features
+
+- **CoplayDev/unity-mcp** — 42+ MCP tools for full Unity Editor control
+- **Sub-agent architecture** — orchestrator delegates to coding/QA/report agents, verifies results
+- **Strict pipeline** — compile check, Play Mode test, screenshot review, doc update before proceeding
+- **UI strategy** — UI Toolkit (default), uGUI + TextMeshPro, or NoUI (null-safe stubs)
+- **Constant reporting** — DEV_STATE and screenshots updated after every feature
+- **Reuse-first** — check existing packages/GitHub before coding from scratch
 
 ---
 
 ## How to use
 
-1. **Add the skill** in Cursor (e.g. copy this folder into your project’s `.cursor/skills/` or point to this repo).  
-2. **Open your Unity project** and, if needed, configure MCP (Unity MCP, ComfyUI) in `.cursor/mcp.json`.  
-3. **Tell the agent** you want to make a game — it will ask for settings and game design, then propose a plan in Plan mode. After you confirm, implementation runs by stages.
-
-Detailed setup and scenarios: [SKILL.md](SKILL.md) and [PROMPTS.md](PROMPTS.md).
-
----
-
-## Who it’s for
-
-- **Indies and jam participants** — quick prototype or workflow for a small game.  
-- **Teams** — shared cycle and state files (DEV_*, logs) so the agent and humans stay on the same page.  
-- **Learning** — clear stages and modes instead of “write everything at once”.
+1. **Add the skill** — copy this folder to `.cursor/skills/` in your project
+2. **Install MCP** — `com.coplaydev.unity-mcp` in Unity Package Manager
+3. **Start server** — Window → MCP for Unity → Start Server
+4. **Tell the agent** — describe your game, pick a mode, and let it build
 
 ---
 
-## License and contributing
+## MCP Package
 
-Use it in your projects. Improvements and ideas welcome via issues and pull requests.
+**Package:** `com.coplaydev.unity-mcp`  
+**Install URL:** `https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity`
 
-**Unity Game Agent** — so the agent keeps the thread and you keep control over how the game is made.
+This is the same MCP used in the Neoxider project and provides 42+ tools for scene control, script management, physics, animation, build, profiling, and more.
+
+---
+
+## License
+
+Use in your projects. Improvements welcome via issues and PRs.

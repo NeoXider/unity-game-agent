@@ -1,34 +1,15 @@
-# C# / Code — recommendations
+# C# / Code — Detailed Reference
 
-Recommendations for writing Unity game code. Style, patterns, and strictness depend on [dev mode](../MODE_CHOICE.md).
+Extended code rules. Core rules are in [SKILL.md](../SKILL.md) → "Code Rules". This file has details and examples.
 
 ---
 
-## General rules (all modes)
+## ScriptableObject Patterns
 
-### Naming
-
-- **Do not use game/project-specific names** in scripts, classes, SO, or file names (e.g. `TotalWar`, `MyGame`, `SuperPuzzle`). Use **role-based names**: `GameManager`, `MainMenuController`, `RewardPanel`, `UiData`, `ShopItemView` — so code and assets stay portable.
-- **Namespaces:** do not use C# `namespace` (keep default/global scope) in **Prototype, Standard, Fast**. Use namespaces **only in Pro mode** — by system, e.g. `Game.Combat`, `Game.Inventory`, `Game.UI`. See [Code by mode](#code-by-mode) below.
-
-| Element | Style | Example |
-|---------|-------|--------|
-| Classes, structs | PascalCase | `PlayerController`, `EnemyData` |
-| Public methods | PascalCase | `TakeDamage()`, `Initialize()` |
-| Public properties | PascalCase | `MaxHealth`, `MoveSpeed` |
-| Private fields | camelCase with _ | `_currentHealth`, `_moveDirection` |
-| Local variables | camelCase | `spawnPosition`, `enemyCount` |
-| Constants | UPPER_SNAKE or PascalCase | `MAX_ENEMIES` or `MaxEnemies` |
-| SO assets | PascalCase with suffix | `PlayerData`, `EnemyData_Goblin` |
-
-### ScriptableObject (required in all modes)
-
-**All settings and data in SO.** No hardcoding in MonoBehaviour.
-
+### Basic SO
 ```csharp
-// SO — data
 [CreateAssetMenu(fileName = "NewEnemyData", menuName = "GameData/EnemyData")]
-public class EnemyData : ScriptableObject
+public sealed class EnemyData : ScriptableObject
 {
     [Header("Stats")]
     public int health = 50;
@@ -39,12 +20,13 @@ public class EnemyData : ScriptableObject
     public Sprite sprite;
     public Color tintColor = Color.white;
 }
+```
 
-// MonoBehaviour — logic (references SO)
+### MonoBehaviour referencing SO
+```csharp
 public class Enemy : MonoBehaviour
 {
     [SerializeField] private EnemyData _data;
-
     private int _currentHealth;
 
     private void Start()
@@ -55,206 +37,168 @@ public class Enemy : MonoBehaviour
 }
 ```
 
-### Basics
+---
 
-- **One script — one responsibility.** `PlayerMovement` separate from `PlayerHealth`.
-- **SerializeField instead of public** for Inspector fields.
-- **No Find/FindObjectOfType in Update** — cache in Start/Awake.
-- **Null-check** when using references.
-- **Logging** — volume depends on mode (see below).
-
-### Async and deferred ops
-
-**Recommendation for all modes:** use **UniTask** (Cysharp) for async/await in Unity — zero allocation, runs on PlayerLoop (no threads, WebGL ok), cancellation via `CancellationToken`, `UniTask.Delay`, `UniTask.Yield`, await for `AsyncOperation` and coroutines.
-
-- **If UniTask is in project** — use for delays, scene/asset load, chains, cancellable timers. Do not duplicate with coroutines without reason.
-- **If UniTask not installed** — before implementing async feature check if adding the package is simpler (UPM: `com.cysharp.unitasks` or [GitHub](https://github.com/Cysharp/UniTask)). Docs: [UniTask](https://github.com/Cysharp/UniTask#readme).
-- **Coroutines** — ok for simple step delays (single `WaitForSeconds` chain) if UniTask not used. For complex (cancellation, multiple waits, async chains) prefer UniTask.
+## Singleton Pattern (fast/standard modes)
 
 ```csharp
-// With UniTask (preferred)
-await UniTask.Delay(TimeSpan.FromSeconds(1), cancellationToken: cts.Token);
-await sceneLoader.LoadSceneAsync("Game").ToUniTask();
+public class GameManager : MonoBehaviour
+{
+    public static GameManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
+}
 ```
 
-### Common packages
-
-Before implementing a feature check: (1) Unity built-in; (2) packages already in project; (3) if needed — **search GitHub** (unity, mechanic, library, UPM) and **web** (tutorials, Unity Forums, Asset Store). Below — packages often used in Unity projects.
-
-| Purpose | Package | Brief |
-|---------|---------|-------|
-| **Async/await** | **UniTask** (Cysharp) | Async, no alloc, cancellation, await AsyncOperation. UPM: `com.cysharp.unitasks` or Git. Recommended all modes. |
-| **Tweens** | **DOTween** (Demigiant) | Fast tweens for transform, UI, values. Asset Store or [dotween.demigiant.com](https://dotween.demigiant.com/). Alternative: Animator/Animation. |
-| **JSON** | **Newtonsoft.Json** | Serialization. Often already in Unity (2022+). NuGet or UPM. |
-| **DI / IoC** | **VContainer**, **Zenject** | DI for large projects (Pro). Not required for prototype/small games. |
-| **Localization** | **Unity Localization** | Package `com.unity.localization` — tables, keys, text swap. |
-
-Do not install packages “just in case” — only for a task. **How to add** UniTask, DOTween, Newtonsoft.Json, Unity Localization: [libraries-setup.md](libraries-setup.md).
-
-**Where to find ready-made:** GitHub (e.g. `unity 2d movement`, `unity inventory system`, `unity ui toolkit`); web — tutorials, [Unity Forums](https://forum.unity.com/), [Asset Store](https://assetstore.unity.com/).
-
-### Unity UI (runtime creation)
-
-Per this skill **all UI only via UI Builder** (UXML/USS, UIDocument), see [ui-builder.md](ui-builder.md). Dynamic elements via UI Toolkit API. Below — **legacy only** (e.g. Unity without UI Builder): programmatic Canvas. Do not use Canvas in normal workflow.
-
-When creating UI on Canvas (exceptional cases only):
-
-- **EventSystem:** scene must have `EventSystem` and `StandaloneInputModule` (or `InputSystemUIInputModule` with new Input System). If UI is created from code at start — ensure EventSystem exists or create it.
-- **Buttons:** button GameObject must have `Image` (or other Graphic) and `Button`. Add `Button` before subscribing to `onClick`.
+**Usage:** fast — freely. standard — OK. pro — prefer DI/ServiceLocator.
 
 ---
 
-## Code by mode
+## Object Pool Pattern
 
-### Prototype
+```csharp
+public class ObjectPool : MonoBehaviour
+{
+    [SerializeField] private GameObject _prefab;
+    [SerializeField] private int _initialSize = 10;
+    private readonly Queue<GameObject> _pool = new();
 
-**Goal:** it works = ok. Minimal abstraction, max speed.
+    private void Start()
+    {
+        for (int i = 0; i < _initialSize; i++)
+        {
+            var obj = Instantiate(_prefab, transform);
+            obj.SetActive(false);
+            _pool.Enqueue(obj);
+        }
+    }
 
-**Allowed:**
-- All logic in one script (if < 100 lines).
-- Direct references via `[SerializeField]` without architecture.
-- `GetComponent<>()` in Start without caching (if few objects).
-- Magic numbers — **except settings** (those in SO).
-- No XML docs (except non-obvious).
-- **Singleton for managers** — freely (`GameManager.Instance`, `AudioManager.Instance`).
+    public GameObject Get(Vector3 position)
+    {
+        var obj = _pool.Count > 0 ? _pool.Dequeue() : Instantiate(_prefab, transform);
+        obj.transform.position = position;
+        obj.SetActive(true);
+        return obj;
+    }
 
-**Not allowed:**
-- Hardcoded settings (speed, damage) — **only in SO**.
-- `Update` without checks (endless pointless work).
-- **Namespaces** — do not use; keep scripts in default (global) scope.
-
-**Example (Prototype):** *(same code block as in original, comments in code can stay)*
-
-### Standard
-
-**Goal:** clean, readable code with sensible separation.
-
-**Required:**
-- Separate scripts per responsibility: `PlayerMovement`, `PlayerHealth`, `PlayerCombat`.
-- `[SerializeField]` for all Inspector fields.
-- Cache components in `Awake`/`Start`.
-- Data in SO, references to SO via `[SerializeField]`.
-- Prefabs for repeated objects.
-- XML docs for public methods.
-
-**Recommended:**
-- Events / UnityEvents for cross-system communication.
-- UniTask for async and delays; if no UniTask — coroutines for simple time-based ops.
-- `[Header]`, `[Tooltip]`, `[Range]` on SO for Inspector.
-
-**Not allowed:**
-- **Namespaces** — do not use; keep scripts in default (global) scope.
-
-### Fast
-
-**Goal:** working component code, fast to write, easy to change.
-
-**Required:**
-- Components per responsibility (small ones may be combined).
-- Data in SO.
-- Cache components.
-
-**Allowed:**
-- Minimal XML docs (only non-obvious).
-- Less strict separation (2 responsibilities in one script if related).
-- **Singleton for managers** — freely.
-
-**Not allowed:**
-- Hardcoded settings.
-- Copy-paste (prefer helper or base class).
-- **Namespaces** — do not use; keep scripts in default (global) scope.
-
-### Pro
-
-**Goal:** scalable architecture, testable code, extensibility.
-
-**Required:**
-- **Interfaces** for key systems (`IDamageable`, `IInteractable`, `ISaveable`).
-- **Services** via ServiceLocator or DI (Zenject / VContainer).
-- **Data vs logic:** SO for data, MonoBehaviour for Unity binding, POCO for pure logic.
-- **Events / Observer** for cross-system communication.
-- **XML docs** for classes, public methods, public fields/properties, interfaces — **required**.
-- **Autotests** (if not disabled): EditMode for logic, PlayMode for integration.
-- **Namespace** by system (only mode where namespaces are used): e.g. `Game.Combat`, `Game.Inventory`, `Game.UI`.
-
-**Comments — strict:** No plain `//` comments. Code self-documenting. Only allowed: `// TODO:`, `// HACK:` / `// WORKAROUND:`, `// NOTE:` (non-obvious). No “call method”, “increment counter” etc.
-
-**Recommended:**
-- State machine for complex behavior (AI, animation).
-- Command pattern for actions (undo/redo, replay).
-- Object pool for frequent create/destroy.
-- Addressables instead of Resources.
-- Assembly Definitions for compile speed.
-
----
-
-## Common Unity patterns
-
-### Singleton (managers)
-
-*(Same code block — GameManager Awake pattern.)*
-
-**Modes:** Prototype/Fast — Singleton freely. Standard — ok. Pro — prefer ServiceLocator/DI.
-
-### Object Pool
-
-*(Same code block — ObjectPool Get/Return.)*
-
-**Modes:** Prototype — not needed. Standard — if objects spawn often. Fast/Pro — recommended.
-
----
-
-## Logging (Debug.Log)
-
-Volume depends on mode. Logs help debug and understand behavior.
-
-| Mode | Logging | What to log |
-|------|---------|-------------|
-| **Prototype** | Minimal or none | Only when debugging. No logs is ok. |
-| **Fast** | Moderate | Errors (`LogError`), warnings (`LogWarning`). `Log` as needed. |
-| **Standard** | **Plenty (when relevant)** | Key events, state changes, errors, warnings. |
-| **Pro** | **Plenty (when relevant)** | Key events, state changes, input params, errors, warnings. |
-
-### Log format (all modes)
-
-```
-Debug.Log($"[Feature.Class.Method] comment");
+    public void Return(GameObject obj)
+    {
+        obj.SetActive(false);
+        _pool.Enqueue(obj);
+    }
+}
 ```
 
-- **Feature** — system/feature name (`Combat`, `Spawn`, `UI`, `Save`, `Inventory`, `Input`).
-- **Class** — class name (`WaveSpawner`, `PlayerCombat`, `SaveSystem`).
-- **Method** — method name (`StartNextWave`, `TakeDamage`, `Save`).
-- **Comment** — what happened + params.
+---
 
-Use `$"..."` for readability. `Debug.LogError` for errors, `Debug.LogWarning` for warnings. **Do not log every frame in Update** (except when debugging). In Prototype same format, fewer logs (or none).
+## UniTask Examples
+
+```csharp
+using Cysharp.Threading.Tasks;
+using System;
+using System.Threading;
+
+public class TimerExample : MonoBehaviour
+{
+    private CancellationTokenSource _cts;
+
+    private async UniTaskVoid StartCountdown()
+    {
+        _cts = new CancellationTokenSource();
+        await UniTask.Delay(TimeSpan.FromSeconds(3), cancellationToken: _cts.Token);
+        Debug.Log("[Timer.TimerExample.StartCountdown] Countdown finished");
+    }
+
+    private void OnDestroy() => _cts?.Cancel();
+}
+```
 
 ---
 
-## Code quality checklist
+## TextMeshPro (MANDATORY — never legacy Text)
 
-| Check | Prototype | Standard | Fast | Pro |
-|-------|-----------|----------|------|-----|
-| Settings in SO | ✅ | ✅ | ✅ | ✅ |
-| Single responsibility | — | ✅ | ≈ | ✅ |
-| XML docs | — | ✅ public | Min | ✅ classes + public |
-| Plain `//` comments | Allowed | Allowed | Allowed | ❌ No (except TODO/HACK/NOTE and SO) |
-| Logging | Min / none | ✅ Plenty | Moderate | ✅ Plenty |
-| SerializeField (not public) | — | ✅ | ✅ | ✅ |
-| Cache components | — | ✅ | ✅ | ✅ |
-| Interfaces | — | — | — | ✅ |
-| Namespace | — | — | — | ✅ |
-| Autotests | — | — | — | ✅ |
-| Singleton for managers | ✅ Free | Ok | ✅ Free | ServiceLocator/DI |
-| Events vs direct refs | — | ✅ | ≈ | ✅ |
-| Object Pool (if needed) | — | ≈ | ✅ | ✅ |
+### uGUI (Canvas)
+```csharp
+using TMPro;
 
-### Allowed comments by mode
+public class ScoreDisplay : MonoBehaviour
+{
+    [SerializeField] private TMP_Text _scoreText;
 
-| Type | Prototype | Standard | Fast | Pro |
-|------|-----------|----------|------|-----|
-| XML (`/// <summary>`) | — | public methods | Min | Classes + all public |
-| Plain `//` | Yes | Yes | Yes | **No** |
-| `// TODO:` | Yes | Yes | Yes | Yes |
-| `// HACK:` / `// WORKAROUND:` | Yes | Yes | Yes | Yes |
-| `// NOTE:` | Yes | Yes | Yes | Yes |
-| SO explanations (`[Tooltip]` / `//`) | Yes | Yes | Yes | Yes |
+    public void UpdateScore(int score)
+    {
+        if (_scoreText != null)
+            _scoreText.text = $"Score: {score}";
+    }
+}
+```
+
+### Null-safe stubs (NoUI mode)
+```csharp
+public class GameHUD : MonoBehaviour
+{
+    [SerializeField] private TMP_Text _healthText;
+    [SerializeField] private TMP_Text _scoreText;
+
+    public void UpdateHealth(int hp)
+    {
+        if (_healthText != null) _healthText.text = $"HP: {hp}";
+    }
+
+    public void UpdateScore(int score)
+    {
+        if (_scoreText != null) _scoreText.text = $"Score: {score}";
+    }
+}
+```
+
+---
+
+## No Obvious Comments — Use Debug.Log Instead
+
+**No obvious `//` comments.** Code must be self-documenting. Use `Debug.Log` to explain logic at runtime.
+
+- ✅ Allowed: **XML docs** (`/// <summary>`), `// TODO:`, `// HACK:`, `// WORKAROUND:`
+- ❌ Banned: `// calculate damage`, `// increment counter`, `// get component`
+
+Pattern: `Debug.Log($"[Feature.Class.Method] description with params")`
+
+```csharp
+Debug.Log($"[Spawn.WaveSpawner.StartNextWave] Wave {wave}: {count} enemies");
+Debug.LogError($"[Save.SaveSystem.Load] File not found: {path}");
+Debug.LogWarning($"[Combat.Health.TakeDamage] Damage={amount} but HP already 0");
+```
+
+**Only allowed:** `// TODO:`, `// HACK:`, `// WORKAROUND:` (temporary markers).
+
+| Mode | Debug.Log volume |
+|------|-------------------|
+| fast | Key events only |
+| standard | Plenty — key events, state changes |
+| pro | Plenty — key events, params, state changes |
+
+---
+
+## Code Quality by Mode
+
+| Check | fast | standard | pro |
+|-------|------|----------|-----|
+| Settings in SO | ✅ | ✅ | ✅ |
+| Single responsibility | — | ✅ | ✅ |
+| XML docs | — | Public methods | All public |
+| `//` comments | **No** | **No** | **No** |
+| Debug.Log | Key events | Plenty | Plenty + params |
+| [SerializeField] | OK | ✅ | ✅ |
+| Cache components | — | ✅ | ✅ |
+| Interfaces | — | — | ✅ |
+| Namespaces | — | — | ✅ |
+| Tests | — | — | ✅ |
+| Singleton | ✅ | OK | DI |
+| Events | Optional | ✅ | ✅ |
+| Object Pool | — | If needed | ✅ |
+| TextMeshPro (never legacy) | ✅ | ✅ | ✅ |

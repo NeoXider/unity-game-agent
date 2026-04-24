@@ -1,223 +1,155 @@
-# Ready prompts for AutoUnity
+# Ready Prompts
 
-Request templates for common tasks when building Unity games with AI. Replace `[...]` with your values.
+Action-oriented prompts for the Unity Game Agent. Replace `[...]` with your values.
 
 ---
 
-## Starting a new project
-
-**Agent behavior from scratch:** first ask for **settings** and **game design**. Create all memory files **in Docs/** (Docs/DEV_CONFIG.md, Docs/GAME_DESIGN.md, Docs/DEV_STATE.md, Docs/DEV_PLAN.md, **Docs/AGENT_MEMORY.md** — required). Iteration log file name includes date and time (iteration-NN-YYYYMMDD-HHMM.md). Do not start without asking for settings and game design (anti-pattern). Do planning in **Plan mode**; after plan confirmation — implementation.
-
-### Create game from scratch
+## Start New Game
 
 ```
 Create a [genre] game: [short description].
-Main mechanics: [mechanic 1], [mechanic 2], [mechanic 3].
+Mechanics: [mechanic 1], [mechanic 2], [mechanic 3].
 Platform: [PC / Mobile / WebGL].
-Art style: [2D pixel / 2D casual / 3D low-poly / ...].
+Mode: [fast / standard / pro].
 ```
 
 **Example:**
-
 ```
-Create a 2D platformer: character runs through level, collects coins, avoids traps.
-Main mechanics: run, jump, collect items.
-Platform: PC.
-Art style: 2D pixel.
-```
-
-### Continue existing project
-
-```
-Project is already set up. Check Docs/DEV_CONFIG.md, Docs/DEV_STATE.md, Docs/AGENT_MEMORY.md and Docs/DEV_PLAN.md — continue from where we left off.
-```
-
-### Change / clarify mode
-
-```
-Switch dev mode to [Prototype / Standard / Fast / Pro / NoUI]. Update Docs/DEV_CONFIG.md and Docs/DEV_PROFILE.json.
-```
-
-### Write to agent memory
-
-```
-Remember: [important info, preference, decision, convention]. Write to Docs/AGENT_MEMORY.md.
+Create a 2D platformer: character runs, collects coins, avoids traps.
+Mechanics: run, jump, collect items.
+Platform: PC. Mode: standard.
 ```
 
 ---
 
-## Working with features
-
-### Discovery before planning
+## Continue Project
 
 ```
-Before finalizing the implementation plan, run library discovery:
-1) detect what frameworks/packages already exist in project,
-2) find ready solutions for this feature (Unity built-in, installed packages, GitHub/UPM/Asset Store),
-3) write Reuse Decision Matrix into Docs/DEV_PLAN.md,
-4) only then request plan approval.
+Continue from where we left off. Read Docs/ and pick next task from DEV_PLAN.
 ```
 
-### Add new mechanic
+---
+
+## Direct Task (skip full cycle)
 
 ```
-Add mechanic [name]: [behavior description].
-Settings (speed, damage, etc.) — in ScriptableObject.
+Direct task: [what to do]. No full onboarding needed.
 ```
 
 **Example:**
-
 ```
-Add dash mechanic: on Shift press character dashes 3 units forward with cooldown.
-Settings (distance, cooldown, speed) — in ScriptableObject DashSettings.
-```
-
-### Create UI screen
-
-```
-Create UI screen [name]: [element description].
-Texts and params — in ScriptableObject UiData.
+Direct task: add dash mechanic. On Shift — dash 3 units forward with cooldown.
+Settings in ScriptableObject DashSettings.
 ```
 
-**Example:**
+---
+
+## Add Mechanic
 
 ```
-Create main menu UI screen: buttons Play, Settings, Exit. Title with game name.
-Texts — in ScriptableObject UiData.
+Add [mechanic]: [behavior].
+Settings in ScriptableObject [SOName].
 ```
 
-### Save system
+---
+
+## Create UI Screen
+
+```
+Create UI screen [name]: [elements].
+Use [ui_toolkit / ugui]. Data in ScriptableObject UiData.
+```
+
+---
+
+## Save System
 
 ```
 Add save system: [what to save].
-Format: JSON. Path: Application.persistentDataPath.
+Format: JSON (Newtonsoft). Path: Application.persistentDataPath.
 ```
 
 ---
 
-## Asset generation (ComfyUI)
-
-### Character sprite
+## Debug
 
 ```
-Generate via ComfyUI a sprite [character description].
-Style: [pixel / cartoon / realistic].
-Size: [64x64 / 128x128 / 256x256].
-Background: transparent.
-```
-
-**Example:**
-
-```
-Generate via ComfyUI a sprite of a knight in blue armor, side view.
-Style: pixel. Size: 64x64. Background: transparent.
-```
-
-### Background / tiles
-
-```
-Generate via ComfyUI [level background / tile set].
-Description: [description].
-Style: [style]. Size: [size].
-```
-
-### UI icons
-
-```
-Generate via ComfyUI a set of UI icons: [list icons].
-Style: [style]. Size: [32x32 / 48x48 / 64x64].
-Background: transparent.
+Read Unity console. Fix errors. Verify in Play Mode. Screenshot.
 ```
 
 ---
 
-## Unity Editor (via MCP)
-
-### Check state
+## Full Feature Cycle
 
 ```
-Show current scene state and take a screenshot. Update Docs/DEV_STATE.md.
+Add feature [name]: [description].
+1. Create SO for settings.
+2. Implement logic.
+3. Create UI (if ui_mode != no_ui).
+4. Play Mode test + screenshot.
+5. Update DEV_STATE + DEV_LOG.
 ```
 
-### Setup scene
+---
+
+## Quick Prototype
 
 ```
-Setup scene [name]: [what should be in the scene].
-Use Unity MCP to create objects.
+Quick prototype: [mechanic description].
+No UI, no polish. Settings in SO. Verify it works.
+Mode: fast.
 ```
 
-### Debug
+---
+
+## Change Mode
 
 ```
-Read Unity console logs. If there are errors — fix and check again.
+Switch mode to [fast / standard / pro]. Update DEV_CONFIG and DEV_PROFILE.json.
+```
+
+---
+
+## Agent Memory
+
+```
+Remember: [important decision/preference/convention].
+Write to Docs/AGENT_MEMORY.md.
+```
+
+---
+
+## Run Tests (Pro)
+
+```
+Run tests for [system]. Fix failures. Report results.
+```
+
+---
+
+## Scene Setup via MCP
+
+```
+Setup scene [name]: [objects needed].
+Use MCP batch_execute for efficiency.
 ```
 
 ---
 
 ## ScriptableObject
 
-### Create SO for data
-
 ```
-Create ScriptableObject [name] to store [data description].
-Fields: [list fields with types].
-Create asset in Assets/_source/Data/.
+Create ScriptableObject [name]: [fields with types].
+Create asset in [path].
 ```
 
 **Example:**
-
 ```
-Create ScriptableObject EnemyData to store enemy parameters.
-Fields: string enemyName, int health, float speed, float attackDamage, float attackCooldown.
+Create ScriptableObject EnemyData:
+  string enemyName, int health, float speed, float attackDamage.
 Create asset in Assets/_source/Data/Enemies/.
 ```
 
-### Update balance
-
-```
-Update params in SO [name]: [which fields to which values].
-```
-
 ---
 
-## Refactor and optimization
-
-### Refactor
-
-```
-Refactor [file / system]: [what to improve].
-Do not change public API without agreement.
-```
-
-### Optimize
-
-```
-Analyze performance of [system]. Suggest optimizations.
-Priority: [draw calls / GC alloc / physics / loading].
-```
-
----
-
-## Useful combinations
-
-### Full feature cycle (Standard mode)
-
-```
-Add feature [name]: [description].
-1. Create SO for settings.
-2. Implement logic.
-3. Create UI (if needed).
-4. Check in editor, take screenshot.
-5. Update Docs/DEV_STATE (micro-plan, 📈 progress, blockers, screenshot) + Docs/DEV_PLAN + current iteration in Docs/DEV_LOG/ (file name with date and time: iteration-NN-YYYYMMDD-HHMM.md).
-```
-
-### Quick mechanic prototype
-
-```
-Quick prototype of [mechanic]: [description].
-No UI, no polish. Settings in SO. Check it works.
-```
-
----
-
-> **Tip:** these prompts are a starting point. Combine and adapt for your project. Dev mode defines planning depth and checks.
+> **Tip:** combine prompts for your workflow. Mode defines planning depth and checks.

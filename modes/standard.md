@@ -1,115 +1,117 @@
 # Mode: Standard
 
-**For:** small complete game (few mechanics, few screens) with full process and moderate code style.
+**For:** Small complete game with quality balance — few mechanics, few screens, full process.
 
-## Goal
+## Scope Limits (guidelines, not hard limits)
+- Mechanics: **3–6**
+- Screens: **3–6** (0 if `ui_mode = no_ui`)
+- Scenes: **2–5**
+- Features per iteration: **1–2**
 
-Small complete game. Few mechanics, few screens — “minimal complete game”. Normal process: stages, state files kept.
+## Pipeline Adjustments
 
-## Complexity limits
+### INTAKE
+- Questions before plan: **yes, clarify** genre, mechanics, screens, style, platform.
+- Questions before feature: **yes, if in doubt.** If clear from plan → proceed.
 
-> Default guidelines, not hard limits. Can exceed with user agreement.
+### PLAN
+- Short outline: genre, 2–3 mechanics, 2–3 screens, key SO data.
+- Short stages with per-stage checklist (files, scenes, what to check).
+- Reuse-first: check Unity + packages, search GitHub/web if needed.
+- Record reuse decisions in DEV_LOG and ARCHITECTURE if significant.
 
-- Screens: **3–6**.
-- Mechanics: **3–6**.
-- Scenes: **2–5**.
-- New features per iteration: **1–2**.
+### BUILD
+- **Per feature checks** — Play Mode + `read_console` + screenshot after EACH feature.
+- Compile check after every code change.
+- Scene save after every feature.
+- Screenshot after every feature → link in DEV_STATE.
+- DEV_STATE + DEV_LOG update after every feature.
+- **Do NOT move to next feature until current passes all checks.**
 
-## Clarifying questions
+### VERIFY
+- Full Play Mode walkthrough of complete game flow.
+- `read_console` — completely clean.
+- Screenshot series of all key screens.
+- QA checklist if enabled in DEV_CONFIG.
 
-- **Before plan:** yes. Clarify genre, mechanics, screens, style, platform — whatever is unclear.
-- **Before feature:** yes **if in doubt**. If mechanic or UI is ambiguous — ask. If clear — do without asking.
-- **During:** if unclear — ask. If clear — do not ask.
-- Can be turned off/on at user request.
+### SHIP
+- Full report with screenshot gallery.
+- All docs updated.
 
-## Workflow
+## Code Style
+- **Moderate** — clear separation, sensible structure.
+- Separate scripts per responsibility: `PlayerMovement`, `PlayerHealth`, `PlayerCombat`.
+- `[SerializeField]` for all Inspector fields.
+- Cache components in `Awake`/`Start`.
+- Data in SO, references via `[SerializeField]`.
+- Prefabs for repeated objects.
+- Events / UnityEvents for cross-system communication.
+- No C# namespaces.
+- XML docs for public methods.
+- `[Header]`, `[Tooltip]`, `[Range]` on SO fields.
 
-1. Clarifying questions → clarify details.
-2. Short outline (genre, 2–3 mechanics, 2–3 screens).
-3. Short stages with per-stage checklist.
-4. Reuse-first (default): before implementing feature (1) check Unity built-in and installed packages; (2) if needed search for mechanics/libraries on **GitHub** and **web** (UPM, open code, tutorials, Asset Store). If feature is small and simple — code by hand. **Before each feature — ask if in doubt.**
-5. State files required (Docs/DEV_STATE + Docs/DEV_PLAN + Docs/DEV_LOG/).
+## Logging
+- **No `//` comments.** Use `Debug.Log` instead — plenty, for key events and state changes.
+- Format: `Debug.Log($"[Feature.Class.Method] description with params")`
+- `Debug.LogError` for errors, `Debug.LogWarning` for warnings.
+- Do not log every frame in Update.
 
-## Reuse-first
+## Docs
+- `Docs/DEV_STATE.md` — **required**, update every action.
+- `Docs/DEV_PLAN.md` — **required**, all tasks with checkboxes.
+- `Docs/DEV_LOG/iteration-*.md` — **required**, completed task entries.
+- `Docs/AGENT_MEMORY.md` — **required**.
+- `Docs/ARCHITECTURE.md` — create when structure decisions are made.
 
-- **On by default** (toggle in `Docs/DEV_CONFIG.md` → “Search ready solutions”).
-- Check ready-made (Unity + packages) first, then GitHub and web if needed. Priority: **UPM/package** → **GitHub/open code** → asset → reference code.
-- Choice criteria: compatibility, activity/support, license, dependency size.
-- Record choice: write to current iteration file in `Docs/DEV_LOG/` (name: iteration-NN-YYYYMMDD-HHMM.md); if architecturally important also `Docs/ARCHITECTURE.md`.
+## Architecture
+- Feature nodes in hierarchy (`Feature_Player`, `Feature_Enemies`).
+- Moderate separation into features/subsystems.
+- MonoBehaviour for feature logic — no extra infra layers.
+- DI only when it clearly pays off.
+- Hierarchy: GameManager + Core/Features/UI, separate Environment.
 
-## Input policy
+## Input
+- Default: `Old` or `Both`.
+- Change only by agreement.
 
-- Default `Old` or `Both`.
-- If project runs on `New Input System`, change only by agreement.
+## QA
+- **QA per feature:** on/off in DEV_CONFIG. If on → agent writes mini QA checklist after each feature, waits for user OK.
+- **Final QA:** if enabled in DEV_CONFIG.
 
-## Checks and tests
+## MCP Usage
+- Per feature: `refresh_unity` → `read_console` → Play Mode → screenshot.
+- `manage_gameobject` / `manage_components` — for scene setup.
+- `batch_execute` — when creating multiple objects.
+- `manage_scene action=save` — after every feature.
 
-- **Agent must check each feature** before next: run Play Mode, take game screenshots (not only editor scene), try to play (buttons, flow), read console via `read_console` during/after Play Mode. Editor check + screenshot/checklist per feature.
-- **Before stage/project handoff:** Play Mode + `read_console` + final screenshot.
-- Tests not required by default.
-- **QA per feature:** on/off in `Docs/DEV_CONFIG.md`. If on — after each feature agent writes mini QA checklist (steps + expected + “Agent check” + “QA check”) and waits for user OK.
-- **Final QA checklist:** only if enabled in `Docs/DEV_CONFIG.md`. See reference.md → “QA checklist template”.
+## Checklist
 
-## Outline
+- [ ] Clarifying questions → short outline (genre, 2–3 mechanics, 2–3 screens)
+- [ ] Stages with per-stage checklist
+- [ ] Before each feature — ask user if in doubt
+- [ ] Implement per feature, all data in SO
+- [ ] After each feature: compile + Play Mode + `read_console` + screenshot
+- [ ] Screenshot reviewed (not blank, shows expected)
+- [ ] DEV_STATE + DEV_LOG updated after each feature
+- [ ] Before handoff: full Play Mode + `read_console` + final screenshot
+- [ ] All text uses TextMeshPro (never legacy Text)
+- [ ] QA checklist if enabled in DEV_CONFIG
 
-Short: genre, 2–3 mechanics, 2–3 screens (menu, gameplay, settings, etc.).
-
-## Stages
-
-Short stages with checklist per stage. List files/scenes/prefabs and what to check in Unity.
-
-## State files
-
-Required. `Docs/DEV_STATE.md` — context + current task + blockers + next 3–5 (update on each action). `Docs/DEV_PLAN.md` — all tasks with checkboxes. `Docs/DEV_LOG/iteration-NN-YYYYMMDD-HHMM.md` — completed task entries (can be simplified).
-
-## Code style
-
-**Moderate** — clear separation of data (SO) and logic, sensible structure without heavy architecture. **All settings in SO** (NpcData, GameFightData, UiData, etc.). See [SKILL.md](../SKILL.md) — “settings only in SO”.
-- **No C# namespaces** — keep scripts in default (global) scope. Namespaces only in Pro mode; see [tools/code-writing.md](../tools/code-writing.md).
-- **Hierarchy/scene:** use template from [tools/architecture-by-mode.md](../tools/architecture-by-mode.md): `GameManager` + `Core/Features/UI`, separate `Environment`.
-- **MonoBehaviour:** ok for feature logic and view layer without extra service layers.
-- **Architecture:** [tools/architecture-by-mode.md](../tools/architecture-by-mode.md).
-
-### Logging (Standard)
-
-- **Plenty and relevant.** Log key events, state changes, errors, warnings.
-- Format: `Debug.Log($"[Feature.Class.Method] description with params")`. Example: `Debug.Log($"[Spawn.WaveSpawner.StartNextWave] Wave {wave}: {count} enemies")`.
-- Do not log every frame.
-
-## Example outline (Standard)
+## Example
 
 ```
 Genre: Top-down shooter.
 Mechanics: WASD move, mouse shoot, enemy waves.
 Screens: MainMenu, Gameplay, GameOver.
-Data: PlayerData (speed, fireRate, maxHealth), EnemyData (speed, health, damage), WaveData (enemyCount, spawnInterval).
-```
+SO: PlayerData (speed, fireRate, maxHealth), EnemyData, WaveData.
 
-## Example stages (Standard)
-
-```
-Stage 1: Gameplay scene + character movement.
-  Files: PlayerController.cs, PlayerData.asset
-  Check: WASD works, speed from SO.
+Stage 1: Gameplay + character movement.
+  Files: PlayerController.cs, PlayerData.asset. Check: WASD works.
 Stage 2: Shooting.
-  Files: ShootController.cs, BulletPrefab
-  Check: bullets toward cursor, fireRate from SO.
+  Files: ShootController.cs, BulletPrefab. Check: bullets toward cursor.
 Stage 3: Enemies and waves.
-  Files: Enemy.cs, EnemyData.asset, WaveSpawner.cs, WaveData.asset
-  Check: enemies spawn, move to player, params from SO.
+  Files: Enemy.cs, WaveSpawner.cs. Check: enemies spawn, move to player.
 Stage 4: UI (HUD + menu + GameOver).
-  Files: UIManager.cs, UiData.asset, MainMenu/GameOver scenes
-  Check: HP bar, score, scene transitions.
-Stage 5: Polish (balance via SO, sound).
+  Files: UIManager.cs, UiData.asset. Check: HP bar, score, transitions.
+Stage 5: Polish (balance, sound).
 ```
-
-## Standard mode checklist
-
-- [ ] Clarifying questions → short outline (genre, 2–3 mechanics, 2–3 screens).
-- [ ] Detailed plan: short stages with per-stage checklist.
-- [ ] **Before each feature** — if in doubt, ask user.
-- [ ] Implement by stages, moderate code style, all data in SO.
-- [ ] **After each feature** — agent checks: Play Mode, `read_console`, game screenshots, try to play (buttons, flow). Then screenshot/checklist in Docs/DEV_STATE. If “QA per feature” on in Docs/DEV_CONFIG — write QA steps, wait for user OK before next feature.
-- [ ] Before stage/project handoff: Play Mode + `read_console` + final screenshot.
-- [ ] State files (DEV_STATE/PLAN/LOG) required, update on each action.
-- [ ] Final QA checklist only if enabled in `Docs/DEV_CONFIG.md`.
