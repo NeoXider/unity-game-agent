@@ -134,7 +134,7 @@ Unity Preflight:
 
 ## NeoxiderTools Decision Point
 
-If `ask_about_neoxider_tools` is true and the project is new/empty, or the task involves UI, settings, pages, save, quest, cards, audio, editor tooling, docs, or reusable game systems, ask:
+If `ask_about_neoxider_tools` is true and the project is new/empty, or the task involves UI pages/navigation, game flow, audio, shop/economy, reusable managers, settings/save, quests, cards/decks, inventory, dialogue, spawning, movement/input helpers, editor tooling, docs, or other reusable game systems, ask:
 
 ```text
 Use ready systems from NeoxiderTools, or build standalone for this project?
@@ -143,6 +143,7 @@ Use ready systems from NeoxiderTools, or build standalone for this project?
 If the user chooses NeoxiderTools:
 
 - inspect available NeoxiderTools systems before planning implementation;
+- distinguish package modules from optional samples such as `NeoxiderPages`;
 - prefer reuse/adapters over duplicate systems;
 - record the choice in `Docs/DEV_PROFILE.json` and `Docs/AGENT_MEMORY.md`;
 - keep project-specific code thin and explicit.

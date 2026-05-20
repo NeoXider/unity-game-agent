@@ -9,13 +9,14 @@ Use this preset only if corresponding packages/frameworks are detected in the pr
 ## Default decisions
 - UI stack: existing `uGUI + NeoxiderPages` (no forced migration).
 - Reuse-first priority:
-  1. existing Neo frameworks/components,
+  1. existing high-level Neo systems already used by the project,
   2. Unity built-in,
   3. additional packages if still needed.
 - Scene/page flow should integrate with existing page manager/events.
 
 ## Mandatory checks before custom code
-- Confirm feature cannot be solved by existing Neo components.
+- Confirm feature cannot be solved by existing high-level Neo systems without NoCode-style wiring.
+- Do not use `Neo.Condition`, lifecycle-event wrappers, generic UnityEvent relays, or inspector flow-control components as replacements for normal C# logic.
 - Record reuse decision in plan/docs (Reuse Decision Matrix).
 
 ## Notes
