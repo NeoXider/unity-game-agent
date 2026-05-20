@@ -29,6 +29,7 @@
 - Scene save after every task.
 - DEV_STATE + DEV_LOG update after every task.
 - **Run autotests** after features (if enabled).
+- Before closing any task/feature, run Play Mode when MCP or equivalent automation is available, check console during Play Mode, verify changed mechanics/UI/scene behavior directly, and run relevant tests.
 
 ### VERIFY
 - Full Play Mode walkthrough of all game paths.
@@ -89,15 +90,16 @@
 - **Final QA:** if enabled — full checklist including performance.
 
 ## MCP Usage
-- **Full MCP every step:**
-  - Before task: `mcpforunity://editor/state` → note initial state.
-  - After task: `read_console` + screenshot.
-  - After feature: full Play Mode check + screenshot.
-- `validate_script` — after each script edit (strict compile check).
-- `batch_execute` — for complex operations (creating object systems).
-- `manage_prefabs` — create prefabs immediately.
-- `manage_profiler` — performance checks.
-- `run_tests` — after features.
+- Follow provider-neutral preflight from `tools/mcp-provider-neutral.md`.
+- If MCP is missing and `auto_install_mcp_in_manifest` is enabled, add the adapter package to `Packages/manifest.json`, retry MCP detection, then fall back to file-only only if still unavailable.
+- Full MCP or equivalent automation every step:
+  - before task: editor readiness + console baseline;
+  - after task: compile/import readiness + console comparison + screenshot when visual;
+  - after feature: full Play Mode check, console during Play Mode, screenshot, relevant tests.
+- Use script validation after each script edit when available.
+- Use bulk/batch capabilities for complex object systems.
+- Create prefabs immediately for reusable scene objects.
+- Use profiler/performance capabilities for major systems and final verification.
 
 ## Checklist
 
@@ -108,6 +110,7 @@
 - [ ] Implement: architecture + SO + tests
 - [ ] After each task: compile + `read_console`
 - [ ] After each feature: Play Mode + `read_console` + screenshot + tests
+- [ ] During Play Mode: console checked and changed mechanic/UI/scene behavior verified
 - [ ] Screenshot reviewed (not blank, shows expected)
 - [ ] DEV_STATE + DEV_LOG updated after every action
 - [ ] All text uses TextMeshPro (never legacy Text)

@@ -201,15 +201,27 @@ Docs/            # Outside Assets (project root)
 ```json
 {
   "dev_mode": "standard",
-  "ui_mode": "ui_toolkit",
+  "skill_mode": "full_cycle",
+  "ui_mode": "enabled",
+  "ui_stack": "ui_toolkit",
   "mcp_mode": "use",
+  "mcp_adapter": "coplaydev-unity-mcp",
+  "auto_install_mcp_in_manifest": true,
+  "provider_neutral_tool_mapping": true,
+  "strict_preflight": true,
+  "visual_verification": true,
+  "visual_verification_max_resolution": 512,
+  "final_console_check": true,
+  "final_playmode_tests_standard_pro": true,
+  "final_tests_when_relevant": true,
+  "final_build_validation_when_relevant": true,
+  "ask_about_neoxider_tools": true,
+  "neoxider_tools": "ask",
   "qa_per_feature": true,
   "qa_final": true,
   "screenshot_policy": "per_feature",
   "reuse_first": true,
-  "auto_mode": true,
   "library_policy": "discover_before_plan",
-  "project_frameworks": [],
-  "text_component": "TextMeshPro"
+  "project_frameworks": []
 }
 ```

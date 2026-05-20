@@ -1,19 +1,35 @@
-# Unity MCP — Full Command Catalog
+# CoplayDev Unity MCP Adapter Command Catalog
+
+This file is the concrete adapter for `com.coplaydev.unity-mcp`. The skill's core workflow is provider-neutral; use [tools/mcp-provider-neutral.md](tools/mcp-provider-neutral.md) first, then map required capabilities to these commands when the active adapter is CoplayDev/unity-mcp.
 
 **Package:** `com.coplaydev.unity-mcp`  
 **Install:** `https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity`  
 **Version:** v9.6+ (beta)  
-**Server:** Unity → Window → MCP for Unity → Start Server (localhost:8080)
+**Server:** Unity -> Window -> MCP for Unity -> Start Server
+
+---
+
+## Manifest Install
+
+When the project has `Packages/manifest.json` and this adapter is missing, add it directly to `dependencies` before falling back to file-only mode:
+
+```json
+"com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity"
+```
+
+Parse `manifest.json` as JSON and update the `dependencies` object. Do not use blind string insertion. Do not manually edit `Packages/packages-lock.json`; Unity updates it during package resolution.
+
+After editing the manifest, let Unity resolve packages, then retry the first-steps checks below.
 
 ---
 
 ## First Steps (every session)
 
 ```
-1. Read mcpforunity://editor/state    → check Unity is ready
-2. Read mcpforunity://custom-tools    → see available tools
-3. Read mcpforunity://instances       → if multiple Unity instances, select one
-4. Read mcpforunity://project/info    → project name, Unity version, packages
+1. Read mcpforunity://editor/state    -> check Unity is ready
+2. Read mcpforunity://custom-tools    -> see available tools
+3. Read mcpforunity://instances       -> if multiple Unity instances, select one
+4. Read mcpforunity://project/info    -> project name, Unity version, packages
 ```
 
 ---

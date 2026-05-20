@@ -27,6 +27,7 @@
 - Screenshot after every feature → link in DEV_STATE.
 - DEV_STATE + DEV_LOG update after every feature.
 - **Do NOT move to next feature until current passes all checks.**
+- Before closing any task/feature, run Play Mode when MCP or equivalent automation is available, check console during Play Mode, and verify the changed mechanic/UI/scene behavior directly.
 
 ### VERIFY
 - Full Play Mode walkthrough of complete game flow.
@@ -79,10 +80,11 @@
 - **Final QA:** if enabled in DEV_CONFIG.
 
 ## MCP Usage
-- Per feature: `refresh_unity` → `read_console` → Play Mode → screenshot.
-- `manage_gameobject` / `manage_components` — for scene setup.
-- `batch_execute` — when creating multiple objects.
-- `manage_scene action=save` — after every feature.
+- Follow provider-neutral preflight from `tools/mcp-provider-neutral.md`.
+- If MCP is missing and `auto_install_mcp_in_manifest` is enabled, add the adapter package to `Packages/manifest.json`, retry MCP detection, then fall back to file-only only if still unavailable.
+- Per feature: import/compile readiness → console baseline/current comparison → Play Mode → console during Play Mode → screenshot.
+- Use object/component capabilities for scene setup and bulk/batch capabilities when creating multiple objects.
+- Save scene after every feature when the scene changed.
 
 ## Checklist
 
@@ -91,6 +93,7 @@
 - [ ] Before each feature — ask user if in doubt
 - [ ] Implement per feature, all data in SO
 - [ ] After each feature: compile + Play Mode + `read_console` + screenshot
+- [ ] During Play Mode: console checked and changed mechanic/UI/scene behavior verified
 - [ ] Screenshot reviewed (not blank, shows expected)
 - [ ] DEV_STATE + DEV_LOG updated after each feature
 - [ ] Before handoff: full Play Mode + `read_console` + final screenshot

@@ -4,14 +4,14 @@ Instructions for the agent: how to add commonly used libraries to a Unity projec
 
 ---
 
-## Install before development starts
+## Discover before installing
 
-**Agent must** install libraries from this file before starting implementation (after plan approval, before first feature). Do not proceed to implementation until installed.
+Do not install libraries by default. Discover existing project packages first, then install only for a concrete feature need, explicit user request, or approved plan item.
 
-**Install by default (all projects):**
-- **UniTask** — async/await.
-- **DOTween** — tweens (if no Asset Store access — note in DEV_STATE and use built-in Animator/code where tweens are needed).
-- **Newtonsoft.Json** — JSON (saves, configs, API); Unity package `com.unity.nuget.newtonsoft-json`.
+**Common candidates (install only when needed):**
+- **UniTask** — async/await for timers, scene loads, operation chains.
+- **DOTween** — tweens; if no Asset Store access, note in DEV_STATE and use Animator/code where tweens are needed.
+- **Newtonsoft.Json** — JSON saves, configs, API data; Unity package `com.unity.nuget.newtonsoft-json`.
 
 **As needed (per task / GAME_DESIGN / DEV_CONFIG):**
 - **Unity Localization** — only if multiple languages are required.

@@ -11,6 +11,7 @@ Single source of truth for mode-specific cadences. No ambiguity.
 | **Compile check** | After every feature | After every feature | After every task |
 | **read_console** | After every feature | After every feature | After every task |
 | **Play Mode test** | After batch (2-4 features) | After every feature | After every task + feature |
+| **Before closing task** | Compile + console; Play Mode when cadence/visual change requires it | Play Mode + console during play + changed behavior checked | Play Mode + console during play + changed behavior checked + relevant tests |
 | **Screenshot** | After batch | After every feature | After every feature |
 | **Review screenshot** | After batch | After every feature | After every feature |
 | **DEV_STATE update** | After batch | After every feature | After every task |

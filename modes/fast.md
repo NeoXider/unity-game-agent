@@ -63,10 +63,12 @@
 - Keep existing if project uses `New Input System`.
 
 ## MCP Usage
-- `batch_execute` — **recommended** (multiple objects/components at once).
-- `read_console` — after each batch, not each feature.
-- Screenshot — after batch or stage, not each feature.
-- `manage_scene action=save` — after each batch.
+- Follow provider-neutral preflight from `tools/mcp-provider-neutral.md`.
+- If MCP is missing and `auto_install_mcp_in_manifest` is enabled, add the adapter package to `Packages/manifest.json`, retry MCP detection, then fall back to file-only only if still unavailable.
+- `batch_execute` or equivalent bulk operations are recommended for multiple objects/components.
+- Console check after each feature for C# changes and after each batch for Play Mode.
+- Screenshot after batch or stage, not each feature unless the feature is visual.
+- Save scene after each batch when the scene changed.
 
 ## Checklist
 
