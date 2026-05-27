@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Windows command scripts must keep CRLF or cmd.exe can misparse lines.
+*.bat text eol=crlf
+*.cmd text eol=crlf

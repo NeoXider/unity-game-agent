@@ -19,6 +19,10 @@ Before implementation starts, verify and create missing:
 | `Docs/DEV_PROFILE.json` | Machine-readable persistent settings |
 | `Docs/DEV_LOG/` | Iteration log folder |
 | `Docs/Screenshots/` | Screenshot folders (iter-01/, iter-02/) |
+| `Docs/Features/` | Standard/Pro feature pages, one file per Feature |
+| `Docs/Tasks/` | Standard/Pro task pages, one file per implementation task |
+| `Docs/QA/` | Agent-filled feature QA checklists |
+| `Docs/QA_AGENT/` | Duplicate independent QA-agent checklists |
 | First log file | `Docs/DEV_LOG/iteration-01-YYYYMMDD-HHMM.md` |
 
 **Anti-patterns:** Do not create docs in project root. Do not skip AGENT_MEMORY. Do not create log files without datetime.
@@ -38,6 +42,28 @@ Bootstrap: `setup_project.bat "<project-root>"` creates all of the above.
 7. `Docs/ARCHITECTURE.md` → architecture (if exists)
 8. Create new iteration: `Docs/DEV_LOG/iteration-{N+1}-YYYYMMDD-HHMM.md`
 9. Create screenshot folder: `Docs/Screenshots/iter-{N+1}/`
+
+---
+
+## Standard/Pro Lead-Dev-QA Docs Flow
+
+For Standard/Pro, this explicit file flow supersedes the simple DEV_PLAN -> DEV_STATE -> DEV_LOG flow below.
+
+```text
+DEV_PLAN.md -> Docs/Features/FEAT-*.md -> Docs/Tasks/TASK-*.md
+      |                 |                         |
+      v                 v                         v
+DEV_STATE.md      Docs/QA/FEAT-*-qa.md     DEV_LOG/iteration-NN-*.md
+                  Docs/QA_AGENT/FEAT-*-qa.md
+```
+
+1. Game Designer and Designer prepare `GAME_DESIGN.md` / `UI_BRIEF.md` when needed; Lead then creates feature pages, task pages, agent QA checklist, and QA-agent duplicate before implementation.
+2. Developer phase takes the next task from DEV_PLAN and its task page, then marks DEV_STATE "In progress" with a micro-plan.
+3. On task completion, update the task page evidence, DEV_LOG, DEV_STATE, and DEV_PLAN checkbox.
+4. On feature completion, Developer/orchestrator runs self-check into `Docs/QA/`, then independent QA role fills `Docs/QA_AGENT/`.
+5. If both pass, mark the feature done and continue automatically. If QA cannot complete a required check after 2 attempts, write the degraded report, create a follow-up task, mark the risk, and continue. Ask the user only for blockers or ambiguous product decisions.
+
+Fast/Quick Fix uses brief DEV_PLAN/DEV_STATE/DEV_LOG tracking. Feature/task/QA pages are optional unless the user requests stronger tracking.
 
 ---
 
@@ -66,10 +92,18 @@ Full template files are in `templates/` folder. Use `setup_project.bat` to copy 
 | GAME_DESIGN | `templates/GAME_DESIGN.md` |
 | DEV_STATE | `templates/DEV_STATE.md` (with emoji) |
 | DEV_PLAN | `templates/DEV_PLAN.md` |
+| FEATURE | `templates/FEATURE.md` |
+| TASK | `templates/TASK.md` |
+| QA checklist | `templates/QA_CHECKLIST.md` |
+| QA-agent duplicate | `templates/QA_AGENT_CHECKLIST.md` |
 | AGENT_MEMORY | `templates/AGENT_MEMORY.md` |
 | ARCHITECTURE | `templates/ARCHITECTURE.md` |
 | UI_BRIEF | `templates/UI_BRIEF.md` |
 | Iteration log | `templates/iteration-template.md` |
+
+Role subskills live in `roles/`: `game-designer.md`, `designer.md`, `lead.md`, `developer.md`, and `qa.md`.
+
+Use `tools/new-feature-docs.ps1` to generate Standard/Pro feature, task, QA, and QA-agent files from these templates when running on Windows.
 
 ---
 
@@ -126,14 +160,25 @@ When QA per feature is enabled in DEV_CONFIG:
 ```markdown
 ## N. [Section name]
 
-| # | Step | Expected | Agent check | QA check |
-|---|------|----------|-------------|----------|
-| N.1 | [repro step] | [expected] | [agent fills: OK/issue] | [empty — user fills] |
-| N.2 | ... | ... | ... | ... |
+| # | Step | Expected | Agent result | QA-agent result | Evidence |
+|---|------|----------|--------------|-----------------|----------|
+| N.1 | [repro step] | [expected] | [agent fills: OK/issue] | [QA pass fills independently] | [path/log] |
+| N.2 | ... | ... | ... | ... | ... |
 ```
 
-- Agent fills "Agent check" after own Play Mode test
-- Agent leaves "QA check" empty for user
+- Agent fills `Docs/QA/` after own Play Mode test.
+- QA agent or independent second pass fills `Docs/QA_AGENT/`.
+
+---
+
+## Standard/Pro QA Checklist Files
+
+For Standard/Pro, the QA checklist above is implemented as two files:
+
+- `Docs/QA/FEAT-*-qa.md`: Agent fills this after own Play Mode and behavior checks.
+- `Docs/QA_AGENT/FEAT-*-qa.md`: QA agent or independent second pass fills this separately.
+
+User review is optional after both pass. If QA cannot complete a required check after 2 attempts, write a degraded report, create a follow-up defect/automation-gap task, and continue. Stop for the user only on blockers that cannot be bypassed with degraded reporting, ambiguity, missing required assets/credentials, or destructive decisions.
 
 ---
 
@@ -158,10 +203,13 @@ When QA per feature is enabled in DEV_CONFIG:
 - [Library] — version / location / usage
 
 ## Candidate solutions
-| Option | Source | Fits | Risks | Decision |
-|--------|--------|------|-------|----------|
-| Unity built-in ... | Built-in | Yes/No | ... | Use/Skip |
-| Package ... | UPM/GitHub | Yes/No | ... | Use/Skip |
+| Option | Source | Reuse mode | Fits | Integration risks | Decision |
+|--------|--------|------------|------|-------------------|----------|
+| Unity built-in ... | Built-in/docs | direct reuse | Yes/No | ... | Use/Skip |
+| Package ... | UPM/GitHub/Asset Store | direct reuse/adapt/reference-only | Yes/No | ... | Use/Skip |
+| Open-source game/feature slice ... | GitHub/source repo | direct reuse/adapt/reference-only | Yes/No | ... | Use as package/reference/skip |
+| Asset pack/sample ... | Asset Store/open asset repo/Unity sample | import/adapt/reference-only | Yes/No | ... | Import/adapt/skip |
+| Shipped game/tutorial/technical breakdown ... | Public article/video/repo/wiki | reference-only | Yes/No | ... | Reimplement behavior/skip |
 
 ## Reuse Decision Matrix
 | Feature | Reuse option | Why | Fallback |
@@ -192,6 +240,10 @@ Assets/
 Docs/            # Outside Assets (project root)
   DEV_LOG/
   Screenshots/
+  Features/
+  Tasks/
+  QA/
+  QA_AGENT/
 ```
 
 ---
@@ -215,12 +267,33 @@ Docs/            # Outside Assets (project root)
   "final_playmode_tests_standard_pro": true,
   "final_tests_when_relevant": true,
   "final_build_validation_when_relevant": true,
+  "qa_verification_driver_required": true,
+  "qa_tests_required_standard_pro": true,
+  "qa_screenshot_evidence_required": true,
+  "interactive_qa_requires_runtime_driver": true,
+  "qa_max_attempts_before_degraded_report": 2,
+  "qa_continue_after_degraded_report": true,
+  "qa_degraded_report_required": true,
   "ask_about_neoxider_tools": true,
   "neoxider_tools": "ask",
   "qa_per_feature": true,
   "qa_final": true,
   "screenshot_policy": "per_feature",
   "reuse_first": true,
+  "external_reference_discovery": true,
+  "no_reinventing_without_reason": true,
+  "lead_dev_qa_workflow_standard_pro": true,
+  "task_pages_standard_pro": true,
+  "qa_agent_duplicate_checklist": true,
+  "auto_advance_after_self_qa": true,
+  "skill_memory_enabled": true,
+  "skill_memory_write_policy": "auto_after_verified_task",
+  "skill_memory_scope": "universal_only",
+  "role_subskills_enabled": true,
+  "mandatory_subagents_standard_pro": true,
+  "subagent_fallback_policy": "only_when_tools_unavailable",
+  "gd_before_lead": true,
+  "designer_before_lead_when_visual": true,
   "library_policy": "discover_before_plan",
   "project_frameworks": []
 }

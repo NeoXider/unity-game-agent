@@ -8,6 +8,10 @@ Instructions for the agent: how to add commonly used libraries to a Unity projec
 
 Do not install libraries by default. Discover existing project packages first, then install only for a concrete feature need, explicit user request, or approved plan item.
 
+Also discover ready solutions before building custom systems. Check Unity built-ins, official samples, maintained UPM/GitHub packages, open-source Unity games or feature slices, Asset Store packages, reusable asset packs, shipped game references, tutorials, talks, and technical breakdowns. Prefer reuse or a thin adapter when it is smaller and safer than custom code.
+
+Classify each candidate as `direct reuse`, `adapt`, or `reference-only`. Directly import/copy when the source is usable for the project; otherwise use it to understand behavior, APIs, data layout, architecture, tuning, and edge cases, then reimplement the logic independently. If the user explicitly asks for a from-scratch implementation, do not import external code/assets; use references only to validate behavior and edge cases.
+
 **Common candidates (install only when needed):**
 - **UniTask** — async/await for timers, scene loads, operation chains.
 - **DOTween** — tweens; if no Asset Store access, note in DEV_STATE and use Animator/code where tweens are needed.

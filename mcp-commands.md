@@ -357,6 +357,8 @@ Get file hash for change detection.
 ```
 
 ### Full verification cycle
+
+For interactive behavior, execute the declared driver between entering Play Mode and taking the final screenshot: PlayMode test, scenario runner, input injection/custom tool, UI automation, or passive Play Mode only when the feature is non-interactive. Screenshot-only evidence is not enough for interactive gameplay/UI flows.
 ```
 1. refresh_unity
 2. read_console → must be clean

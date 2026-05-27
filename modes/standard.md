@@ -11,6 +11,7 @@
 ## Pipeline Adjustments
 
 ### INTAKE
+- Use mandatory role subagents when tools are available: Game Designer for game design gaps, Designer for UI/visual work, Lead for planning, Developer for tasks, QA for independent feature verification.
 - Questions before plan: **yes, clarify** genre, mechanics, screens, style, platform.
 - Questions before feature: **yes, if in doubt.** If clear from plan → proceed.
 
@@ -60,6 +61,9 @@
 ## Docs
 - `Docs/DEV_STATE.md` — **required**, update every action.
 - `Docs/DEV_PLAN.md` — **required**, all tasks with checkboxes.
+- `Docs/Features/FEAT-*.md` — **required**, one page per feature.
+- `Docs/Tasks/TASK-*.md` — **required**, one page per implementation task.
+- `Docs/QA/FEAT-*-qa.md` and `Docs/QA_AGENT/FEAT-*-qa.md` — **required** for feature QA.
 - `Docs/DEV_LOG/iteration-*.md` — **required**, completed task entries.
 - `Docs/AGENT_MEMORY.md` — **required**.
 - `Docs/ARCHITECTURE.md` — create when structure decisions are made.
@@ -76,7 +80,10 @@
 - Change only by agreement.
 
 ## QA
-- **QA per feature:** on/off in DEV_CONFIG. If on → agent writes mini QA checklist after each feature, waits for user OK.
+- Standard/Pro Lead-Dev-QA workflow overrides any human-wait default: agent creates `Docs/QA/` and `Docs/QA_AGENT/` checklists, fills both through self QA/independent pass, and auto-advances after pass or degraded report with follow-up task.
+- After 2 failed/unavailable attempts for the same QA check, write a degraded report with skipped checks, create a follow-up defect/automation-gap task, and continue.
+- Ask the user only for blockers that cannot be bypassed with degraded reporting, missing required assets/credentials, or ambiguous product decisions.
+- **QA per feature:** on/off in DEV_CONFIG. If on, agent writes and fills feature QA plus QA-agent duplicate, then auto-advances after both pass or after a degraded report with follow-up task.
 - **Final QA:** if enabled in DEV_CONFIG.
 
 ## MCP Usage
@@ -88,6 +95,10 @@
 
 ## Checklist
 
+- [ ] Lead phase created feature pages, task pages, QA checklist, and QA-agent duplicate
+- [ ] Each task page has acceptance criteria, touched files, verification evidence, and rollback risk
+- [ ] Feature QA and QA-agent duplicate pass, or degraded checks have report + follow-up task before advancing
+- [ ] Auto-advance to next task/feature after self QA passes or degraded report is filed unless blocker/ambiguity exists
 - [ ] Clarifying questions → short outline (genre, 2–3 mechanics, 2–3 screens)
 - [ ] Stages with per-stage checklist
 - [ ] Before each feature — ask user if in doubt

@@ -5,28 +5,40 @@
 
 ---
 
-## Stage 1 — [name]
+## Standard/Pro Tracking
 
-- [x] Task 1.1 — [desc]
-- [x] Task 1.2 — [desc]
-- [ ] Task 1.3 — [desc]
+For Standard/Pro, every Feature has a page in `Docs/Features/`, every implementation task has a page in `Docs/Tasks/`, and every Feature has QA files in `Docs/QA/` and `Docs/QA_AGENT/`.
 
-## Stage 2 — [name]
+Fast/Quick Fix can keep this brief unless the user requests full tracking.
 
-- [ ] Task 2.1 — [desc]
-- [ ] Task 2.2 — [desc]
+---
 
-## Stage 3 — [name]
+## Stage 1 - [name]
 
-- [ ] Task 3.1 — [desc]
-- [ ] Task 3.2 — [desc]
+- [ ] Feature 1.1 - `Docs/Features/FEAT-001-name.md`
+  - [ ] Task 1.1.1 - `Docs/Tasks/TASK-001-name.md`
+  - [ ] Task 1.1.2 - `Docs/Tasks/TASK-002-name.md`
+
+## Stage 2 - [name]
+
+- [ ] Feature 2.1 - `Docs/Features/FEAT-002-name.md`
+  - [ ] Task 2.1.1 - `Docs/Tasks/TASK-003-name.md`
+  - [ ] Task 2.1.2 - `Docs/Tasks/TASK-004-name.md`
+
+## Stage 3 - [name]
+
+- [ ] Feature 3.1 - `Docs/Features/FEAT-003-name.md`
+  - [ ] Task 3.1.1 - `Docs/Tasks/TASK-005-name.md`
+  - [ ] Task 3.1.2 - `Docs/Tasks/TASK-006-name.md`
 
 ---
 
 ## Stats
 
+- **Total features:** F
+- **Done features:** D
 - **Total tasks:** N
-- **Done:** M
-- **Left:** N − M
+- **Done tasks:** M
+- **Left tasks:** N - M
 
-> Details → **Docs/DEV_LOG/**
+> Details -> **Docs/DEV_LOG/**

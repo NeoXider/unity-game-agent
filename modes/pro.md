@@ -11,6 +11,7 @@
 ## Pipeline Adjustments
 
 ### INTAKE
+- Use mandatory role subagents when tools are available: Game Designer for game design gaps, Designer for UI/visual work, Lead for planning, Developer for tasks, QA for independent feature verification.
 - **Detailed questions:** genre, all mechanics, screens, systems, style, platform, extensibility, priorities.
 - Ask: "Autotests on by default; disable?" Record in DEV_CONFIG.
 - Ask about QA per feature and final QA checklist.
@@ -71,6 +72,7 @@
 
 ## Docs
 - **Everything required.** DEV_STATE, DEV_PLAN, DEV_LOG, AGENT_MEMORY, ARCHITECTURE.
+- Feature pages, task pages, agent QA checklists, and QA-agent duplicate checklists are required for every feature.
 - Full format: detailed entries with timestamps, screenshots, file lists.
 - Update on every action — not optional.
 
@@ -86,7 +88,10 @@
 - `Both`/`Old` only for confirmed legacy limits. Document reason.
 
 ## QA
-- **QA per feature:** on/off in DEV_CONFIG. If on → agent writes QA checklist with edge cases, waits for user OK.
+- Standard/Pro Lead-Dev-QA workflow overrides any human-wait default: agent creates `Docs/QA/` and `Docs/QA_AGENT/` checklists, fills both through self QA/independent pass, and auto-advances after pass or degraded report with follow-up task.
+- After 2 failed/unavailable attempts for the same QA check, write a degraded report with skipped checks, create a follow-up defect/automation-gap task, and continue.
+- Ask the user only for blockers that cannot be bypassed with degraded reporting, missing required assets/credentials, destructive/broad changes, or ambiguous product decisions.
+- **QA per feature:** on/off in DEV_CONFIG. If on, agent writes and fills feature QA plus QA-agent duplicate with edge cases, then auto-advances after both pass or after a degraded report with follow-up task.
 - **Final QA:** if enabled — full checklist including performance.
 
 ## MCP Usage
@@ -103,6 +108,10 @@
 
 ## Checklist
 
+- [ ] Lead phase created feature pages, task pages, QA checklist, and QA-agent duplicate
+- [ ] Each task page has acceptance criteria, touched files, verification evidence, and rollback risk
+- [ ] Feature QA and QA-agent duplicate pass, or degraded checks have report + follow-up task before advancing
+- [ ] Auto-advance to next task/feature after self QA passes or degraded report is filed unless blocker/ambiguity exists
 - [ ] Detailed questions → full outline (systems, screens, data)
 - [ ] Clarify: autotests? QA per feature? Final QA? Write to DEV_CONFIG
 - [ ] Detailed stages with acceptance criteria

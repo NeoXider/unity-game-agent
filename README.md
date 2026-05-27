@@ -1,68 +1,223 @@
 # Unity Game Agent
 
-**An autonomous agent that builds Unity games from idea to playable build — with a strict pipeline, MCP integration, and sub-agent architecture.**
+![Unity Game Agent header](assets/unity-game-agent-header.png)
 
-> **Repository description:** Cursor skill: autonomous Unity game development. Pipeline: INTAKE → PLAN → BUILD → VERIFY → SHIP. Modes: fast / standard / pro. Full CoplayDev/unity-mcp integration (42+ tools).
+Autonomous Unity game development skill for Cursor/Codex: from an idea or existing project task to implemented, documented, and verified Unity work.
 
----
+This is not just a prompt pack. It is a role-based production pipeline with planning docs, task ownership, Unity preflight, reuse discovery, Play Mode QA, screenshots, tests, defect loops, and bounded failure recovery.
 
-## What it does
+```text
+INTAKE -> DESIGN -> PLAN -> BUILD -> VERIFY -> QA -> SHIP
+```
 
-The agent acts as a **game developer** — asks for game design, locks in a plan, implements step by step, verifies in Play Mode, and delivers a tested build.
+## Why It Exists
 
-- **Fast mode** — prototype or playable build in hours
-- **Standard mode** — small complete game with quality checks per feature
-- **Pro mode** — scalable project with architecture, tests, and full documentation
+Most Unity agents can write scripts. That is not the hard part.
 
-One pipeline for everything: **INTAKE → PLAN → BUILD → VERIFY → SHIP**.
+The hard part is staying aligned with an existing project, not rewriting working systems, testing gameplay instead of claiming it works, tracking state across sessions, and moving forward when tools fail.
 
----
+Unity Game Agent is built for that gap.
 
-## What's inside
+## What Makes It Different
 
-| File | Description |
-|------|-------------|
-| **SKILL.md** | Main file: pipeline, rules, modes, UI strategy, code rules, sub-agent architecture |
-| **mcp-commands.md** | Full catalog of 42+ CoplayDev/unity-mcp tools with examples |
-| **reference.md** | Templates for project docs (DEV_STATE, DEV_PLAN, etc.) and doc rules |
-| **PROMPTS.md** | Ready-made prompts for common tasks |
-| **modes/** | Mode-specific rules: fast.md, standard.md, pro.md |
-| **tools/** | Code rules (code-writing.md), core mechanics, library setup |
-| **templates/** | Full doc templates for project Docs/ folder |
-| **project-profiles/** | Project-specific presets (Neoxider, uGUI, UI Toolkit) |
-| **setup_project.bat** | Manual bootstrap: creates Docs/, _source/, all templates |
+| Capability | Generic coding agent | Basic Unity skill | Unity Game Agent |
+|---|---:|---:|---:|
+| Reads existing architecture before changing it | Sometimes | Sometimes | Required |
+| Reuse-first search before custom code | Rare | Partial | Required |
+| Explicit game design pass | No | No | Game Designer role |
+| UI/UX and visual design pass | No | Partial | Designer role |
+| Lead creates feature/task/QA docs | No | Rare | Required in standard/pro |
+| One task per developer pass | No | Rare | Required |
+| Independent QA pass | No | Partial | QA role + QA_AGENT checklist |
+| Play Mode verification policy | Weak | Partial | Required by mode |
+| EditMode/PlayMode test expectations | Optional | Optional | Declared per task/feature |
+| Screenshot evidence and visual review | Optional | Partial | Required for visual/runtime-visible work |
+| Interactive checks cannot pass from screenshots alone | Rare | Rare | Required |
+| Failure recovery without infinite retry loops | Rare | Rare | 2 attempts -> degraded report -> continue |
+| Persistent project state | Manual | Partial | Docs/DEV_STATE, DEV_LOG, DEV_PLAN |
+| Skill self-improvement memory | No | No | SKILL_MEMORY.md |
 
----
+## Pipeline
 
-## Key features
+```mermaid
+flowchart TD
+  A["User request"] --> O["Orchestrator"]
+  O --> M{"Mode"}
+  M -->|"quick / fast"| D["Developer direct path"]
+  M -->|"standard / pro"| GD["Game Designer"]
+  GD --> V{"Visual or UI work?"}
+  V -->|"yes"| UX["Designer"]
+  V -->|"no"| L["Lead"]
+  UX --> L
+  L --> P["Feature pages, task pages, QA docs"]
+  P --> DEV["Developer: one TASK at a time"]
+  DEV --> SELF["Self verification and evidence"]
+  SELF --> QA["Independent QA"]
+  QA --> R{"Result"}
+  R -->|"pass"| NEXT["Mark done and auto-advance"]
+  R -->|"implementation defect"| BUG["Create/reopen defect task"]
+  BUG --> DEV
+  R -->|"cannot test after 2 attempts"| DEG["Degraded report + skipped checks + follow-up task"]
+  DEG --> NEXT
+  R -->|"real blocker or product decision"| ASK["Ask user"]
+```
 
-- **CoplayDev/unity-mcp** — 42+ MCP tools for full Unity Editor control
-- **Sub-agent architecture** — orchestrator delegates to coding/QA/report agents, verifies results
-- **Strict pipeline** — compile check, Play Mode test, screenshot review, doc update before proceeding
-- **UI strategy** — UI Toolkit (default), uGUI + TextMeshPro, or NoUI (null-safe stubs)
-- **Constant reporting** — DEV_STATE and screenshots updated after every feature
-- **Reuse-first** — check existing packages/GitHub before coding from scratch
+## Role System
 
----
+The orchestrator stays accountable, but work is split into small role files so the agent does not keep every responsibility in one context.
 
-## How to use
+| Role | Goal | Main output |
+|---|---|---|
+| Game Designer | Turn idea or vague gameplay into implementable design | `Docs/GAME_DESIGN.md` |
+| Designer | Define UI/UX, visual direction, states, assets, and visual QA | `Docs/UI_BRIEF.md` |
+| Lead | Convert design into feature pages, task pages, QA plans, risks | `Docs/DEV_PLAN.md`, `Docs/Features/`, `Docs/Tasks/`, `Docs/QA/`, `Docs/QA_AGENT/` |
+| Developer | Implement exactly one task page with the smallest safe change | Code/assets/scenes plus task evidence |
+| QA | Verify independently, create defects, avoid deadlocks | Filled `Docs/QA_AGENT/`, defect tasks, degraded reports |
 
-1. **Add the skill** — copy this folder to `.cursor/skills/` in your project
-2. **Install MCP** — `com.coplaydev.unity-mcp` in Unity Package Manager
-3. **Start server** — Window → MCP for Unity → Start Server
-4. **Tell the agent** — describe your game, pick a mode, and let it build
+In `standard` and `pro`, real subagents are mandatory when the tool environment supports them. If subagents are unavailable, the orchestrator records degraded mode and follows the same role files locally.
 
----
+## Current Progress
 
-## MCP Package
+These are implemented in the skill today.
 
-**Package:** `com.coplaydev.unity-mcp`  
-**Install URL:** `https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity`
+| Area | Status | Evidence |
+|---|---:|---|
+| Runtime policy profile | Done | `templates/DEV_PROFILE.json` |
+| Fast / standard / pro mode matrix | Done | `POLICY_MATRIX.md`, `modes/` |
+| Reuse-first discovery policy | Done | `SKILL.md`, `tools/libraries-setup.md` |
+| Role subskills | Done | `roles/game-designer.md`, `roles/designer.md`, `roles/lead.md`, `roles/developer.md`, `roles/qa.md` |
+| Standard/pro feature docs | Done | `templates/FEATURE.md`, `templates/TASK.md` |
+| Agent QA and independent QA docs | Done | `templates/QA_CHECKLIST.md`, `templates/QA_AGENT_CHECKLIST.md` |
+| Play Mode QA automation policy | Done | `tools/playmode-qa-automation.md` |
+| EditMode/PlayMode test expectations | Done | Feature/task verification fields |
+| Screenshot evidence policy | Done | QA templates and Play Mode QA reference |
+| Two-attempt QA failure recovery | Done | `qa_max_attempts_before_degraded_report: 2` |
+| Skill memory | Done | `SKILL_MEMORY.md`, `tools/append-skill-memory.ps1` |
+| Project bootstrap | Done | `setup_project.bat` |
+| Feature doc generator | Done | `tools/new-feature-docs.ps1` |
+| Skill validation | Done | `tools/validate-skill.ps1` |
+| Script smoke tests | Done | `tools/test-scripts.ps1` |
 
-This is the same MCP used in the Neoxider project and provides 42+ tools for scene control, script management, physics, animation, build, profiling, and more.
+## Verification Philosophy
 
----
+The skill treats "it compiles" as a start, not a finish.
 
-## License
+For Unity work, the close gate can include:
 
-Use in your projects. Improvements welcome via issues and PRs.
+- compile/import readiness;
+- console baseline and current console comparison;
+- Play Mode run;
+- console checks during Play Mode;
+- declared runtime driver;
+- EditMode tests;
+- PlayMode tests;
+- screenshot capture and visual review;
+- task evidence in docs;
+- independent QA result.
+
+Interactive gameplay, UI flows, input, collision, spawning, scene transitions, pause, restart, and runtime state changes cannot pass from screenshots alone. They need a driver, test, scenario runner, input injection, or an explicit degraded report.
+
+## Bounded QA Recovery
+
+QA should be strict, but it should not freeze the whole project.
+
+Rule:
+
+```text
+2 serious attempts per required QA check.
+If still blocked: write degraded report, create follow-up task, continue.
+```
+
+The degraded report must include:
+
+- what was attempted;
+- exact failure reason;
+- skipped checks;
+- available evidence;
+- player/user risk;
+- follow-up defect or automation-gap task.
+
+This keeps automation honest without turning one flaky tool path into a dead stop.
+
+## Modes
+
+| Mode | Use for | Cadence |
+|---|---|---|
+| fast | Prototype, small playable slice, quick validation | Larger feature batches, lighter docs |
+| standard | Small complete game or meaningful feature work | Feature/task docs, Play Mode per feature, QA docs |
+| pro | Larger systems, maintainability, tests, architecture | Task-level checks, stricter docs, relevant tests |
+
+## Project Docs Created By The Pipeline
+
+```text
+Docs/
+  DEV_CONFIG.md
+  DEV_PROFILE.json
+  GAME_DESIGN.md
+  UI_BRIEF.md
+  DEV_STATE.md
+  DEV_PLAN.md
+  AGENT_MEMORY.md
+  ARCHITECTURE.md
+  DEV_LOG/
+  Screenshots/
+  Features/
+  Tasks/
+  QA/
+  QA_AGENT/
+```
+
+The docs are not ceremony. They are the agent's working memory, task ownership system, QA evidence trail, and resume point.
+
+## Quick Start
+
+1. Put this folder in a discoverable skill location, such as `.cursor/skills/unity-game`.
+2. Open a Unity project or create an empty project.
+3. Ask for a quick fix, a direct feature, or a full game.
+4. The skill chooses the shortest verified path:
+   - quick fix for narrow edits;
+   - fast for prototypes;
+   - standard for complete small games/features;
+   - pro for stricter architecture and tests.
+
+Optional bootstrap for tracked projects:
+
+```powershell
+.\setup_project.bat "<UnityProjectRoot>"
+```
+
+## MCP And Unity Automation
+
+The skill is provider-neutral, with a CoplayDev Unity MCP adapter reference.
+
+It expects the agent to prefer MCP/Editor automation when available:
+
+- inspect editor state;
+- wait for compile/import/domain reload;
+- read console;
+- run tests;
+- enter Play Mode;
+- capture screenshots;
+- save scenes;
+- run builds when relevant.
+
+If MCP is unavailable, the skill falls back to CLI/file-level work only where safe, records degraded verification, and avoids pretending runtime behavior was tested.
+
+## Honest Limits
+
+This skill does not make Unity verification magically perfect. Some projects still need custom QA hooks, deterministic seeds, test scenes, or input drivers.
+
+The difference is that the skill forces those gaps to become visible tasks instead of hidden assumptions.
+
+## Best Fit
+
+Use Unity Game Agent when you want:
+
+- a real Unity project workflow, not one-shot script generation;
+- autonomous progress with documented state;
+- feature-by-feature delivery;
+- QA evidence;
+- reusable libraries and references before custom code;
+- a system that can resume work across sessions.
+
+For a one-line script edit, use quick mode. For a game or feature that should survive more than one session, use standard or pro.

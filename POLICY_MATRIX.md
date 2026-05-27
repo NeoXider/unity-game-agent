@@ -17,8 +17,13 @@ Single source of truth for mode-specific cadences. No ambiguity.
 | **DEV_STATE update** | After batch | After every feature | After every task |
 | **DEV_LOG entry** | After batch | After every feature | After every task |
 | **Scene save** | After every feature | After every feature | After every task |
-| **User approval (plan)** | Auto (skip if auto_mode) | Required | Required |
-| **User approval (feature)** | Never | If unclear | If unclear |
+| **Lead planning pass** | Optional brief | Required | Required |
+| **Role subskills** | Optional | Required | Required |
+| **Real subagents when available** | Optional | Required | Required |
+| **User approval (plan)** | Auto (skip if auto_mode) | Only if ambiguous/high-impact | Only if ambiguous/high-impact |
+| **User approval (feature)** | Never | Only if unclear/blocker | Only if unclear/blocker |
+| **Auto-advance after Agent QA** | Yes | Yes, after QA + QA_AGENT pass or degraded report with follow-up task | Yes, after QA + QA_AGENT pass or degraded report with follow-up task |
+| **QA retry limit** | Best effort | 2 attempts, then degraded report and continue | 2 attempts, then degraded report and continue |
 | **Autotests** | No | No | Yes (after feature) |
 | **Profiler check** | Never (unless visible lag) | VERIFY phase (quick FPS) | After major systems + VERIFY |
 | **Performance gate** | No | No | Yes (Mobile/WebGL: mandatory) |
@@ -58,6 +63,10 @@ Single source of truth for mode-specific cadences. No ambiguity.
 | ARCHITECTURE.md | No | OPTIONAL | REQUIRED |
 | DEV_PROFILE.json | REQUIRED | REQUIRED | REQUIRED |
 | Screenshots/ | REQUIRED | REQUIRED | REQUIRED |
+| Features/FEAT-*.md | OPTIONAL | REQUIRED | REQUIRED |
+| Tasks/TASK-*.md | OPTIONAL | REQUIRED | REQUIRED |
+| QA/FEAT-*-qa.md | OPTIONAL | REQUIRED | REQUIRED |
+| QA_AGENT/FEAT-*-qa.md | OPTIONAL | REQUIRED | REQUIRED |
 
 ---
 

@@ -10,7 +10,7 @@ Approved game outline. Agent uses this for implementation.
 |-------|--------|
 | Name | [game name] |
 | Genre | [genre] |
-| Goal | [1–2 sentences] |
+| Goal | [1-2 sentences] |
 | Platform(s) | [PC / Mobile / ...] |
 | Orientation | [portrait / landscape] |
 | Style | [pixel / cartoon / ...] |
@@ -19,8 +19,8 @@ Approved game outline. Agent uses this for implementation.
 
 ## Mechanics
 
-1. [Mechanic 1] — [short desc]
-2. [Mechanic 2] — [short desc]
+1. [Mechanic 1] - [short desc]
+2. [Mechanic 2] - [short desc]
 
 ---
 
@@ -32,7 +32,7 @@ Approved game outline. Agent uses this for implementation.
 | Gameplay | Core gameplay | Player, enemies, HUD |
 | GameOver | Game over | Score, Restart |
 
-> **UI:** UI Builder only (UI Toolkit, UIDocument + UXML/USS). No Canvas/uGUI. See [tools/ui-builder.md](tools/ui-builder.md).
+> **UI:** Follow `Docs/DEV_CONFIG.md` and existing project UI stack. Prefer UI Toolkit for new projects, uGUI + TextMeshPro for uGUI projects, or `no_ui` when the game does not need UI.
 
 ---
 
@@ -48,8 +48,8 @@ Approved game outline. Agent uses this for implementation.
 
 ## Dev stages
 
-1. **Stage 1:** [name] — [what to do]
-2. **Stage 2:** [name] — [what to do]
+1. **Stage 1:** [name] - [what to do]
+2. **Stage 2:** [name] - [what to do]
 
 ---
 

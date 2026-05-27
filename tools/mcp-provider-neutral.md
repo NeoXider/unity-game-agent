@@ -17,6 +17,7 @@ Map the active MCP server to these capabilities before acting:
 | Console | baseline and post-change errors/warnings |
 | Packages/project info | UI/input/render/test/build capability discovery |
 | Camera/screenshot | visual verification |
+| Runtime driver/input | scenario runner, input injection, UI automation, or custom QA tools |
 | Tests/build | final verification for pro/build-impacting work |
 
 If a capability is missing, do not fake the result. Use file-only fallback or report the skipped verification.
@@ -109,11 +110,13 @@ Before closing a task:
 |---|---|
 | C# script | compile/import complete, no new console errors |
 | Scene/prefab/material/UI/camera | screenshot reviewed, scene saved if modified |
-| Gameplay/system in standard/pro | Play Mode run, console checked during play, changed behavior verified |
+| Gameplay/system in standard/pro | Play Mode run, console checked during play, declared runtime driver/tests executed, changed behavior verified |
 | Pro mode | relevant tests when available |
 | Build/platform/package/settings | lightweight build validation when practical |
 
 If verification cannot run, report the exact missing capability or project limitation.
+
+For interactive behavior, screenshot-only verification is not a pass. Use a PlayMode test, scenario runner, input injection, UI automation, custom MCP tool, or mark the result degraded and create an automation-gap task.
 
 ## File-Only Fallback
 
