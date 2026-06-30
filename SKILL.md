@@ -1,6 +1,10 @@
 ---
 name: unity-game-agent
 description: "Unity Game Agent: autonomous Unity game development pipeline for quick fixes, direct feature work, full game builds, verification, Play Mode checks, and MCP-driven Unity Editor automation. Use when working on Unity games, gameplay systems, scenes, UI, ScriptableObjects, builds, tests, or project continuation with Docs/ state files."
+metadata:
+  version: 3.0.0
+  author: Neoxider
+  homepage: https://github.com/NeoXider/unity-game-agent
 ---
 
 # Unity Game Agent
