@@ -1,0 +1,12 @@
+<ui:UXML
+    xmlns:ui="UnityEngine.UIElements"
+    xmlns:game="Game.UI.Controls">
+
+    <Style src="StatBadge.uss" />
+
+    <ui:VisualElement class="stats-row">
+        <game:StatBadge title="HP" value="8" warning-below="10" />
+        <game:StatBadge title="Mana" value="42" warning-below="5" />
+        <game:StatBadge title="Armor" value="3" warning-below="2" />
+    </ui:VisualElement>
+</ui:UXML>

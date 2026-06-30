@@ -1,0 +1,32 @@
+.stats-row {
+    flex-direction: row;
+}
+
+.stat-badge {
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 10px;
+    margin-right: 8px;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.08);
+    transition-property: background-color, scale;
+    transition-duration: 120ms, 100ms;
+}
+
+.stat-badge:hover {
+    scale: 1.03;
+}
+
+.stat-badge__title {
+    opacity: 0.7;
+    margin-right: 8px;
+}
+
+.stat-badge__value {
+    font-size: 18px;
+    -unity-font-style: bold;
+}
+
+.stat-badge.is-warning {
+    background-color: rgba(180, 40, 40, 0.35);
+}

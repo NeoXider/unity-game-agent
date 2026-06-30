@@ -1,0 +1,24 @@
+.toast {
+    position: absolute;
+    right: 24px;
+    bottom: 24px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background-color: rgba(30, 30, 30, 0.88);
+    opacity: 0;
+    translate: 0 16px;
+    visibility: hidden;
+    transition-property: opacity, translate;
+    transition-duration: 120ms, 180ms;
+    transition-timing-function: ease-out, ease-out;
+}
+
+.toast.is-visible {
+    opacity: 1;
+    translate: 0 0;
+    visibility: visible;
+}
+
+.toast__message {
+    color: white;
+}

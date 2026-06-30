@@ -4,6 +4,25 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.1.0] — 2026-06-30
+
+### ✨ New Features
+- **Runtime UI Toolkit profile (Unity 6.5 / `PanelRenderer`)** — vendored the standalone `uitk-6-5`
+  skill (author: Neoxider) into `project-profiles/ui-toolkit/`: a `PanelRenderer`-first router plus
+  `docs/` (architecture, UXML/USS, binding, animation, shaders/materials/filters, performance,
+  verification), `examples/`, and `templates/`. Covers USS filters and `-unity-material`/UI Shader Graph.
+  `PanelRenderer` replaces `UIDocument` from Unity 6.5; on 6.4 and earlier, keep `UIDocument`.
+
+### 🔧 Improvements
+- SKILL.md UI section and Reference Map now point at the UI Toolkit profile.
+- `project-profiles/ui-toolkit.md` (thin flat profile) replaced by `project-profiles/ui-toolkit/README.md`.
+
+### Notes
+- Vendored `docs/`/`examples/` keep their original Russian prose (language-neutral code); the profile
+  entry is English. Source repo: github.com/NeoXider/uitk-6-5-unity-skill (target Unity 6.5 / 6000.5).
+
+---
+
 ## [3.0.0] — 2026-06-30
 
 ### ✨ New Features

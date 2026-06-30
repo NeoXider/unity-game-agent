@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement class="card">
+        <ui:Label name="card-title" class="card__title" text="Default title" />
+        <ui:Label name="card-subtitle" class="card__subtitle" text="Default subtitle" />
+        <ui:VisualElement name="card-body" class="card__body" content-container="content" />
+    </ui:VisualElement>
+</ui:UXML>

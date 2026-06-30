@@ -1,0 +1,47 @@
+.main-menu {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+}
+
+.main-menu__title {
+    font-size: 56px;
+    -unity-font-style: bold;
+    margin-bottom: 8px;
+}
+
+.main-menu__subtitle {
+    opacity: 0.65;
+    margin-bottom: 32px;
+}
+
+.main-menu__buttons {
+    width: 280px;
+}
+
+.main-menu__button {
+    height: 44px;
+    margin-bottom: 10px;
+    scale: 1;
+    transition-property: scale, opacity, translate;
+    transition-duration: 100ms, 120ms, 120ms;
+    transition-timing-function: ease-out, ease-out, ease-out;
+}
+
+.main-menu__button:hover {
+    scale: 1.035;
+    translate: 0 -1px;
+}
+
+.main-menu__button:active {
+    scale: 0.985;
+}
+
+.main-menu__button--danger {
+    opacity: 0.8;
+}
+
+.main-menu__button--danger:hover {
+    opacity: 1;
+}

@@ -1,0 +1,13 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="FilterDemo.uss" />
+
+    <ui:VisualElement name="filter-demo" class="filter-demo">
+        <ui:VisualElement name="backdrop" class="filter-demo__backdrop" />
+
+        <ui:VisualElement name="card" class="filter-card">
+            <ui:Label class="filter-card__title" text="USS Filters" />
+            <ui:Label text="Toggle blur/grayscale/tint через classes" />
+            <ui:Button name="toggle-filter-button" text="Toggle filter" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="AnimatedToast.uss" />
+
+    <ui:VisualElement name="toast" class="toast">
+        <ui:Label name="message" class="toast__message" text="Saved" />
+    </ui:VisualElement>
+</ui:UXML>

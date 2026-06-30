@@ -2,7 +2,7 @@
 name: unity-game-agent
 description: "Unity Game Agent: autonomous Unity game development pipeline for quick fixes, direct feature work, full game builds, verification, Play Mode checks, and MCP-driven Unity Editor automation. Use when working on Unity games, gameplay systems, scenes, UI, ScriptableObjects, builds, tests, or project continuation with Docs/ state files."
 metadata:
-  version: 3.0.0
+  version: 3.1.0
   author: Neoxider
   homepage: https://github.com/NeoXider/unity-game-agent
 ---
@@ -162,6 +162,7 @@ and QA policy always still apply. To add a pattern, see [patterns/README.md](pat
 ## Reference Map
 
 - Development patterns: [patterns/README.md](patterns/README.md); casual games on NeoxiderTools: [patterns/casual-neoxider/pattern.md](patterns/casual-neoxider/pattern.md)
+- UI stack profiles: `project-profiles/` — runtime UI Toolkit on Unity 6.5 / `PanelRenderer`: [project-profiles/ui-toolkit/README.md](project-profiles/ui-toolkit/README.md)
 - Provider-neutral MCP workflow: [tools/mcp-provider-neutral.md](tools/mcp-provider-neutral.md)
 - CoplayDev command adapter: [mcp-commands.md](mcp-commands.md)
 - NeoxiderTools reuse rules: [tools/neoxider-tools-reuse.md](tools/neoxider-tools-reuse.md)
@@ -499,6 +500,7 @@ Docs rules:
 ## UI, Libraries, And Architecture
 
 - Detect existing UI stack before choosing one. Do not mix UI Toolkit and uGUI in the same screen unless migrating.
+- For UI Toolkit runtime UI on Unity 6.5+, use the `PanelRenderer` profile (`PanelRenderer` replaces `UIDocument`, supports USS filters and `-unity-material`/UI Shader Graph): [project-profiles/ui-toolkit/README.md](project-profiles/ui-toolkit/README.md). On Unity 6.4 and earlier, keep `UIDocument`.
 - Use TextMeshPro for uGUI text; never use legacy `UnityEngine.UI.Text`.
 - Use null-safe UI references, especially in tests and no_ui mode.
 - Separate UI view updates from game rules.

@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="MainMenu.uss" />
+
+    <ui:VisualElement name="main-menu" class="main-menu">
+        <ui:Label name="title-label" class="main-menu__title" text="Victor" />
+        <ui:Label name="subtitle-label" class="main-menu__subtitle" text="UI Toolkit 6.5" />
+
+        <ui:VisualElement class="main-menu__buttons">
+            <ui:Button name="play-button" class="main-menu__button" text="Играть" />
+            <ui:Button name="settings-button" class="main-menu__button" text="Настройки" />
+            <ui:Button name="quit-button" class="main-menu__button main-menu__button--danger" text="Выйти" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

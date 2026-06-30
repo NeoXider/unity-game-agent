@@ -1,0 +1,18 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="TemplateUsage.uss" />
+    <ui:Template name="Card" src="CardTemplate.uxml" />
+
+    <ui:VisualElement class="cards">
+        <ui:Instance template="Card" name="quest-card">
+            <ui:AttributeOverrides element-name="card-title" text="Квест" />
+            <ui:AttributeOverrides element-name="card-subtitle" text="Награда: 120 XP" />
+            <ui:Label text="Поговорить с кузнецом" />
+        </ui:Instance>
+
+        <ui:Instance template="Card" name="warning-card">
+            <ui:AttributeOverrides element-name="card-title" text="Опасность" />
+            <ui:AttributeOverrides element-name="card-subtitle" text="Низкое здоровье" />
+            <ui:Label text="Используй зелье" />
+        </ui:Instance>
+    </ui:VisualElement>
+</ui:UXML>

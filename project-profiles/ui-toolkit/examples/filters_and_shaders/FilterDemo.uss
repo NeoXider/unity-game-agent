@@ -1,0 +1,57 @@
+.filter-demo {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.filter-demo__backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(100, 140, 255, 0.20);
+    filter: blur(0px) grayscale(0%) opacity(100%);
+    transition-property: filter;
+    transition-duration: 220ms;
+}
+
+.filter-demo__backdrop.is-filtered {
+    filter: blur(8px) grayscale(45%) opacity(70%);
+}
+
+.filter-card {
+    width: 320px;
+    padding: 18px;
+    border-radius: 12px;
+    background-color: rgba(20, 20, 20, 0.78);
+    transition-property: scale, filter;
+    transition-duration: 140ms, 220ms;
+    filter: tint(rgba(255, 255, 255, 0));
+}
+
+.filter-card:hover {
+    scale: 1.02;
+    filter: tint(rgba(90, 180, 255, 0.12));
+}
+
+.filter-card__title {
+    font-size: 22px;
+    -unity-font-style: bold;
+    margin-bottom: 6px;
+}
+
+/* UI Shader Graph material example. Replace path with your actual .mat asset. */
+.hologram-ui {
+    -unity-material: url("project://database/Assets/UI/Materials/M_HologramUI.mat");
+}
+
+/* Reset inherited material on content if necessary. */
+.hologram-ui__content {
+    -unity-material: none;
+}
+
+/* Custom filter example. Replace path with your actual FilterFunctionDefinition asset. */
+.swirl-effect {
+    filter: filter("Assets/UI/Filters/SwirlFilter.asset" 58.9 2.3);
+}
