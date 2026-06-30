@@ -11,11 +11,12 @@ All notable changes to this skill are documented here.
   skill (author: Neoxider) into `project-profiles/ui-toolkit/`: a `PanelRenderer`-first router plus
   `docs/` (architecture, UXML/USS, binding, animation, shaders/materials/filters, performance,
   verification), `examples/`, and `templates/`. Covers USS filters and `-unity-material`/UI Shader Graph.
-  `PanelRenderer` replaces `UIDocument` from Unity 6.5; on 6.4 and earlier, keep `UIDocument`.
+  From Unity 6.5, prefer `PanelRenderer` for new runtime UI; keep `UIDocument` on 6.4 and earlier or for existing screens unless migrating intentionally.
 
 ### 🔧 Improvements
 - SKILL.md UI section and Reference Map now point at the UI Toolkit profile.
 - `project-profiles/ui-toolkit.md` (thin flat profile) replaced by `project-profiles/ui-toolkit/README.md`.
+- Independent-audit follow-up: reconciled the NeoxiderTools opt-in anti-pattern with pattern stack-defaults, softened "DOTween (Pro)" to free-DOTween-by-default, clarified PanelRenderer-vs-UIDocument as preference (not global migration), and made the UI Toolkit docs map link exact filenames.
 
 ### Notes
 - Vendored `docs/`/`examples/` keep their original Russian prose (language-neutral code); the profile

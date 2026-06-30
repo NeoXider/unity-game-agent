@@ -1,6 +1,6 @@
 # UI Brief
 
-Short brief for UI Builder (UXML/USS).
+Short UI Toolkit brief (UXML/USS).
 
 ---
 

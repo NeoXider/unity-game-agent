@@ -8,8 +8,9 @@ This is a **pattern** layered on the universal pipeline (`INTAKE -> PLAN -> BUIL
 It sets the stack, scene skeleton, reuse map, and golden rules for casual games; the pipeline's
 preflight, verification gate, and QA policy still apply.
 
-> Requires **DOTween (Pro)** and the **NeoxiderTools** package (`com.neoxider.tools`, namespace `Neo`)
-> plus the optional **NeoxiderPages** sample (`PM`/`UIPage`/`BtnChangePage`/`G`).
+> Requires **DOTween** (free is fine; DOTween Pro only if you use Pro-only features) and the
+> **NeoxiderTools** package (`com.neoxider.tools`, namespace `Neo`) plus the optional **NeoxiderPages**
+> sample (`PM`/`UIPage`/`BtnChangePage`/`G`).
 
 ## When to use
 
@@ -27,7 +28,7 @@ in scenes. **Not for:** general C#/Unity API questions without building a game, 
   installed, plus `Assets/Neoxider/Docs/**` (RU) and `DocsEn/**` in the NeoxiderTools repo.
 - **Driving the Editor via MCP:** [../../tools/mcp-provider-neutral.md](../../tools/mcp-provider-neutral.md)
   and [../../mcp-commands.md](../../mcp-commands.md).
-- Reference games: study existing casual games in your own samples/forks folder before building.
+- Reference games: study existing casual games in project-provided samples, local references, or approved repos before building.
 
 ---
 
@@ -82,7 +83,7 @@ INTAKE -> SCAFFOLD -> REUSE -> CONFIG(SO) -> PAGES -> DYNAMICS(prefab) -> POLISH
 ## Golden rules (12)
 
 1. **Don't write from scratch** — assemble from Neoxider managers. No component? Check docs, then write.
-2. **Minimal code.** Wire logic in the inspector (UnityEvent/refs), don't hardcode. **No NoCode.**
+2. **Minimal code.** Wire references/events in the inspector (UnityEvent/refs); keep branching and game rules in typed C#. **No NoCode.**
 3. **No comments** — clear names. (Exception: one "why" line for nontrivial logic is fine.)
 4. **State via `GM`/`G`**, not your own bool flags for game flow.
 5. **Hook logic through a `<Game>Manager` bridge** that listens to `G.On*` (the bridge is optional for

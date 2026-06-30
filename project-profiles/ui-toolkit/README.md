@@ -87,16 +87,18 @@ over `await` for delays/animation.
 
 ## docs/ map
 
-- `docs/00` — extended decision matrix and mini-glossary.
-- `docs/01` — `PanelRenderer` architecture, presenter skeleton, world-space, common mistakes.
-- `docs/02` — UXML/USS, templates, custom controls, `AttributeOverrides`.
-- `docs/03` — binding, events, input, reload lifecycle, state classes, screen router.
-- `docs/04` — animation: USS transitions, C# `schedule`/tween, `display:none` nuances.
-- `docs/05` — `-unity-material`, UI Shader Graph, built-in/custom USS filters.
-- `docs/06` — performance, Profiler markers, atlas, masks, `ListView`, pooling.
-- `docs/07` — agent answer templates and code-review checklists.
-- `docs/08` — API verification (reflection/tests) before asserting.
-- `docs/references.md` — links to official 6000.5 documentation.
+(The matrix above cites docs by number — `docs/01` means the file below.)
+
+- [docs/00-quick-decision-matrix.md](docs/00-quick-decision-matrix.md) — extended decision matrix and mini-glossary.
+- [docs/01-architecture-panel-renderer.md](docs/01-architecture-panel-renderer.md) — `PanelRenderer` architecture, presenter skeleton, world-space, common mistakes.
+- [docs/02-uxml-uss-templates-custom-controls.md](docs/02-uxml-uss-templates-custom-controls.md) — UXML/USS, templates, custom controls, `AttributeOverrides`.
+- [docs/03-runtime-binding-events-input.md](docs/03-runtime-binding-events-input.md) — binding, events, input, reload lifecycle, state classes, screen router.
+- [docs/04-animation-motion.md](docs/04-animation-motion.md) — animation: USS transitions, C# `schedule`/tween, `display:none` nuances.
+- [docs/05-shaders-materials-filters.md](docs/05-shaders-materials-filters.md) — `-unity-material`, UI Shader Graph, built-in/custom USS filters.
+- [docs/06-performance-debugging-gotchas.md](docs/06-performance-debugging-gotchas.md) — performance, Profiler markers, atlas, masks, `ListView`, pooling.
+- [docs/07-agent-prompts-and-checklists.md](docs/07-agent-prompts-and-checklists.md) — agent answer templates and code-review checklists.
+- [docs/08-verification.md](docs/08-verification.md) — API verification (reflection/tests) before asserting.
+- [docs/references.md](docs/references.md) — links to official 6000.5 documentation.
 
 `examples/` mirrors these topics (runtime_panel_renderer, custom_control, animations,
 filters_and_shaders, performance); `templates/` holds agent task / screen spec / PR checklist templates.

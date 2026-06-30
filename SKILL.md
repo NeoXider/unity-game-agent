@@ -500,7 +500,7 @@ Docs rules:
 ## UI, Libraries, And Architecture
 
 - Detect existing UI stack before choosing one. Do not mix UI Toolkit and uGUI in the same screen unless migrating.
-- For UI Toolkit runtime UI on Unity 6.5+, use the `PanelRenderer` profile (`PanelRenderer` replaces `UIDocument`, supports USS filters and `-unity-material`/UI Shader Graph): [project-profiles/ui-toolkit/README.md](project-profiles/ui-toolkit/README.md). On Unity 6.4 and earlier, keep `UIDocument`.
+- For UI Toolkit runtime UI on Unity 6.5+, prefer the `PanelRenderer` profile (`PanelRenderer` supersedes `UIDocument` for new runtime UI; supports USS filters and `-unity-material`/UI Shader Graph): [project-profiles/ui-toolkit/README.md](project-profiles/ui-toolkit/README.md). On Unity 6.4 and earlier, or for existing `UIDocument` screens, keep `UIDocument` unless migrating intentionally.
 - Use TextMeshPro for uGUI text; never use legacy `UnityEngine.UI.Text`.
 - Use null-safe UI references, especially in tests and no_ui mode.
 - Separate UI view updates from game rules.
@@ -529,7 +529,7 @@ Docs rules:
 - Report visual work as done without reviewing a screenshot.
 - Hardcode settings that belong in ScriptableObjects.
 - Add packages before discovery.
-- Force NeoxiderTools reuse without user opt-in.
+- Force NeoxiderTools reuse without user opt-in (unless a selected/detected development pattern declares it the stack default, e.g. casual-neoxider).
 - Impose a new folder structure over an existing project convention.
 - Trust sub-agent or tool output without verification.
 - Rename serialized fields casually and break scene/prefab data.

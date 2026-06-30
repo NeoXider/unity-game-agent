@@ -97,6 +97,9 @@ These are implemented in the skill today.
 | Area | Status | Evidence |
 |---|---:|---|
 | Runtime policy profile | Done | `templates/DEV_PROFILE.json` |
+| Development patterns | Done | `patterns/README.md` |
+| casual-neoxider pattern | Done | `patterns/casual-neoxider/` |
+| UI Toolkit profile (6.5 / PanelRenderer) | Done | `project-profiles/ui-toolkit/` |
 | Fast / standard / pro mode matrix | Done | `POLICY_MATRIX.md`, `modes/` |
 | Reuse-first discovery policy | Done | `SKILL.md`, `tools/libraries-setup.md` |
 | Role subskills | Done | `roles/game-designer.md`, `roles/designer.md`, `roles/lead.md`, `roles/developer.md`, `roles/qa.md` |
