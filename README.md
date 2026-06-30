@@ -2,7 +2,7 @@
 
 ![Unity Game Agent header](assets/unity-game-agent-header.png)
 
-Autonomous Unity game development skill for Cursor/Codex: from an idea or existing project task to implemented, documented, and verified Unity work.
+Autonomous Unity game development skill for Claude Code, Codex, Cursor, and other AI coding agents: from an idea or existing project task to implemented, documented, and verified Unity work.
 
 This is not just a prompt pack. It is a role-based production pipeline with planning docs, task ownership, Unity preflight, reuse discovery, Play Mode QA, screenshots, tests, defect loops, and bounded failure recovery.
 
@@ -75,6 +75,20 @@ The orchestrator stays accountable, but work is split into small role files so t
 | QA | Verify independently, create defects, avoid deadlocks | Filled `Docs/QA_AGENT/`, defect tasks, degraded reports |
 
 In `standard` and `pro`, real subagents are mandatory when the tool environment supports them. If subagents are unavailable, the orchestrator records degraded mode and follows the same role files locally.
+
+## Development Patterns
+
+The pipeline is the engine; a **development pattern** is a swappable playbook for one *family* of games.
+A pattern fills the same pipeline with concrete stack choices, scene skeletons, reuse maps, golden rules,
+and anti-patterns — and is auto-selected by detecting the project (packages, namespaces, scene shape) or
+matching the request for a new project.
+
+| Pattern | Use for | Stack |
+|---|---|---|
+| `casual-neoxider` | Casual / hyper-casual / mobile: match-3, merge, lotto/bingo, slots, dress-up, idle/clicker, arcade, puzzle | NeoxiderTools (`Neo.*`) + NeoxiderPages + DOTween via Unity MCP |
+
+Patterns are additive — drop a new `patterns/<name>/pattern.md` and register it. See
+[patterns/README.md](patterns/README.md).
 
 ## Current Progress
 
@@ -171,7 +185,7 @@ The docs are not ceremony. They are the agent's working memory, task ownership s
 
 ## Quick Start
 
-1. Put this folder in a discoverable skill location, such as `.cursor/skills/unity-game`.
+1. Put this folder in your agent's skills location (e.g. `~/.claude/skills/unity-game-agent`, `~/.codex/skills/unity-game-agent`, or `.cursor/skills/unity-game`).
 2. Open a Unity project or create an empty project.
 3. Ask for a quick fix, a direct feature, or a full game.
 4. The skill chooses the shortest verified path:

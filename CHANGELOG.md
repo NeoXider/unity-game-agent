@@ -4,6 +4,27 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.0.0] — 2026-06-30
+
+### ✨ New Features
+- **Development Patterns** — pluggable, opinionated playbooks layered on the universal pipeline. Patterns
+  live under `patterns/`, are auto-selected by project detection or request match, and override universal
+  defaults where they conflict while keeping preflight/verification/QA intact. See `patterns/README.md`.
+- **`casual-neoxider` pattern** — merged the standalone casual-games method into this skill as the first
+  pattern: NeoxiderTools (`Neo.*`) + NeoxiderPages + DOTween via MCP. `patterns/casual-neoxider/` ships
+  the entry playbook plus `managers.md`, `patterns.md`, and `scene-skeleton.md`. When selected,
+  NeoxiderTools reuse is the default instead of an opt-in question.
+
+### 🔧 Improvements
+- `DEV_PROFILE.json` gains `"pattern"` (`auto` | `none` | `<name>`); Session Routing now selects a pattern.
+- Provider-neutral framing: README and docs no longer assume a single client (Claude Code / Codex / Cursor).
+- Removed all Figma references from templates; genericized hardcoded personal paths in the merged content.
+
+### 🗑️ Removed
+- `project-profiles/neoxider-pages.md` — superseded by the `casual-neoxider` pattern.
+
+---
+
 ## [2.0.0] — 2025-04-24
 
 ### 🔥 Breaking Changes

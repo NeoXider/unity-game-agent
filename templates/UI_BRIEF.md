@@ -9,7 +9,7 @@ Short brief for UI Builder (UXML/USS).
 | Field | Value |
 |-------|--------|
 | Design ref | [yes / no] |
-| Source | [screenshots / site / Figma-export / spec / other] |
+| Source | [screenshots / site / exported mockup / spec / other] |
 | Link | [URL or —] |
 | UI Quality Mode | [quick / standard / production] |
 
@@ -57,7 +57,7 @@ Short brief for UI Builder (UXML/USS).
 
 | Asset | Type | Source | Path |
 |-------|------|--------|------|
-| IconCoins | PNG | Figma | Assets/_source/UI/Icons/IconCoins.png |
+| IconCoins | PNG | Mockup | Assets/_source/UI/Icons/IconCoins.png |
 | ButtonBg | Sprite | Generated | Assets/_source/UI/Sprites/ButtonBg.png |
 
 ---

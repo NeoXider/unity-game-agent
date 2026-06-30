@@ -95,6 +95,7 @@ Use these defaults unless the user or `Docs/DEV_PROFILE.json` overrides them.
   "minimal_change": true,
   "preserve_serialized_contracts": true,
   "library_policy": "discover_before_plan",
+  "pattern": "auto",
   "project_frameworks": []
 }
 ```
@@ -129,8 +130,34 @@ Important policy meanings:
 - `gd_before_lead: true`: Game Designer role prepares/updates `GAME_DESIGN.md` before Lead planning when design is incomplete or gameplay changes are broad.
 - `designer_before_lead_when_visual: true`: Designer role prepares/updates `UI_BRIEF.md` before Lead planning when UI/UX/visual work is involved.
 
+## Development Patterns
+
+A **development pattern** is a reusable, opinionated playbook for building one *family* of games on top
+of this same pipeline. The pipeline (preflight, verification gate, QA policy, roles) is unchanged; a
+pattern fills it with concrete stack choices, scene skeletons, reuse maps, golden rules, and
+anti-patterns. Patterns are additive — new ones live under `patterns/` without changing the engine.
+
+| Pattern | Use for | Stack | Entry file |
+|---|---|---|---|
+| `casual-neoxider` | Casual/hyper-casual/mobile: match-3, merge, lotto/bingo, slots, dress-up, idle/clicker, arcade, puzzle | NeoxiderTools (`Neo.*`) + NeoxiderPages + DOTween via MCP | [patterns/casual-neoxider/pattern.md](patterns/casual-neoxider/pattern.md) |
+
+Pattern selection (during Session Routing / INTAKE), at most one:
+
+1. **Detect** — scan for the pattern's signals (packages, namespaces, scene shape, managers). A
+   confident detection auto-selects it. For `casual-neoxider`: `com.neoxider.tools`, `Neo.*` usage, a
+   `-System--` root, `UIPage`/`PageId`/`BtnChangePage`.
+2. **Match the request** — for a new/empty project, match the described genre/stack to the table.
+3. **Confirm only when ambiguous** — weak detection + generic request -> ask; otherwise proceed with the
+   best fit (or no pattern).
+
+Record the choice in `Docs/DEV_PROFILE.json` (`"pattern"`) and `Docs/AGENT_MEMORY.md`. A selected
+pattern's defaults override the universal defaults where they conflict (e.g. `casual-neoxider` treats
+NeoxiderTools reuse as the default, not an opt-in question). The universal preflight, verification gate,
+and QA policy always still apply. To add a pattern, see [patterns/README.md](patterns/README.md).
+
 ## Reference Map
 
+- Development patterns: [patterns/README.md](patterns/README.md); casual games on NeoxiderTools: [patterns/casual-neoxider/pattern.md](patterns/casual-neoxider/pattern.md)
 - Provider-neutral MCP workflow: [tools/mcp-provider-neutral.md](tools/mcp-provider-neutral.md)
 - CoplayDev command adapter: [mcp-commands.md](mcp-commands.md)
 - NeoxiderTools reuse rules: [tools/neoxider-tools-reuse.md](tools/neoxider-tools-reuse.md)
@@ -209,6 +236,10 @@ Start by classifying the user request.
    -> Intake for game idea, mode, platform, UI stack, and optional NeoxiderTools reuse.
 ```
 
+After classifying, **select a development pattern** (see Development Patterns): detect from the project,
+or match the request for a new project. A selected pattern (e.g. `casual-neoxider`) sets the stack
+defaults and reuse posture for the rest of the session; record it in `Docs/DEV_PROFILE.json`.
+
 Defaults:
 
 - Mode: `standard` for "make a game"; `fast` for prototypes/simple games; `pro` for scalable architecture, tests, or larger systems.
@@ -270,6 +301,10 @@ If the user chooses NeoxiderTools:
 - keep project-specific code thin and explicit.
 
 If the user declines or NeoxiderTools is unavailable, build standalone and record that choice. See [tools/neoxider-tools-reuse.md](tools/neoxider-tools-reuse.md).
+
+When the `casual-neoxider` pattern is selected, NeoxiderTools reuse is the **default**, not an opt-in
+question — follow [patterns/casual-neoxider/pattern.md](patterns/casual-neoxider/pattern.md) and only ask
+if the user explicitly wants a standalone build instead.
 
 ## C# Change Workflow
 

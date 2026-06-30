@@ -42,5 +42,6 @@
   "gd_before_lead": true,
   "designer_before_lead_when_visual": true,
   "library_policy": "discover_before_plan",
+  "pattern": "auto",
   "project_frameworks": []
 }

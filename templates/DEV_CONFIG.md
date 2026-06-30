@@ -41,7 +41,7 @@ Project config. Agent reads this first each session.
 | Subagent fallback | [only_when_tools_unavailable / off] | Local role switching only when subagents are unavailable or blocked |
 | ComfyUI | [used / not used] | Asset generation |
 | UI design ref | [yes / no] | Mockups/screens/guide for UI Builder |
-| Design source | [screenshots / site / Figma-export / other] | |
+| Design source | [screenshots / site / exported mockup / other] | |
 | Design link | [URL or —] | |
 
 ---

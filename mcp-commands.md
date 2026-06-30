@@ -401,7 +401,7 @@ manage_packages action=install package="com.cysharp.unitask" source="git" url="h
 
 | Issue | Fix |
 |---|---|
-| Tools not visible | Unity open? Window → MCP for Unity → Start Server. Check Cursor MCP settings. |
+| Tools not visible | Unity open? Window → MCP for Unity → Start Server. Check your client's MCP settings. |
 | `read_console` empty | Run `refresh_unity` first — errors appear after recompile. |
 | `ready_for_tools=false` | Wait and re-read `mcpforunity://editor/state` (check `advice.recommended_retry_after_ms`). |
 | Object created but invisible | Check position, scale, camera. Use `find_gameobjects`. |
