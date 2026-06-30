@@ -1,20 +1,19 @@
-# 08 — Верификация API и проверка кода
+# 08 — API verification and code checking
 
-Правило skill: **не утверждай сигнатуру метода, наличие свойства или поведение API по памяти.**
-UITK активно меняется между версиями Unity (особенно `UIDocument` → `PanelRenderer` в 6.5), и
-тренировочные данные часто устаревшие. Прежде чем писать или ревьюить код — проверь.
+Skill rule: **don't assert a method signature, a property's existence, or API behavior from memory.**
+UITK changes actively between Unity versions (especially `UIDocument` → `PanelRenderer` in 6.5), and
+training data is often stale. Before writing or reviewing code — verify.
 
-Порядок доверия источникам (от самого надёжного):
+Trust order of sources (most reliable first):
 
-1. **Рефлексия по живому редактору** (если подключён Unity MCP) — отражает ровно ту версию Unity,
-   что стоит у пользователя.
-2. **Компилирующийся код проекта** — если проект собирается, его сигнатуры верны для его версии Unity.
-3. **Официальная документация 6000.5** (`docs/references.md`).
-4. Память/тренировочные данные — **только как гипотеза**, требующая подтверждения 1–3.
+1. **Reflection against the live editor** (if Unity MCP is connected) — reflects exactly the Unity version the user has.
+2. **Compiling project code** — if the project builds, its signatures are correct for its Unity version.
+3. **Official 6000.5 documentation** (`docs/references.md`).
+4. Memory/training data — **only as a hypothesis**, requiring confirmation from 1–3.
 
-## Проверка через Unity MCP (рефлексия)
+## Verify via Unity MCP (reflection)
 
-Если доступен Unity MCP (`mcp__UnityMCP__unity_reflect`):
+If Unity MCP is available (`mcp__UnityMCP__unity_reflect`):
 
 ```text
 unity_reflect action=get_member
@@ -22,63 +21,62 @@ unity_reflect action=get_member
   member_name=RegisterUIReloadCallback
 ```
 
-Так подтверждается реальный тип делегата. На момент Unity 6.5 у метода **два overload'а** (проверено
-рефлексией в живом редакторе 6000.5.0f1):
+This confirms the actual delegate type. As of Unity 6.5 the method has **two overloads** (verified by
+reflection in a live 6000.5.0f1 editor):
 
 ```csharp
-// overload 1 — делегат PanelRenderer.UIReloadCallback
+// overload 1 — delegate PanelRenderer.UIReloadCallback
 public void RegisterUIReloadCallback(UIReloadCallback callback);
 //   void Invoke(PanelRenderer panelRenderer, VisualElement rootElement)
 
-// overload 2 — делегат PanelRenderer.VersionedUIReloadCallback
+// overload 2 — delegate PanelRenderer.VersionedUIReloadCallback
 public void RegisterUIReloadCallback(VersionedUIReloadCallback callback);
 //   void Invoke(PanelRenderer panelRenderer, VisualElement rootElement, int version)
 ```
 
-Компилятор выбирает overload по сигнатуре твоего метода-обработчика. По умолчанию — 2-арг
-(`UIReloadCallback`) + идемпотентный `Unwire()`. 3-арг (`VersionedUIReloadCallback`) — если реально
-нужен dedup «тот же `version` → пропустить повторную привязку».
+The compiler picks the overload by your handler method's signature. By default — 2-arg
+(`UIReloadCallback`) + an idempotent `Unwire()`. The 3-arg (`VersionedUIReloadCallback`) — if you really
+need dedup "same `version` → skip re-binding".
 
-> Этот пункт — наглядный урок самого skill: ранний вывод «3-арг не существует» был сделан по
-> единственному примеру использования в проекте (там брали 2-арг overload) и оказался неверным.
-> Рефлексия в живом редакторе показала оба overload'а. Всегда проверяй, а не достраивай по одному примеру.
+> This point is a clear lesson from the skill itself: an early conclusion that "the 3-arg doesn't exist"
+> was made from a single usage example in a project (which used the 2-arg overload) and turned out wrong.
+> Reflection in the live editor showed both overloads. Always verify rather than extrapolate from one example.
 
-Полезные свойства `PanelRenderer` (проверяй по месту): `panelSettings`, `visualTree`,
-`worldSpaceSize`, `worldSpaceSizeMode`. У `PanelSettings`: `renderMode` (`PanelRenderMode.WorldSpace`
+Useful `PanelRenderer` properties (verify on the spot): `panelSettings`, `visualTree`,
+`worldSpaceSize`, `worldSpaceSizeMode`. On `PanelSettings`: `renderMode` (`PanelRenderMode.WorldSpace`
 / overlay), scale mode, sorting order, dynamic atlas.
 
-Прочие действия рефлексии:
+Other reflection actions:
 
 ```text
-unity_reflect action=get_type   class_name=UnityEngine.UIElements.PanelSettings   # список членов
-unity_reflect action=search     query=PanelRenderer scope=unity                   # найти тип
+unity_reflect action=get_type   class_name=UnityEngine.UIElements.PanelSettings   # member list
+unity_reflect action=search     query=PanelRenderer scope=unity                   # find a type
 ```
 
-## Проверка через сам проект
+## Verify via the project itself
 
-Если редактор не запущен, а проект собирается — его код это источник истины для его версии Unity:
+If the editor isn't running but the project builds — its code is the source of truth for its Unity version:
 
-- найди существующий вызов спорного API (`RegisterUIReloadCallback`, `worldSpaceSize`, …) в кодовой
-  базе и посмотри фактическую сигнатуру обработчика;
-- не вводи новый паттерн, противоречащий тому, что уже компилируется.
+- find an existing call to the disputed API (`RegisterUIReloadCallback`, `worldSpaceSize`, …) in the
+  codebase and look at the handler's actual signature;
+- don't introduce a new pattern that contradicts what already compiles.
 
-## Проверка после написания кода
+## Verify after writing code
 
-1. Сохрани/синкни скрипты, дай домен-релоаду пройти.
-2. Проверь консоль на ошибки компиляции (Unity MCP `read_console`, фильтр по error) — **до** того, как
-   использовать новые типы/компоненты.
-3. Прогон EditMode-тестов на UITK-логику там, где она покрыта (Unity MCP `run_tests`).
-4. UI Toolkit Debugger — убедиться, что USS-правило реально применилось (см. `docs/06`).
+1. Save/sync scripts, let domain reload finish.
+2. Check the console for compile errors (Unity MCP `read_console`, filter by error) — **before** using the new types/components.
+3. Run EditMode tests for UITK logic where it's covered (Unity MCP `run_tests`).
+4. UI Toolkit Debugger — confirm the USS rule actually applied (see `docs/06`).
 
-## Чеклист «я не выдумал API»
+## Checklist "I didn't invent the API"
 
-- [ ] Сигнатуру метода подтвердил рефлексией / доками / кодом проекта, не памятью.
-- [ ] Свойство/enum существует в целевой версии Unity (6000.5), а не только в старой/новой.
-- [ ] После правки нет ошибок компиляции в консоли.
-- [ ] Покрытые тесты зелёные.
+- [ ] Confirmed the method signature by reflection / docs / project code, not memory.
+- [ ] The property/enum exists in the target Unity version (6000.5), not only in an older/newer one.
+- [ ] No compile errors in the console after the change.
+- [ ] Covered tests are green.
 
-## Документация
+## Documentation
 
-- Unity MCP (рефлексия/тесты/консоль): инструменты `unity_reflect`, `run_tests`, `read_console`.
+- Unity MCP (reflection/tests/console): tools `unity_reflect`, `run_tests`, `read_console`.
 - Scripting API PanelRenderer: https://docs.unity3d.com/6000.5/Documentation/ScriptReference/UIElements.PanelRenderer.html
 - RegisterUIReloadCallback: https://docs.unity3d.com/6000.5/Documentation/ScriptReference/UIElements.PanelRenderer.RegisterUIReloadCallback.html

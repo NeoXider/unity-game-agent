@@ -19,8 +19,8 @@ All notable changes to this skill are documented here.
 - Independent-audit follow-up: reconciled the NeoxiderTools opt-in anti-pattern with pattern stack-defaults, softened "DOTween (Pro)" to free-DOTween-by-default, clarified PanelRenderer-vs-UIDocument as preference (not global migration), and made the UI Toolkit docs map link exact filenames.
 
 ### Notes
-- Vendored `docs/`/`examples/` keep their original Russian prose (language-neutral code); the profile
-  entry is English. Source repo: github.com/NeoXider/uitk-6-5-unity-skill (target Unity 6.5 / 6000.5).
+- Vendored `docs/`/`examples/` were translated to English. Source repo:
+  github.com/NeoXider/uitk-6-5-unity-skill (target Unity 6.5 / 6000.5).
 
 ---
 

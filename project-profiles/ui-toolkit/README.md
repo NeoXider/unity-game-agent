@@ -6,9 +6,8 @@ Use this profile when the project uses UI Toolkit, or when UI Toolkit is chosen 
 including USS transitions, custom `VisualElement` controls, USS filters, and `-unity-material` /
 UI Shader Graph for per-element shader looks.
 
-> Vendored from the standalone `uitk-6-5` skill (author: Neoxider, target Unity 6.5 / 6000.5). The
-> deep `docs/` and `examples/` are kept in their original Russian prose with language-neutral code;
-> this entry is the English router into them.
+> Vendored from the standalone `uitk-6-5` skill (author: Neoxider, target Unity 6.5 / 6000.5) and
+> translated to English. This entry is the router into the `docs/` and `examples/`.
 
 ## Detection hints
 

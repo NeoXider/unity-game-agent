@@ -1,56 +1,56 @@
-# 00 — Быстрая матрица решений UITK 6.5
+# 00 — UITK 6.5 quick decision matrix
 
-## Что выбирать
+## What to choose
 
-| Ситуация | Делай | Не делай | Лайфхак |
+| Situation | Do | Don't | Tip |
 |---|---|---|---|
-| Новый runtime UI | `PanelRenderer` + `PanelSettings` | Новый код на `UI Document` | Заведи prefab `UIRoot_PanelRenderer` |
-| Нужно найти элементы в C# | Через `RegisterUIReloadCallback` | `Q` в `Awake` без проверки reload | Сбрасывай cached references в `Unwire()` |
-| Экран меню | UXML + USS + Presenter | Всё в C# | Один Presenter на один экран |
-| HUD меняется часто | C# обновляет только изменённые поля | Пересоздавать весь root | Храни last-value и не сетай тот же текст каждый frame |
-| Повторяемая карточка | UXML template или custom control | Копипастить UXML 20 раз | Template — для вида, custom control — для API/логики |
-| Popup open/close | USS class `is-open` + transition | C# Update с alpha | Переключай class после первого frame через `schedule` |
-| Hover/selected/focus | USS псевдоклассы/classes | C# на каждый pointer event | Transition ставь на базовый class, не на `:hover` |
-| Gameplay tween | C# `schedule` / tween wrapper | Сложная логика через USS delays | USS пусть отвечает за визуал, C# — за сценарий |
-| Blur backdrop | USS filter `blur(...)` | Скриншот сцены вручную | Не blur-ь огромные full-screen subtree без проверки профайлера |
-| Hologram/dissolve | UI Shader Graph material + `-unity-material` | Custom filter, если нужен только material look | Материал наследуется детьми — сбрасывай `-unity-material: none` |
-| Swirl/shockwave subtree | Custom USS filter | UI Shader Graph на каждом child | Custom filter работает как post-process по subtree |
-| 500 item inventory | `ListView` | 500 кнопок вручную | Reuse visual tree in `makeItem/bindItem` |
-| Маски | `overflow: hidden`, stencil-aware | Много nested rounded masks | Для mask-heavy контейнера проверь `UsageHints.MaskContainer` |
-| Адаптивность | PanelSettings scale mode + USS flex | Ручные пиксели везде | Сначала mobile reference resolution, потом desktop overrides |
-| Debug UI | UI Toolkit Debugger + Profiler markers | Гадать по коду | Смотри `UpdateStyle`, `UpdateLayout`, `DrawChain` |
+| New runtime UI | `PanelRenderer` + `PanelSettings` | New code on `UIDocument` | Make a `UIRoot_PanelRenderer` prefab |
+| Need to find elements in C# | Via `RegisterUIReloadCallback` | `Q` in `Awake` without reload handling | Reset cached references in `Unwire()` |
+| Menu screen | UXML + USS + Presenter | Everything in C# | One Presenter per screen |
+| HUD changes often | C# updates only changed fields | Recreate the whole root | Keep last-value and don't set the same text every frame |
+| Repeatable card | UXML template or custom control | Copy-paste UXML 20 times | Template for looks, custom control for API/logic |
+| Popup open/close | USS class `is-open` + transition | C# Update with alpha | Toggle the class after the first frame via `schedule` |
+| Hover/selected/focus | USS pseudo-classes/classes | C# on every pointer event | Put the transition on the base class, not on `:hover` |
+| Gameplay tween | C# `schedule` / tween wrapper | Complex logic via USS delays | Let USS own the visual, C# the scenario |
+| Blur backdrop | USS filter `blur(...)` | Screenshot the scene manually | Don't blur a huge full-screen subtree without a profiler check |
+| Hologram/dissolve | UI Shader Graph material + `-unity-material` | Custom filter if you only need a material look | Material is inherited by children — reset with `-unity-material: none` |
+| Swirl/shockwave subtree | Custom USS filter | UI Shader Graph on every child | A custom filter works as a post-process over the subtree |
+| 500-item inventory | `ListView` | 500 buttons by hand | Reuse the visual tree in `makeItem/bindItem` |
+| Masks | `overflow: hidden`, stencil-aware | Many nested rounded masks | For a mask-heavy container check `UsageHints.MaskContainer` |
+| Responsiveness | PanelSettings scale mode + USS flex | Hand pixels everywhere | Mobile reference resolution first, then desktop overrides |
+| Debug UI | UI Toolkit Debugger + Profiler markers | Guess from code | Watch `UpdateStyle`, `UpdateLayout`, `DrawChain` |
 
 ---
 
-## Самый частый правильный pipeline
+## The most common correct pipeline
 
 ```text
-1. UI Builder создаёт UXML/USS.
-2. GameObject получает PanelRenderer.
-3. PanelRenderer указывает Source Asset = экран.uxml.
-4. PanelRenderer указывает Panel Settings.
-5. Presenter подписывается через RegisterUIReloadCallback.
-6. Presenter кэширует элементы и callbacks.
-7. Состояния включаются через AddToClassList/EnableInClassList.
-8. USS делает transitions/filter/material look.
+1. UI Builder creates UXML/USS.
+2. A GameObject gets a PanelRenderer.
+3. PanelRenderer.Source Asset = screen.uxml.
+4. PanelRenderer points to a Panel Settings.
+5. Presenter subscribes via RegisterUIReloadCallback.
+6. Presenter caches elements and callbacks.
+7. States toggle via AddToClassList/EnableInClassList.
+8. USS does transitions/filter/material look.
 ```
 
 ---
 
-## Мини-словарь
+## Mini-glossary
 
-| Термин | Значение |
+| Term | Meaning |
 |---|---|
-| `VisualElement` | Лёгкий retained-mode элемент UI tree |
-| Visual tree | Иерархия `VisualElement`, созданная из UXML и C# |
-| UXML | XML-структура UI |
-| USS | Unity Style Sheets: стили, flex, states, transitions, filters |
-| Panel | Контейнер, который рендерит visual tree |
-| Panel Settings | Asset с настройками рендера, scale, atlas, sorting |
-| PanelRenderer | Component на GameObject, связывает UXML + Panel Settings + Scene |
-| Runtime binding | Связь данных и UI в runtime |
-| Template | UXML-файл, который можно инстанцировать в другом UXML |
-| AttributeOverrides | Переопределение атрибутов внутри template instance |
-| Custom control | C# класс `VisualElement` с UXML-атрибутами |
-| USS filter | Постэффект над элементом и его children |
-| `-unity-material` | Custom material на UI element mesh |
+| `VisualElement` | Lightweight retained-mode UI tree element |
+| Visual tree | Hierarchy of `VisualElement`s built from UXML and C# |
+| UXML | XML structure of the UI |
+| USS | Unity Style Sheets: styles, flex, states, transitions, filters |
+| Panel | Container that renders a visual tree |
+| Panel Settings | Asset with render/scale/atlas/sorting settings |
+| PanelRenderer | Component on a GameObject linking UXML + Panel Settings + Scene |
+| Runtime binding | Data-to-UI link at runtime |
+| Template | UXML file that can be instanced inside another UXML |
+| AttributeOverrides | Override attributes inside a template instance |
+| Custom control | A C# `VisualElement` class with UXML attributes |
+| USS filter | Post-effect over an element and its children |
+| `-unity-material` | Custom material on the UI element mesh |

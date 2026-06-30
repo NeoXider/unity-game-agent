@@ -1,6 +1,6 @@
-# 01 — Архитектура UI Toolkit 6.5 и PanelRenderer
+# 01 — UI Toolkit 6.5 architecture and PanelRenderer
 
-## Как всё устроено
+## How it all fits together
 
 ```text
 GameObject
@@ -13,23 +13,23 @@ GameObject
       └─ Label #title-label
 ```
 
-`PanelRenderer` — bridge между сценой Unity и UXML. Он не должен быть твоим UI-controller. Он отвечает за загрузку visual tree и рендер через `PanelSettings`.
+`PanelRenderer` is the bridge between the Unity scene and the UXML. It should not be your UI controller. It is responsible for loading the visual tree and rendering it through `PanelSettings`.
 
-`PanelSettings` отвечает за:
+`PanelSettings` is responsible for:
 
-- render mode: screen overlay или world-space;
-- scale mode и reference resolution;
+- render mode: screen overlay or world-space;
+- scale mode and reference resolution;
 - sorting order;
 - target texture;
-- theme style sheet и text settings;
+- theme style sheet and text settings;
 - dynamic atlas;
 - buffer/vertex budget.
 
-## Почему не `Awake -> root.Q(...)`
+## Why not `Awake -> root.Q(...)`
 
-В Unity 6.5 visual tree может быть создан и пересоздан не тогда, когда ты ожидаешь. Reload происходит при создании компонента, изменении `PanelSettings`, изменении `VisualTreeAsset`, включении компонента и dirty-reload.
+In Unity 6.5 the visual tree can be created and recreated at times you don't expect. A reload happens on component creation, `PanelSettings` change, `VisualTreeAsset` change, component enable, and dirty-reload.
 
-Поэтому лучший lifecycle такой:
+So the best lifecycle is:
 
 ```csharp
 private void OnEnable()
@@ -43,8 +43,8 @@ private void OnDisable()
     Unwire();
 }
 
-// Unity 6.5: у RegisterUIReloadCallback два overload'а (см. docs/08). Этот метод имеет сигнатуру
-// (PanelRenderer, VisualElement) → выбирается overload UIReloadCallback (2-арг, дефолт).
+// Unity 6.5: RegisterUIReloadCallback has two overloads (see docs/08). This method's signature is
+// (PanelRenderer, VisualElement) → the UIReloadCallback overload is chosen (2-arg, default).
 private void OnUIReload(PanelRenderer renderer, VisualElement root)
 {
     Unwire();
@@ -53,33 +53,30 @@ private void OnUIReload(PanelRenderer renderer, VisualElement root)
 }
 ```
 
-## Правильные роли файлов
+## Correct file roles
 
-| Файл | Ответственность |
+| File | Responsibility |
 |---|---|
-| `.uxml` | Структура, имена элементов, template instances |
+| `.uxml` | Structure, element names, template instances |
 | `.uss` | Layout, spacing, colors, states, transitions, filters/materials |
-| `Presenter.cs` | Найти элементы, подписаться на события, обновлять state/classes |
-| `Model.cs` | Данные и правила предметной области |
+| `Presenter.cs` | Find elements, subscribe to events, update state/classes |
+| `Model.cs` | Domain data and rules |
 | `PanelSettings.asset` | Render/scale/input/atlas settings |
 
 ## Presenter vs Controller vs ViewModel
 
-Для игры удобнее всего простой Presenter:
+For a game a simple Presenter is the most convenient:
 
 ```text
 Game systems -> Presenter -> VisualElements
 VisualElements events -> Presenter -> Game systems
 ```
 
-Presenter не должен знать, как именно нарисована кнопка внутри template. Он знает публичные имена: `#play-button`, `#settings-button`, `#volume-slider`.
+The Presenter must not know how the button is drawn inside a template. It knows the public names: `#play-button`, `#settings-button`, `#volume-slider`.
 
-## База, нейтральная к парадигме (любой презентер на ней)
+## A paradigm-neutral base (any presenter on top of it)
 
-Lifecycle (`RegisterUIReloadCallback`/`Unwire`/`Require`) одинаков у всех экранов — вынеси его один раз
-в базовый `MonoBehaviour`, а наследник реализует только `BindUi` и `Unwire`. База **не навязывает**
-парадигму: на ней одинаково делается и «прямой» экран (наследник сам меняет UI/игру), и «passive view»
-для Clean Architecture (наследник только отдаёт `event`/`Set*`, логика снаружи).
+The lifecycle (`RegisterUIReloadCallback`/`Unwire`/`Require`) is the same for every screen — factor it out once into a base `MonoBehaviour`, and the subclass implements only `BindUi` and `Unwire`. The base does **not** impose a paradigm: on it you build a "direct" screen (the subclass changes the UI/game itself) and a "passive view" for Clean Architecture (the subclass only exposes `event`/`Set*`, logic lives outside) exactly the same way.
 
 ```csharp
 using System;
@@ -97,7 +94,7 @@ public abstract class PanelViewBase : MonoBehaviour
     protected virtual void OnEnable()
     {
         if (panelRenderer == null) panelRenderer = GetComponent<PanelRenderer>();
-        panelRenderer.RegisterUIReloadCallback(OnUIReload); // 2-арг overload (см. docs/08)
+        panelRenderer.RegisterUIReloadCallback(OnUIReload); // 2-arg overload (see docs/08)
     }
 
     protected virtual void OnDisable()
@@ -109,15 +106,15 @@ public abstract class PanelViewBase : MonoBehaviour
 
     private void OnUIReload(PanelRenderer renderer, VisualElement root)
     {
-        Unwire();        // идемпотентно: дублей подписок нет ни на одном пути
+        Unwire();        // idempotent: no duplicate subscriptions on any path
         Root = root;
-        BindUi(root);    // Q<>() + подписки + первичная отрисовка состояния
+        BindUi(root);    // Q<>() + subscriptions + initial state render
     }
 
-    /// <summary>Найти элементы и подписаться. Вызывается на КАЖДЫЙ reload.</summary>
+    /// <summary>Find elements and subscribe. Called on EVERY reload.</summary>
     protected abstract void BindUi(VisualElement root);
 
-    /// <summary>Снять подписки и обнулить кэш. Должен быть идемпотентным (null-safe).</summary>
+    /// <summary>Remove subscriptions and clear the cache. Must be idempotent (null-safe).</summary>
     protected abstract void Unwire();
 
     protected static T Require<T>(VisualElement root, string name) where T : VisualElement
@@ -129,7 +126,7 @@ public abstract class PanelViewBase : MonoBehaviour
 }
 ```
 
-### Способ A — «прямой» (наследник сам всё делает)
+### Style A — "direct" (the subclass does everything)
 
 ```csharp
 public sealed class PauseMenuView : PanelViewBase
@@ -148,14 +145,13 @@ public sealed class PauseMenuView : PanelViewBase
         resume = null;
     }
 
-    private void OnResume() => Time.timeScale = 1f; // меняем игру/UI прямо здесь
+    private void OnResume() => Time.timeScale = 1f; // change the game/UI right here
 }
 ```
 
-### Способ B — passive view для Clean Architecture (логика снаружи)
+### Style B — passive view for Clean Architecture (logic outside)
 
-View не знает домена: отдаёт `event` наружу и принимает данные через `Set*`. Подписку делай на
-**метод** (не лямбду), иначе её нельзя снять в `Unwire`.
+The view doesn't know the domain: it exposes an `event` and receives data via `Set*`. Subscribe to a **method** (not a lambda), otherwise you can't unsubscribe in `Unwire`.
 
 ```csharp
 public sealed class HudView : PanelViewBase
@@ -164,14 +160,14 @@ public sealed class HudView : PanelViewBase
 
     private Button heal;
     private Label hp;
-    private float lastHealth = 1f;          // кэш: переприменяем после reload
+    private float lastHealth = 1f;          // cache: re-applied after reload
 
     protected override void BindUi(VisualElement root)
     {
         heal = Require<Button>(root, "heal");
         hp = Require<Label>(root, "hp");
         heal.clicked += RaiseHeal;
-        ApplyHealth(lastHealth);            // новый tree сразу показывает актуальное значение
+        ApplyHealth(lastHealth);            // the new tree immediately shows the current value
     }
 
     protected override void Unwire()
@@ -196,8 +192,7 @@ public sealed class HudView : PanelViewBase
 }
 ```
 
-Презентер — обычный класс (без `MonoBehaviour`), живёт в application-слое; как его создают и кто даёт
-`IHealthService` — решает проект (composition root / DI / ручная сборка), к UITK это не относится:
+The presenter is a plain class (no `MonoBehaviour`), lives in the application layer; how it is created and who provides `IHealthService` is the project's decision (composition root / DI / manual wiring) and is unrelated to UITK:
 
 ```csharp
 public sealed class HudPresenter : IDisposable
@@ -208,8 +203,8 @@ public sealed class HudPresenter : IDisposable
     public HudPresenter(HudView view, IHealthService health)
     {
         this.view = view; this.health = health;
-        view.HealClicked += health.Heal;        // ввод view → домен
-        health.Changed += view.SetHealth;       // домен → view
+        view.HealClicked += health.Heal;        // view input → domain
+        health.Changed += view.SetHealth;       // domain → view
         view.SetHealth(health.Normalized);
     }
 
@@ -221,34 +216,31 @@ public sealed class HudPresenter : IDisposable
 }
 ```
 
-Тот же `HudView` без единой правки работает и «напрямую» (кто-то зовёт `view.SetHealth(...)` /
-`view.HealClicked`), и в Clean Architecture (через `HudPresenter`). База одна — парадигму выбирает
-наследник и точка сборки.
+The same `HudView`, without a single edit, works both "directly" (someone calls `view.SetHealth(...)` /
+`view.HealClicked`) and in Clean Architecture (through `HudPresenter`). The base is one — the paradigm is
+chosen by the subclass and the assembly point.
 
-## Component-view vs обычный класс (sub-view) — кто чем должен быть
+## Component-view vs plain class (sub-view) — which should be which
 
-View **не обязана** быть `MonoBehaviour`. Есть два типа, и тип выбирается по тому, **владеет ли элемент
-своим `PanelRenderer`**:
+A view **does not have to** be a `MonoBehaviour`. There are two kinds, and the kind is chosen by whether the element **owns its `PanelRenderer`**:
 
-| Что это | Тип в C# | Почему |
+| What it is | C# type | Why |
 |---|---|---|
-| Корневой экран — на GameObject с `PanelRenderer` | `MonoBehaviour : PanelViewBase` | владеет `PanelRenderer`, нужен reload-lifecycle, вешается в инспекторе |
-| Кусок страницы / вложенный `ui:Instance` темплейт / логическая секция | **обычный класс** (sub-view) | у под-ветки нет своего `PanelRenderer`; `MonoBehaviour` на `VisualElement` не повесить; его привязывает родитель |
-| Переиспользуемый элемент с атрибутами из UXML и своим поведением | custom `VisualElement` `[UxmlElement]` | сам по себе `VisualElement`, авторится прямо в UXML (`docs/02`) |
+| Root screen — on a GameObject with `PanelRenderer` | `MonoBehaviour : PanelViewBase` | owns the `PanelRenderer`, needs the reload-lifecycle, attached in the inspector |
+| A page section / nested `ui:Instance` template / logical section | **plain class** (sub-view) | the sub-branch has no `PanelRenderer`; you can't put a `MonoBehaviour` on a `VisualElement`; the parent binds it |
+| Reusable element with UXML attributes and its own behavior | custom `VisualElement` `[UxmlElement]` | it is a `VisualElement` itself, authored directly in UXML (`docs/02`) |
 
-Правило по умолчанию (агент решает по нему): **владеет `PanelRenderer` → компонент; живёт внутри чужого
-visual tree / это вложенный темплейт → обычный класс.** Никогда не вешай `MonoBehaviour` на под-ветку.
+Default rule (the agent decides by it): **owns `PanelRenderer` → component; lives inside someone else's
+visual tree / is a nested template → plain class.** Never put a `MonoBehaviour` on a sub-branch.
 
-Sub-view — обычный класс, который родитель привязывает к **под-ветке** уже загруженного дерева. Своего
-lifecycle у него нет: родитель зовёт его `Bind(subRoot)` из своего `BindUi` и `Unwire()` из своего
-`Unwire`.
+A sub-view is a plain class that the parent binds to a **sub-branch** of an already-loaded tree. It has no lifecycle of its own: the parent calls its `Bind(subRoot)` from its `BindUi` and `Unwire()` from its `Unwire`.
 
 ```csharp
-// Sub-view: без MonoBehaviour и без PanelRenderer. Привязывается к ПОД-ВЕТКЕ.
+// Sub-view: no MonoBehaviour and no PanelRenderer. Bound to a SUB-BRANCH.
 public interface IUiSection
 {
-    void Bind(VisualElement sectionRoot); // Q<>() + подписки в пределах своей под-ветки
-    void Unwire();                        // идемпотентно
+    void Bind(VisualElement sectionRoot); // Q<>() + subscriptions within its sub-branch
+    void Unwire();                        // idempotent
 }
 
 public sealed class HudProgressSection : IUiSection
@@ -272,8 +264,7 @@ public sealed class HudProgressSection : IUiSection
 }
 ```
 
-Родитель — единственный component-view (один `PanelRenderer`) — композирует секции. Это и есть кейс
-страницы с вложенными `ui:Instance` темплейтами (как `GameHudPanel.uxml` → `HudProgress`/`HudCrystals`):
+The parent — the only component-view (one `PanelRenderer`) — composes the sections. This is the case of a page with nested `ui:Instance` templates (like `GameHudPanel.uxml` → `HudProgress`/`HudCrystals`):
 
 ```csharp
 public sealed class GameHudView : PanelViewBase
@@ -283,7 +274,7 @@ public sealed class GameHudView : PanelViewBase
 
     protected override void BindUi(VisualElement root)
     {
-        // под-ветки от вложенных ui:Instance находим по name/class и отдаём sub-view
+        // sub-branches from nested ui:Instance: find by name/class and hand to the sub-view
         progress.Bind(root.Q<VisualElement>(className: "hud-progress-slot"));
         crystals.Bind(root.Q<VisualElement>(className: "hud-crystals-slot"));
     }
@@ -298,27 +289,27 @@ public sealed class GameHudView : PanelViewBase
 }
 ```
 
-Почему так: `PanelRenderer` один на экран и владеет деревом целиком; вложенные темплейты — это его под-ветки,
-а не отдельные панели. Поэтому секции — обычные классы, повязанные родителем, и они автоматически
-переподвязываются на каждый reload (родитель в `BindUi` снова раздаёт им свежие под-корни).
+Why so: a `PanelRenderer` is one per screen and owns the whole tree; nested templates are its sub-branches,
+not separate panels. So sections are plain classes bound by the parent, and they automatically re-bind on
+each reload (the parent hands them fresh sub-roots again in `BindUi`).
 
-## Необходимые поля экрана объявляй в UXML, а не строй деревом в C\#
+## Declare a screen's required fields in UXML, don't build a tree in C\#
 
-Все элементы, которые экрану нужны (поля ввода, кнопки, плейсхолдеры-лейблы, слоты под секции),
-**объявляются в самом `.uxml` с `name`/`class`**, а C# только находит их по имени и привязывает — как в
-`CoreAiChat.uxml` (`coreai-chat-input`, `coreai-chat-send`, header-title, scroll, typing-indicator) или
-settings-панелях. Экран самоописателен: дизайнер видит структуру в UXML, а не в коде.
+All elements a screen needs (input fields, buttons, placeholder labels, section slots) are **declared in the
+`.uxml` itself with `name`/`class`**, and C# only finds them by name and binds them — like in `CoreAiChat.uxml`
+(`coreai-chat-input`, `coreai-chat-send`, header-title, scroll, typing-indicator) or settings panels. The
+screen is self-describing: the designer sees the structure in UXML, not in code.
 
-- Статичные значения (text/tooltip/placeholder) задавай атрибутами в UXML.
-- Настраиваемые из UXML значения секции/контрола → custom control с `[UxmlAttribute]` или
-  `AttributeOverrides` инстанса (`docs/02`).
-- Не строй основной layout через `new VisualElement()` в C# — это только для динамических списков
-  (`ListView`/пул, `docs/06`). Если поле «обязательное» — пусть его наличие гарантирует UXML, а
-  `Require<T>()` в `BindUi` упадёт явно, если элемент забыли.
+- Static values (text/tooltip/placeholder) are set as attributes in UXML.
+- Values configurable from UXML for a section/control → custom control with `[UxmlAttribute]` or instance
+  `AttributeOverrides` (`docs/02`).
+- Don't build the main layout via `new VisualElement()` in C# — that's only for dynamic lists (`ListView`/pool,
+  `docs/06`). If a field is "required", let UXML guarantee its presence and let `Require<T>()` in `BindUi`
+  fail loudly if the element was forgotten.
 
 ## Multi-panel
 
-Несколько `PanelRenderer` могут делить один `PanelSettings`, но думай о:
+Several `PanelRenderer`s can share one `PanelSettings`, but think about:
 
 - sorting order;
 - focus navigation;
@@ -326,21 +317,21 @@ settings-панелях. Экран самоописателен: дизайне
 - target display/texture;
 - world-space overlap.
 
-Лайфхак: для большинства runtime проектов делай 1 screen-space panel для глобального UI и отдельные world-space panels только там, где реально нужен UI в сцене.
+Tip: for most runtime projects make 1 screen-space panel for the global UI and separate world-space panels only where you really need UI in the scene.
 
 ## World Space UI
 
-Для world-space UI учитывай:
+For world-space UI consider:
 
-- physical dimensions в `PanelRenderer`;
-- sorting layer/order или сцепление с render pipeline;
+- physical dimensions in `PanelRenderer`;
+- sorting layer/order or coupling with the render pipeline;
 - event camera/raycast bridge;
-- масштаб текста и reference resolution;
-- маски и фильтры могут быть дороже, если большая поверхность.
+- text scale and reference resolution;
+- masks and filters can be more expensive on a large surface.
 
 ## Default prefab pattern
 
-Создай prefab:
+Create a prefab:
 
 ```text
 UIRoot_RuntimePanel
@@ -356,13 +347,13 @@ PanelRenderer.Source Asset = Assets/UI/Screens/MainMenu/MainMenu.uxml
 PanelRenderer.Panel Settings = Assets/UI/RuntimePanelSettings.asset
 ```
 
-Лайфхак: храни `PanelSettings` отдельно от сцены, чтобы все экраны имели одинаковый scale mode и atlas policy.
+Tip: keep `PanelSettings` separate from the scene so all screens share the same scale mode and atlas policy.
 
-## Частые ошибки
+## Common mistakes
 
-### 1. Дубли подписок
+### 1. Duplicate subscriptions
 
-Плохо:
+Bad:
 
 ```csharp
 private void OnUIReload(PanelRenderer r, VisualElement root)
@@ -371,7 +362,7 @@ private void OnUIReload(PanelRenderer r, VisualElement root)
 }
 ```
 
-Хорошо:
+Good:
 
 ```csharp
 private void OnUIReload(PanelRenderer r, VisualElement root)
@@ -382,15 +373,15 @@ private void OnUIReload(PanelRenderer r, VisualElement root)
 }
 ```
 
-### 2. Ссылки на старые VisualElement
+### 2. References to old VisualElements
 
-После reload старый `Button` может больше не быть частью текущего visual tree. Любой cached element нужно считать валидным только до следующего reload.
+After a reload the old `Button` may no longer be part of the current visual tree. Treat any cached element as valid only until the next reload.
 
-### 3. Логика внутри custom control вместо Presenter
+### 3. Logic inside a custom control instead of the Presenter
 
-Custom control должен инкапсулировать локальное поведение элемента. Screen flow, навигация, сохранение настроек и сцены — это Presenter/Service.
+A custom control should encapsulate the element's local behavior. Screen flow, navigation, settings persistence, and scenes are the Presenter/Service.
 
-## Документация
+## Documentation
 
 - Panel Renderer component: https://docs.unity3d.com/6000.5/Documentation/Manual/ui-systems/panel-renderer-component.html
 - Configure runtime UI: https://docs.unity3d.com/6000.5/Documentation/Manual/UIE-get-started-with-runtime-ui.html

@@ -6,7 +6,7 @@
 
         <ui:VisualElement name="card" class="filter-card">
             <ui:Label class="filter-card__title" text="USS Filters" />
-            <ui:Label text="Toggle blur/grayscale/tint через classes" />
+            <ui:Label text="Toggle blur/grayscale/tint via classes" />
             <ui:Button name="toggle-filter-button" text="Toggle filter" />
         </ui:VisualElement>
     </ui:VisualElement>

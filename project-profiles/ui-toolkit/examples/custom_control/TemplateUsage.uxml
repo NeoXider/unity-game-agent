@@ -4,15 +4,15 @@
 
     <ui:VisualElement class="cards">
         <ui:Instance template="Card" name="quest-card">
-            <ui:AttributeOverrides element-name="card-title" text="Квест" />
-            <ui:AttributeOverrides element-name="card-subtitle" text="Награда: 120 XP" />
-            <ui:Label text="Поговорить с кузнецом" />
+            <ui:AttributeOverrides element-name="card-title" text="Quest" />
+            <ui:AttributeOverrides element-name="card-subtitle" text="Reward: 120 XP" />
+            <ui:Label text="Talk to the blacksmith" />
         </ui:Instance>
 
         <ui:Instance template="Card" name="warning-card">
-            <ui:AttributeOverrides element-name="card-title" text="Опасность" />
-            <ui:AttributeOverrides element-name="card-subtitle" text="Низкое здоровье" />
-            <ui:Label text="Используй зелье" />
+            <ui:AttributeOverrides element-name="card-title" text="Danger" />
+            <ui:AttributeOverrides element-name="card-subtitle" text="Low health" />
+            <ui:Label text="Use a potion" />
         </ui:Instance>
     </ui:VisualElement>
 </ui:UXML>

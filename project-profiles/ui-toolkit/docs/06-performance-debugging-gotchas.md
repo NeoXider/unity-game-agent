@@ -1,78 +1,78 @@
-# 06 — Performance, debugging и частые ловушки
+# 06 — Performance, debugging and common gotchas
 
 ## Profiler markers
 
-Смотри UI Toolkit markers:
+Watch the UI Toolkit markers:
 
-| Marker | Что обычно значит |
+| Marker | What it usually means |
 |---|---|
-| `UpdateStyle` | Часто меняются classes/styles или слишком сложные selectors |
-| `UpdateLayout` | Меняются layout properties или дерево активно перестраивается |
-| `UpdateAnimation` | Много transitions/animations |
-| `UpdateRenderData` | Меняются mesh/visual data, текстуры, geometry |
-| `DrawChain` | Стоимость подготовки/отрисовки UI |
-| `UpdateRuntimeBindings` | Runtime binding много обновляет |
-| `PickAll` | Pointer picking/event hit-testing |
+| `UpdateStyle` | Classes/styles change often, or selectors are too complex |
+| `UpdateLayout` | Layout properties change, or the tree is actively rebuilt |
+| `UpdateAnimation` | Many transitions/animations |
+| `UpdateRenderData` | Mesh/visual data, textures, or geometry change |
+| `DrawChain` | Cost of preparing/drawing the UI |
+| `UpdateRuntimeBindings` | Runtime binding updates a lot |
+| `PickAll` | Pointer picking / event hit-testing |
 
-## Проверочный порядок
+## Verification order
 
-1. Включи UI Toolkit Debugger.
-2. Проверь, что нужный USS rule реально применяется.
-3. Проверь specificity и inline styles.
-4. В Profiler смотри spikes.
-5. Если spike в `UpdateLayout`, ищи анимацию `width/height/flex/top/left`.
-6. Если spike в `UpdateStyle`, ищи частое переключение classes на большом subtree.
-7. Если spike в `UpdateRenderData`, проверь текстуры, текст, vector graphics, masks, material/filter.
-8. Если spike в `DrawChain`, проверь batch breaks, nested masks, materials, filters.
+1. Enable the UI Toolkit Debugger.
+2. Check that the intended USS rule is actually applied.
+3. Check specificity and inline styles.
+4. In the Profiler look for spikes.
+5. If the spike is in `UpdateLayout`, look for animating `width/height/flex/top/left`.
+6. If the spike is in `UpdateStyle`, look for frequent class toggling on a large subtree.
+7. If the spike is in `UpdateRenderData`, check textures, text, vector graphics, masks, material/filter.
+8. If the spike is in `DrawChain`, check batch breaks, nested masks, materials, filters.
 
 ## Dynamic atlas
 
-Panel Settings содержит dynamic atlas настройки. UI Toolkit может собирать подходящие текстуры в atlas. Важные решения:
+Panel Settings holds dynamic atlas settings. UI Toolkit can collect suitable textures into an atlas. Key decisions:
 
-- большие текстуры могут не попадать в atlas из-за max subtexture size;
-- много уникальных текстур может разбивать batches;
-- sprites/vector images/backgrounds проверяй через Frame Debugger/Profiler;
-- не дублируй одинаковые icons разными импорт-настройками без причины.
+- large textures may not fit the atlas due to max subtexture size;
+- many unique textures can break batches;
+- check sprites/vector images/backgrounds via Frame Debugger/Profiler;
+- don't duplicate identical icons with different import settings without reason.
 
-Лайфхак: если inventory icons 128x128, а atlas max subtexture слишком мал, они могут не атласиться. Проверь Panel Settings и profiler, прежде чем оптимизировать код.
+Tip: if inventory icons are 128x128 but the atlas max subtexture is too small, they may not be atlased. Check Panel Settings and the profiler before optimizing code.
 
-## Маски
+## Masks
 
-`overflow: hidden` может использоваться как masking. Rounded/arbitrary masks могут использовать stencil. Nested masks могут ломать batching и дорожать.
+`overflow: hidden` can be used as masking. Rounded/arbitrary masks may use stencil. Nested masks can break batching and get expensive.
 
-Правила:
+Rules:
 
-- не вкладывай много rounded masks без нужды;
-- для scroll/list clipping используй штатные элементы;
-- для heavy mask container проверь `UsageHints.MaskContainer`;
-- для корректных masks убедись, что depth/stencil buffers включены там, где это требуется.
+- don't nest many rounded masks without need;
+- for scroll/list clipping use the built-in elements;
+- for a heavy mask container check `UsageHints.MaskContainer`;
+- for correct masks make sure depth/stencil buffers are enabled where required.
 
 ## Filters
 
-Filters могут создавать render texture pass для subtree. Это мощно, но не бесплатно.
+Filters can create a render-texture pass for a subtree. Powerful, but not free.
 
-Правила:
+Rules:
 
-- blur только на нужном слое;
-- не ставь filter на root всего UI без профайлера;
-- не меняй filter каждый frame, если можно class transition;
-- для multiple effects задавай один `filter:` declaration;
-- для transitions держи одинаковый порядок filter functions.
+- blur only on the needed layer;
+- don't put a filter on the root of the whole UI without a profiler;
+- don't change the filter every frame if a class transition will do;
+- for multiple effects set a single `filter:` declaration;
+- for transitions keep the same order of filter functions.
 
 ## Materials/shaders
 
-`-unity-material` может ломать batching, если у многих элементов разные material instances.
+`-unity-material` can break batching if many elements have different material instances.
 
-Правила:
+Rules:
 
-- переиспользуй material assets;
-- не создавай material instances per element без нужды;
-- если меняешь shader param индивидуально, думай о последствиях для batching;
-- проверяй, не наследуется ли material на children случайно.
+- reuse material assets;
+- don't create per-element material instances without need;
+- if you change a shader param individually, consider the batching consequences;
+- check whether the material is accidentally inherited by children.
 
-## Списки и большое количество элементов
+## Lists and large element counts
 
-Плохо:
+Bad:
 
 ```csharp
 foreach (var item in items)
@@ -82,9 +82,9 @@ foreach (var item in items)
 }
 ```
 
-для 1000 items.
+for 1000 items.
 
-Хорошо: `ListView` с `makeItem` и `bindItem`.
+Good: `ListView` with `makeItem` and `bindItem`.
 
 ```csharp
 listView.itemsSource = inventoryItems;
@@ -95,78 +95,73 @@ listView.bindItem = (element, index) =>
 };
 ```
 
-Лайфхак: в `bindItem` не подписывай callbacks без стратегии отписки. Лучше row control имеет method `Bind(item)` и внутри не накапливает обработчики.
+Tip: in `bindItem` don't subscribe callbacks without an unsubscription strategy. Better that the row control has a `Bind(item)` method and doesn't accumulate handlers inside.
 
-### Строки разной высоты (variable-height rows)
+### Variable-height rows
 
-`fixedItemHeight` работает только в режиме виртуализации `FixedHeight` (дефолт). Если строки разной
-высоты (например, чат: одна строка vs 20 строк wrapped markdown), фиксированная высота режет/наслаивает
-контент. Переключи метод виртуализации:
+`fixedItemHeight` works only in the `FixedHeight` virtualization method (the default). If rows have different heights (e.g. a chat: one line vs 20 lines of wrapped markdown), a fixed height clips/overlaps content. Switch the virtualization method:
 
 ```csharp
-listView.virtualizationMethod = CollectionVirtualizationMethod.DynamicHeight; // дефолт = FixedHeight
+listView.virtualizationMethod = CollectionVirtualizationMethod.DynamicHeight; // default = FixedHeight
 listView.itemsSource = messages;
 listView.makeItem = () => new MessageRow();
 listView.bindItem = (e, i) => ((MessageRow)e).Bind(messages[i]);
 ```
 
-В `DynamicHeight` высота берётся из реального контента строки, `fixedItemHeight` не нужен (в этом режиме
-он лишь начальная оценка). Проверено рефлексией в живом редакторе: свойство
-`BaseVerticalCollectionView.virtualizationMethod` (тип `CollectionVirtualizationMethod`), enum-поля —
-ровно `FixedHeight` и `DynamicHeight`. Цена: измерение каждой видимой строки чуть дороже, но при тысячах
-items это всё равно несопоставимо дешевле, чем строить все элементы сразу.
+In `DynamicHeight` the height comes from the row's actual content; `fixedItemHeight` is not needed (in this mode it's only an initial estimate). Verified by reflection in a live editor: the property
+`BaseVerticalCollectionView.virtualizationMethod` (type `CollectionVirtualizationMethod`), enum fields are exactly `FixedHeight` and `DynamicHeight`. Cost: measuring each visible row is a little more expensive, but with thousands of items it is still incomparably cheaper than building all elements at once.
 
 ## Pooling VisualElement
 
-Unity не даёт универсальный встроенный pool для любого `VisualElement`. Если делаешь свой pool:
+Unity doesn't provide a universal built-in pool for any `VisualElement`. If you make your own pool:
 
-При возврате в pool обязательно:
+On return to the pool, always:
 
-- снять callbacks;
-- очистить userData;
-- сбросить classes state: `is-selected`, `is-warning`, etc.;
-- сбросить inline styles;
-- отменить scheduled tasks;
-- убрать из parent;
-- очистить binding/data references.
+- remove callbacks;
+- clear userData;
+- reset class state: `is-selected`, `is-warning`, etc.;
+- reset inline styles;
+- cancel scheduled tasks;
+- remove from parent;
+- clear binding/data references.
 
-Иначе получишь “призрачные” клики, память и состояние от старого item.
+Otherwise you'll get "ghost" clicks, memory, and state from the old item.
 
 ## Text performance
 
-- Не переписывай `label.text` каждый frame тем же значением.
-- Для таймеров обновляй с разумной частотой, например 5–10 раз/сек, если не нужен frame-perfect.
-- Длинный rich text и outline/shadow могут быть дороже.
+- Don't rewrite `label.text` every frame with the same value.
+- For timers update at a reasonable rate, e.g. 5–10 times/sec if you don't need frame-perfect.
+- Long rich text and outline/shadow can be more expensive.
 
-## Selectors performance и maintainability
+## Selectors: performance and maintainability
 
-Лучше:
+Better:
 
 ```css
 .inventory__slot.is-selected {}
 ```
 
-Хуже:
+Worse:
 
 ```css
 .inventory > .panel > .scroll > .row:nth-child > .slot {}
 ```
 
-UITK USS не CSS браузера полностью; меньше магии — стабильнее.
+UITK USS isn't fully a browser CSS; less magic — more stable.
 
-## Debug checklist для “почему стиль не работает”
+## Debug checklist for "why isn't the style working"
 
-1. Style sheet реально подключён к UXML?
-2. Class/name на элементе совпадает?
-3. Inline style перебивает USS?
-4. `AttributeOverrides` пытается менять `style/class/name`? Так нельзя.
-5. В UI Builder preview theme отличается от Panel Settings runtime theme?
-6. Material наследуется от parent?
-7. Filter declaration перетёрт другим class?
-8. `display: none` мешает transition?
-9. Элемент после reload старый, а ты меняешь не тот reference?
+1. Is the style sheet actually linked to the UXML?
+2. Does the class/name on the element match?
+3. Is an inline style overriding USS?
+4. Is `AttributeOverrides` trying to change `style/class/name`? That's not allowed.
+5. Does the UI Builder preview theme differ from the Panel Settings runtime theme?
+6. Is the material inherited from the parent?
+7. Is the filter declaration overridden by another class?
+8. Is `display: none` breaking the transition?
+9. Is the element stale after a reload, and you're changing the wrong reference?
 
-## Документация
+## Documentation
 
 - Profiler markers: https://docs.unity3d.com/6000.5/Documentation/Manual/UIE-profiler-markers.html
 - Panel Settings / atlas: https://docs.unity3d.com/6000.5/Documentation/Manual/UIE-Runtime-Panel-Settings.html

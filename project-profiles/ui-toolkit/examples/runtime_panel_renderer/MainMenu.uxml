@@ -6,9 +6,9 @@
         <ui:Label name="subtitle-label" class="main-menu__subtitle" text="UI Toolkit 6.5" />
 
         <ui:VisualElement class="main-menu__buttons">
-            <ui:Button name="play-button" class="main-menu__button" text="Играть" />
-            <ui:Button name="settings-button" class="main-menu__button" text="Настройки" />
-            <ui:Button name="quit-button" class="main-menu__button main-menu__button--danger" text="Выйти" />
+            <ui:Button name="play-button" class="main-menu__button" text="Play" />
+            <ui:Button name="settings-button" class="main-menu__button" text="Settings" />
+            <ui:Button name="quit-button" class="main-menu__button main-menu__button--danger" text="Quit" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

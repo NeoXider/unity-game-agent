@@ -1,17 +1,17 @@
-# 04 — Анимации в UITK 6.5: USS, C#, schedule, что лучше
+# 04 — Animation in UITK 6.5: USS, C#, schedule, what's best
 
-## Короткий ответ
+## Short answer
 
-Для большинства UI-анимаций используй USS transitions. C# должен включать/выключать классы. C# tween/schedule нужен, когда анимация зависит от логики игры, последовательности, времени, easing-функций или runtime значений.
+For most UI animation use USS transitions. C# should toggle classes on/off. A C# tween/schedule is needed when the animation depends on game logic, sequencing, time, easing functions, or runtime values.
 
 ```text
 USS = visual state animation
 C#  = scenario/state orchestration
 ```
 
-## Таблица выбора
+## Choice table
 
-| Задача | Лучший вариант | Пример |
+| Task | Best option | Example |
 |---|---|---|
 | Hover button | USS `:hover` + transition | scale/opacity |
 | Popup open/close | C# toggles `is-open`, USS animates | opacity + translate |
@@ -47,8 +47,8 @@ public void ShowToast(string message)
 {
     toast.Q<Label>("message").text = message;
 
-    // Если элемент только что создан/добавлен, дай UITK один кадр,
-    // чтобы был previous style. Иначе transition может не стартовать.
+    // If the element was just created/added, give UITK one frame so it has a previous style.
+    // Otherwise the transition may not start.
     toast.schedule.Execute(() => toast.AddToClassList("is-visible"));
 }
 
@@ -58,9 +58,9 @@ public void HideToast()
 }
 ```
 
-## Важный лайфхак: transition на базовом class
+## Important tip: put the transition on the base class
 
-Плохо:
+Bad:
 
 ```css
 .button:hover {
@@ -70,9 +70,9 @@ public void HideToast()
 }
 ```
 
-Переход назад может не сработать как ожидается.
+The transition back may not work as expected.
 
-Хорошо:
+Good:
 
 ```css
 .button {
@@ -86,9 +86,9 @@ public void HideToast()
 }
 ```
 
-## Не анимируй layout без причины
+## Don't animate layout without reason
 
-Лучшие свойства:
+Best properties:
 
 ```css
 opacity
@@ -97,7 +97,7 @@ scale
 rotate
 ```
 
-Осторожно:
+Careful:
 
 ```css
 width
@@ -110,13 +110,13 @@ flex-grow
 flex-basis
 ```
 
-Почему: layout-свойства вызывают layout recalculation. На одном popup это нормально, на списке из 200 элементов — боль.
+Why: layout properties trigger a layout recalculation. On a single popup that's fine; on a list of 200 elements it's painful.
 
-## `display: none` и enter-анимация
+## `display: none` and enter animation
 
-`display: none` удаляет элемент из UI. У него нет previous rendered state, поэтому enter transition легко ломается.
+`display: none` removes the element from the UI. It has no previous rendered state, so an enter transition breaks easily.
 
-Для popup:
+For a popup:
 
 ```css
 .popup {
@@ -148,7 +148,7 @@ public void Close()
 }
 ```
 
-Если нужно после close отключить layout:
+If you need to disable layout after close:
 
 ```csharp
 public void CloseAndRemoveFromLayout()
@@ -166,7 +166,7 @@ public void OpenFromLayout()
 
 ## C# schedule tween
 
-Когда USS не хватает, используй `schedule`. Пример tween opacity:
+When USS isn't enough, use `schedule`. An opacity-tween example:
 
 ```csharp
 using System;
@@ -214,7 +214,7 @@ Usage:
 panel.TweenOpacity(0f, 1f, 180);
 ```
 
-## Stagger animation через classes
+## Stagger animation via classes
 
 USS:
 
@@ -245,7 +245,7 @@ for (var i = 0; i < rows.Count; i++)
 
 ## Transition events
 
-Используй события transition, когда после анимации нужно сделать cleanup:
+Use transition events when you need cleanup after the animation:
 
 ```csharp
 panel.RegisterCallback<TransitionEndEvent>(OnTransitionEnd);
@@ -259,9 +259,9 @@ private void OnTransitionEnd(TransitionEndEvent evt)
 
 ## Filter transitions
 
-Для filters порядок и типы функций должны совпадать, если хочешь плавный transition.
+For filters the order and function types must match if you want a smooth transition.
 
-Хорошо:
+Good:
 
 ```css
 .card {
@@ -275,14 +275,14 @@ private void OnTransitionEnd(TransitionEndEvent evt)
 }
 ```
 
-Плохо:
+Bad:
 
 ```css
 .card { filter: blur(0px); }
 .card.is-disabled { filter: grayscale(100%) blur(2px); }
 ```
 
-## Документация
+## Documentation
 
 - USS transitions: https://docs.unity3d.com/6000.5/Documentation/Manual/UIE-Transitions.html
 - USS filter transitions: https://docs.unity3d.com/6000.5/Documentation/Manual/ui-systems/uss-filter-transitions.html

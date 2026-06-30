@@ -1,6 +1,6 @@
-# References — официальная документация Unity
+# References — official Unity documentation
 
-Целевая версия skill pack: Unity 6.5 / 6000.5. Один раздел про UXML templates ссылается на Unity 6.0 page, потому что Unity search на момент сборки отдаёт актуальную страницу `Reuse UXML files` именно в версии 6000.0, а поведение `<Template>`, `<Instance>`, `AttributeOverrides`, `content-container` стабильно для Unity 6.x.
+Target version: Unity 6.5 / 6000.5. One UXML-templates link points at the Unity 6.0 page, because Unity search currently returns the canonical `Reuse UXML files` page under 6000.0, while the behavior of `<Template>`, `<Instance>`, `AttributeOverrides`, and `content-container` is stable across Unity 6.x.
 
 ## Unity 6.5 / PanelRenderer / runtime UI
 

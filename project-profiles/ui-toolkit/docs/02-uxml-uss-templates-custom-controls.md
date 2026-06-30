@@ -1,14 +1,14 @@
-# 02 — UXML, USS, templates и custom controls
+# 02 — UXML, USS, templates and custom controls
 
-## Базовое разделение
+## Basic separation
 
 ```text
-UXML = что есть на экране
-USS  = как выглядит и двигается
-C#   = что происходит при действиях и данных
+UXML = what is on the screen
+USS  = how it looks and moves
+C#   = what happens on actions and data
 ```
 
-Простой экран:
+A simple screen:
 
 ```xml
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
@@ -16,7 +16,7 @@ C#   = что происходит при действиях и данных
 
     <ui:VisualElement class="main-menu">
         <ui:Label name="title-label" class="main-menu__title" text="Victor" />
-        <ui:Button name="play-button" class="main-menu__button" text="Играть" />
+        <ui:Button name="play-button" class="main-menu__button" text="Play" />
     </ui:VisualElement>
 </ui:UXML>
 ```
@@ -34,15 +34,15 @@ C#   = что происходит при действиях и данных
 }
 ```
 
-## Правила USS
+## USS rules
 
-- Стили — в classes, не в inline `style`.
-- `name` используй для C# и rare instance overrides.
-- Не делай длинные fragile selectors: `.root > .panel > .row > .label`.
-- Не используй `transition-property: all`.
-- Для states используй classes: `is-open`, `is-selected`, `is-warning`.
+- Styles go in classes, not in inline `style`.
+- Use `name` for C# and rare instance overrides.
+- Don't write long fragile selectors: `.root > .panel > .row > .label`.
+- Don't use `transition-property: all`.
+- For states use classes: `is-open`, `is-selected`, `is-warning`.
 
-Хорошо:
+Good:
 
 ```css
 .quest-card {}
@@ -50,7 +50,7 @@ C#   = что происходит при действиях и данных
 .quest-card.is-completed {}
 ```
 
-Плохо:
+Bad:
 
 ```css
 #Root > VisualElement > VisualElement > Label {}
@@ -60,7 +60,7 @@ C#   = что происходит при действиях и данных
 
 ## UXML templates
 
-Используй template, когда нужен повторяемый визуальный блок без собственного C# API.
+Use a template when you need a repeatable visual block without its own C# API.
 
 ### Template file: `CardTemplate.uxml`
 
@@ -82,26 +82,26 @@ C#   = что происходит при действиях и данных
     <ui:Template name="Card" src="CardTemplate.uxml" />
 
     <ui:Instance template="Card" name="quest-card">
-        <ui:AttributeOverrides element-name="card-title" text="Квест" />
-        <ui:AttributeOverrides element-name="card-subtitle" text="Награда: 120 XP" />
-        <ui:Label text="Поговорить с кузнецом" />
+        <ui:AttributeOverrides element-name="card-title" text="Quest" />
+        <ui:AttributeOverrides element-name="card-subtitle" text="Reward: 120 XP" />
+        <ui:Label text="Talk to the blacksmith" />
     </ui:Instance>
 </ui:UXML>
 ```
 
-`content-container` указывает, куда попадут children, вложенные внутрь `<Instance>`.
+`content-container` defines where children nested inside `<Instance>` will land.
 
-### Ограничения AttributeOverrides
+### AttributeOverrides limitations
 
 `AttributeOverrides`:
 
-- ищет элементы только по `element-name`;
-- не использует USS selectors или UQuery;
-- не может переопределить `class`, `name`, `style`;
-- не подходит для data binding через overrides;
-- shallow override в nested templates имеет приоритет.
+- finds elements only by `element-name`;
+- doesn't use USS selectors or UQuery;
+- can't override `class`, `name`, `style`;
+- isn't suitable for data binding via overrides;
+- a shallow override takes priority in nested templates.
 
-Лайфхак: если нужно менять внешний вид instance, не пытайся override `style`; дай instance уникальное `name` или class вокруг и переопредели через USS.
+Tip: if you need to change an instance's appearance, don't try to override `style`; give the instance a unique `name` or a wrapping class and override via USS.
 
 ```css
 #quest-card > .card {
@@ -113,9 +113,9 @@ C#   = что происходит при действиях и данных
 
 ## Custom controls
 
-Используй custom control, когда элемент имеет собственное состояние и API.
+Use a custom control when an element has its own state and API.
 
-### Минимальный control
+### Minimal control
 
 ```csharp
 using UnityEngine;
@@ -222,9 +222,9 @@ namespace Game.UI.Controls
 }
 ```
 
-## Custom control с content container
+## Custom control with a content container
 
-Нужно, если custom control должен иметь внутреннюю рамку и принимать children из UXML.
+Needed when a custom control should have an inner frame and accept children from UXML.
 
 ```csharp
 using UnityEngine.UIElements;
@@ -271,25 +271,25 @@ namespace Game.UI.Controls
 Usage:
 
 ```xml
-<game:FramedBox title="Инвентарь">
-    <ui:Label text="Меч" />
-    <ui:Label text="Зелье" />
+<game:FramedBox title="Inventory">
+    <ui:Label text="Sword" />
+    <ui:Label text="Potion" />
 </game:FramedBox>
 ```
 
-## Когда template, когда custom control
+## When a template, when a custom control
 
-| Нужда | Template | Custom control |
+| Need | Template | Custom control |
 |---|---:|---:|
-| Быстро переиспользовать кусок UXML | ✅ | ⚠️ |
-| Менять text/tooltip/value через UXML | ✅ | ✅ |
-| Собственный C# API | ❌ | ✅ |
-| Внутренние события | ⚠️ | ✅ |
-| Сложное состояние | ❌ | ✅ |
-| Дизайнерские вариации | ✅ | ✅ |
-| Runtime-created элементы | ⚠️ | ✅ |
+| Quickly reuse a chunk of UXML | ✅ | ⚠️ |
+| Change text/tooltip/value via UXML | ✅ | ✅ |
+| Own C# API | ❌ | ✅ |
+| Internal events | ⚠️ | ✅ |
+| Complex state | ❌ | ✅ |
+| Designer variations | ✅ | ✅ |
+| Runtime-created elements | ⚠️ | ✅ |
 
-## Документация
+## Documentation
 
 - Reuse UXML files: https://docs.unity3d.com/6000.0/Documentation/Manual/UIE-reuse-uxml-files.html
 - Custom controls attributes: https://docs.unity3d.com/6000.5/Documentation/Manual/ui-systems/custom-control-attributes-complex-data-types.html

@@ -1,20 +1,20 @@
 # UI Toolkit profiler checklist
 
-## Что смотреть
+## What to watch
 
-- `UpdateStyle`: часто меняются classes/styles или сложные selectors.
-- `UpdateLayout`: layout пересчитывается; проверь width/height/flex/top/left animations.
-- `UpdateAnimation`: много transitions.
-- `UpdateRenderData`: mesh/textures/text/materials/masks меняются.
+- `UpdateStyle`: classes/styles change often, or complex selectors.
+- `UpdateLayout`: layout recalculates; check width/height/flex/top/left animations.
+- `UpdateAnimation`: many transitions.
+- `UpdateRenderData`: mesh/textures/text/materials/masks change.
 - `DrawChain`: batching/render cost.
-- `UpdateRuntimeBindings`: binding обновляет слишком много.
+- `UpdateRuntimeBindings`: binding updates too much.
 
-## Типовые причины spikes
+## Typical causes of spikes
 
-| Spike | Возможная причина | Исправление |
+| Spike | Possible cause | Fix |
 |---|---|---|
-| UpdateLayout | Анимируешь `width/height/flex` | Перейти на `scale/translate` |
-| UpdateStyle | Часто toggles class на root | Тогглить ниже по tree |
-| UpdateRenderData | Меняешь text каждый frame | Обновлять только при изменении |
-| DrawChain | Много masks/materials/filters | Упростить subtree, объединить эффекты |
-| Memory | Не сняты callbacks/schedules | `Unwire`, cancel tasks, reset pools |
+| UpdateLayout | Animating `width/height/flex` | Switch to `scale/translate` |
+| UpdateStyle | Frequently toggling a class on the root | Toggle lower in the tree |
+| UpdateRenderData | Changing text every frame | Update only on change |
+| DrawChain | Many masks/materials/filters | Simplify the subtree, combine effects |
+| Memory | Callbacks/schedules not removed | `Unwire`, cancel tasks, reset pools |
