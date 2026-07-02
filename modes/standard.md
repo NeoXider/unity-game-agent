@@ -95,21 +95,14 @@
 
 ## Checklist
 
-- [ ] Lead phase created feature pages, task pages, QA checklist, and QA-agent duplicate
-- [ ] Each task page has acceptance criteria, touched files, verification evidence, and rollback risk
-- [ ] Feature QA and QA-agent duplicate pass, or degraded checks have report + follow-up task before advancing
-- [ ] Auto-advance to next task/feature after self QA passes or degraded report is filed unless blocker/ambiguity exists
-- [ ] Clarifying questions → short outline (genre, 2–3 mechanics, 2–3 screens)
-- [ ] Stages with per-stage checklist
-- [ ] Before each feature — ask user if in doubt
-- [ ] Implement per feature, all data in SO
-- [ ] After each feature: compile + Play Mode + `read_console` + screenshot
-- [ ] During Play Mode: console checked and changed mechanic/UI/scene behavior verified
-- [ ] Screenshot reviewed (not blank, shows expected)
+Final gate (details in the sections above):
+
+- [ ] Lead docs complete: feature/task pages with acceptance criteria + QA and QA-agent checklists
+- [ ] Per feature: compile + Play Mode + `read_console` during play + screenshot reviewed; behavior verified
 - [ ] DEV_STATE + DEV_LOG updated after each feature
-- [ ] Before handoff: full Play Mode + `read_console` + final screenshot
+- [ ] QA + QA-agent pass, or degraded report + follow-up task, before auto-advancing
+- [ ] Before handoff: full Play Mode walkthrough + clean console + final screenshots
 - [ ] All text uses TextMeshPro (never legacy Text)
-- [ ] QA checklist if enabled in DEV_CONFIG
 
 ## Example
 

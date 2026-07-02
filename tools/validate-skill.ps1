@@ -48,6 +48,7 @@ $requiredProfileFields = @(
     "gd_before_lead",
     "designer_before_lead_when_visual",
     "library_policy",
+    "pattern",
     "project_frameworks"
 )
 
@@ -169,7 +170,10 @@ for ($i = 0; $i -lt $batchBytes.Length; $i++) {
 }
 Assert-True -Condition ($lineFeedCount -eq $crlfCount) -Message "setup_project.bat must use CRLF line endings for cmd.exe"
 
-$allTextFiles = Get-ChildItem -Path $SkillRoot -Recurse -File -Include *.md,*.json,*.ps1,*.bat
+# AUDIT-*.md reports may legitimately contain Russian text; the bare U+0420 mojibake
+# heuristic below assumes English-only skill content, so audits are excluded.
+$allTextFiles = Get-ChildItem -Path $SkillRoot -Recurse -File -Include *.md,*.json,*.ps1,*.bat |
+    Where-Object { $_.Name -notlike "AUDIT-*" }
 $mojibakePatterns = @(
     ([string]([char]0x0432) + [string]([char]0x0402)),
     ([string]([char]0x0432) + [string]([char]0x2020)),
@@ -199,13 +203,11 @@ foreach ($file in $allTextFiles) {
     Assert-True -Condition $hasNoMojibake -Message $mojibakeMessage
 }
 
+# The canonical schema lives ONLY in templates/DEV_PROFILE.json (validated field-by-field above);
+# SKILL.md and reference.md must link to it instead of duplicating the JSON.
 $reference = Get-Content -Path $referencePath -Raw -Encoding UTF8
-foreach ($field in $requiredProfileFields) {
-    $skillHasField = $skill.Contains("`"$field`"")
-    $referenceHasField = $reference.Contains("`"$field`"")
-    Assert-True -Condition $skillHasField -Message "SKILL.md runtime policy missing field: $field"
-    Assert-True -Condition $referenceHasField -Message "reference.md schema missing field: $field"
-}
+Assert-True -Condition $reference.Contains("templates/DEV_PROFILE.json") -Message "reference.md must point to the canonical DEV_PROFILE.json template"
+Assert-True -Condition $skill.Contains("templates/DEV_PROFILE.json") -Message "SKILL.md must point to the canonical DEV_PROFILE.json template"
 
 $linksProviderNeutral = $skill.Contains("tools/mcp-provider-neutral.md")
 $linksNeoxider = $skill.Contains("tools/neoxider-tools-reuse.md")
@@ -228,5 +230,22 @@ Assert-True -Condition $hasPlayModeGate -Message "SKILL.md must include standard
 Assert-True -Condition $hasManifestPolicy -Message "SKILL.md must include MCP manifest auto-install policy"
 Assert-True -Condition $hasDegradedQaPolicy -Message "SKILL.md must include bounded degraded QA policy"
 Assert-True -Condition $hasBoundedQaReference -Message "tools/playmode-qa-automation.md must include bounded QA attempts"
+
+# Relative markdown links must point at existing files (http/anchor-only links skipped).
+# templates/ is excluded: template bodies contain placeholder links (TASK-NNN-name.md) by design.
+$templatesPrefix = (Join-Path $SkillRoot "templates") + [System.IO.Path]::DirectorySeparatorChar
+$mdFiles = Get-ChildItem -Path $SkillRoot -Recurse -File -Include *.md |
+    Where-Object { $_.Name -notlike "AUDIT-*" -and -not $_.FullName.StartsWith($templatesPrefix) }
+foreach ($file in $mdFiles) {
+    $text = Get-Content -Path $file.FullName -Raw -Encoding UTF8
+    $linkMatches = [regex]::Matches($text, '\]\(([^)#\s]+)\)')
+    foreach ($linkMatch in $linkMatches) {
+        $target = $linkMatch.Groups[1].Value
+        if ($target -match '^(https?:|mailto:)') { continue }
+        $resolvedTarget = Join-Path $file.DirectoryName $target
+        $linkMessage = "Broken relative link in {0}: {1}" -f $file.FullName, $target
+        Assert-True -Condition (Test-Path -LiteralPath $resolvedTarget) -Message $linkMessage
+    }
+}
 
 Write-Output "unity-game skill validation passed"

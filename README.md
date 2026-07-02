@@ -188,7 +188,7 @@ The docs are not ceremony. They are the agent's working memory, task ownership s
 
 ## Quick Start
 
-1. Put this folder in your agent's skills location (e.g. `~/.claude/skills/unity-game-agent`, `~/.codex/skills/unity-game-agent`, or `.cursor/skills/unity-game`).
+1. Put this folder in your agent's skills location (e.g. `~/.claude/skills/unity-game-agent`, `~/.codex/skills/unity-game-agent`, or `.cursor/skills/unity-game-agent`).
 2. Open a Unity project or create an empty project.
 3. Ask for a quick fix, a direct feature, or a full game.
 4. The skill chooses the shortest verified path:
@@ -205,7 +205,9 @@ Optional bootstrap for tracked projects:
 
 ## MCP And Unity Automation
 
-The skill is provider-neutral, with a CoplayDev Unity MCP adapter reference.
+The skill is provider-neutral. `mcp-commands.md` covers only installing/enabling the default
+CoplayDev adapter; tool usage comes from the live MCP tool schemas (and the dedicated `unity-mcp-skill`
+when installed), not from a static catalog.
 
 It expects the agent to prefer MCP/Editor automation when available:
 

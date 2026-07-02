@@ -4,6 +4,28 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.2.0] — 2026-07-02
+
+### 🔧 Improvements (independent audit follow-up)
+- **mcp-commands.md rewritten 409 → 40 lines**: now covers only installing (manifest snippet + rules)
+  and enabling the adapter (recent versions auto-start on editor open). Static command catalogs are
+  gone by design — tool usage comes from live MCP tool schemas and the dedicated `unity-mcp-skill`.
+- **Single source of truth for DEV_PROFILE**: canonical schema is `templates/DEV_PROFILE.json` only
+  (now includes `pattern`, `minimal_change`, `preserve_serialized_contracts`); SKILL.md and
+  reference.md link to it instead of duplicating the JSON.
+- **Field-tested gotchas** moved to `tools/mcp-provider-neutral.md` (overlay-canvas screenshots,
+  paused/unfocused editor, `ExecuteEvents` clicks for `IPointerClickHandler`, inactive-object lookup,
+  C#6 code-execution limits, stale `UnityLockfile`); input-injection recipe added to
+  `tools/playmode-qa-automation.md`.
+- **Contradictions resolved**: standard-mode tests are "per task declaration" in POLICY_MATRIX;
+  SKILL.md core loop aligned with README (+DESIGN/+QA for standard/pro); mode-specific minimums
+  now defer to POLICY_MATRIX; bounded-QA rules canonicalized in `tools/playmode-qa-automation.md`.
+- **Validator**: new broken-relative-link check across all md (templates excluded — placeholder links);
+  mojibake heuristic no longer flags Russian-language AUDIT files; profile fields validated in the
+  template only; mode checklists condensed to final gates.
+- Accuracy fixes: `ChangePageByName` takes the PageId asset name; Save System prompt is reuse-first;
+  skill name unified to `unity-game-agent`.
+
 ## [3.1.0] — 2026-06-30
 
 ### ✨ New Features

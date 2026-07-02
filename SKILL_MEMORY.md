@@ -1,6 +1,6 @@
 # Skill Memory
 
-Persistent memory for universal improvements to the `unity-game` skill itself.
+Persistent memory for universal improvements to the `unity-game-agent` skill itself.
 
 Use this file for repeatable lessons that should improve future Unity game-agent work across projects. Do not store project-specific decisions here; put those in the project's `Docs/AGENT_MEMORY.md`.
 

@@ -66,7 +66,8 @@ Use [ui_toolkit / ugui]. Data in ScriptableObject UiData.
 
 ```
 Add save system: [what to save].
-Format: JSON (Newtonsoft). Path: Application.persistentDataPath.
+Reuse the project's existing save system/package first (e.g. Neo.Save SaveProvider);
+otherwise JSON (Newtonsoft), path: Application.persistentDataPath.
 ```
 
 ---

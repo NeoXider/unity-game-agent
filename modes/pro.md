@@ -108,24 +108,14 @@
 
 ## Checklist
 
-- [ ] Lead phase created feature pages, task pages, QA checklist, and QA-agent duplicate
-- [ ] Each task page has acceptance criteria, touched files, verification evidence, and rollback risk
-- [ ] Feature QA and QA-agent duplicate pass, or degraded checks have report + follow-up task before advancing
-- [ ] Auto-advance to next task/feature after self QA passes or degraded report is filed unless blocker/ambiguity exists
-- [ ] Detailed questions → full outline (systems, screens, data)
-- [ ] Clarify: autotests? QA per feature? Final QA? Write to DEV_CONFIG
-- [ ] Detailed stages with acceptance criteria
-- [ ] Before each feature — ask if in doubt or ambiguous
-- [ ] Implement: architecture + SO + tests
-- [ ] After each task: compile + `read_console`
-- [ ] After each feature: Play Mode + `read_console` + screenshot + tests
-- [ ] During Play Mode: console checked and changed mechanic/UI/scene behavior verified
-- [ ] Screenshot reviewed (not blank, shows expected)
-- [ ] DEV_STATE + DEV_LOG updated after every action
+Final gate (details in the sections above):
+
+- [ ] Lead docs complete: feature/task pages with acceptance criteria + QA and QA-agent checklists; DEV_CONFIG records autotests/QA choices
+- [ ] Per task: compile + `read_console`; per feature: Play Mode + console during play + screenshot reviewed + tests pass
+- [ ] DEV_STATE + DEV_LOG updated after every task
+- [ ] QA + QA-agent pass, or degraded report + follow-up task, before auto-advancing
+- [ ] Before handoff: full Play Mode walkthrough of all paths + full test suite + clean console + final screenshots
 - [ ] All text uses TextMeshPro (never legacy Text)
-- [ ] Autotests pass (unless disabled)
-- [ ] Before handoff: full Play Mode + tests + final screenshot
-- [ ] Final QA checklist if enabled
 
 ## Example
 

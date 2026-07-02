@@ -118,6 +118,19 @@ If verification cannot run, report the exact missing capability or project limit
 
 For interactive behavior, screenshot-only verification is not a pass. Use a PlayMode test, scenario runner, input injection, UI automation, custom MCP tool, or mark the result degraded and create an automation-gap task.
 
+## Field-Tested Gotchas
+
+Provider-agnostic Unity Editor automation traps (each verified in production):
+
+| Symptom | Cause / fix |
+|---|---|
+| Screenshot shows scene but no UI | Camera-render screenshot paths skip Screen Space Overlay canvases → capture via code-execution capability: focus the Game View + `ScreenCapture.CaptureScreenshot` in the same call |
+| Frames/screenshots frozen (`Time.frameCount` static) | `EditorApplication.isPaused == true` or editor lost OS focus → unpause via code, activate the Unity window |
+| `onClick.Invoke()` does nothing | Handler implements `IPointerClickHandler` (0 persistent listeners) → simulate the click via `ExecuteEvents.Execute(...pointerClickHandler)` (recipe in [playmode-qa-automation.md](playmode-qa-automation.md)) |
+| `GameObject.Find` returns null | Target is inactive → `transform.Find(path)` from an active root or `GetComponentInChildren<T>(true)` |
+| Code-execution tool rejects valid-looking C# | Legacy compiler backends are C# 6: no string interpolation, no `using` in the body, qualify `UnityEngine.Object` explicitly |
+| Relaunch after editor crash exits instantly | Stale `Temp/UnityLockfile` → delete it and relaunch |
+
 ## File-Only Fallback
 
 If MCP is unavailable:

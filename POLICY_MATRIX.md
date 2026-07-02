@@ -24,7 +24,7 @@ Single source of truth for mode-specific cadences. No ambiguity.
 | **User approval (feature)** | Never | Only if unclear/blocker | Only if unclear/blocker |
 | **Auto-advance after Agent QA** | Yes | Yes, after QA + QA_AGENT pass or degraded report with follow-up task | Yes, after QA + QA_AGENT pass or degraded report with follow-up task |
 | **QA retry limit** | Best effort | 2 attempts, then degraded report and continue | 2 attempts, then degraded report and continue |
-| **Autotests** | No | No | Yes (after feature) |
+| **Autotests** | No | Per task declaration (`Tests Required` for logic/runtime/risky flows) | Yes (after feature) |
 | **Profiler check** | Never (unless visible lag) | VERIFY phase (quick FPS) | After major systems + VERIFY |
 | **Performance gate** | No | No | Yes (Mobile/WebGL: mandatory) |
 
@@ -40,7 +40,7 @@ Single source of truth for mode-specific cadences. No ambiguity.
 | Debug.Log | Key events | Plenty | Plenty + params |
 | Singleton | OK | OK | DI / ServiceLocator |
 | Interfaces | No | No | Yes |
-| Tests | No | No | Yes (auto) |
+| Tests | No | Per task declaration | Yes (auto) |
 | Events | Optional | Yes | Yes |
 | Null-safe UI | Yes | Yes | Yes |
 | TextMeshPro (never legacy) | Yes | Yes | Yes |

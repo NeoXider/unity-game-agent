@@ -2,7 +2,7 @@
 name: unity-game-agent
 description: "Unity Game Agent: autonomous Unity game development pipeline for quick fixes, direct feature work, full game builds, verification, Play Mode checks, and MCP-driven Unity Editor automation. Use when working on Unity games, gameplay systems, scenes, UI, ScriptableObjects, builds, tests, or project continuation with Docs/ state files."
 metadata:
-  version: 3.1.0
+  version: 3.2.0
   author: Neoxider
   homepage: https://github.com/NeoXider/unity-game-agent
 ---
@@ -11,7 +11,7 @@ metadata:
 
 Build Unity games end to end, or make targeted fixes, while keeping the project verifiable. This file is the orchestrator. Load detailed references only when needed.
 
-Core loop: `INTAKE -> PLAN -> BUILD -> VERIFY -> SHIP`.
+Core loop: `INTAKE -> PLAN -> BUILD -> VERIFY -> SHIP` (standard/pro expand it with role passes: `INTAKE -> DESIGN -> PLAN -> BUILD -> VERIFY -> QA -> SHIP`).
 
 Use the shortest path that still verifies the change. For small fixes, skip the full pipeline and use Quick Fix.
 
@@ -50,59 +50,9 @@ Selection rules:
 
 ## Runtime Policy
 
-Use these defaults unless the user or `Docs/DEV_PROFILE.json` overrides them.
-
-```json
-{
-  "dev_mode": "standard",
-  "skill_mode": "full_cycle",
-  "ui_mode": "enabled",
-  "ui_stack": "ui_toolkit",
-  "mcp_mode": "use",
-  "mcp_adapter": "coplaydev-unity-mcp",
-  "auto_install_mcp_in_manifest": true,
-  "provider_neutral_tool_mapping": true,
-  "strict_preflight": true,
-  "visual_verification": true,
-  "visual_verification_max_resolution": 512,
-  "final_console_check": true,
-  "final_playmode_tests_standard_pro": true,
-  "final_tests_when_relevant": true,
-  "final_build_validation_when_relevant": true,
-  "qa_verification_driver_required": true,
-  "qa_tests_required_standard_pro": true,
-  "qa_screenshot_evidence_required": true,
-  "interactive_qa_requires_runtime_driver": true,
-  "qa_max_attempts_before_degraded_report": 2,
-  "qa_continue_after_degraded_report": true,
-  "qa_degraded_report_required": true,
-  "ask_about_neoxider_tools": true,
-  "neoxider_tools": "ask",
-  "qa_per_feature": true,
-  "qa_final": true,
-  "screenshot_policy": "per_feature",
-  "reuse_first": true,
-  "external_reference_discovery": true,
-  "no_reinventing_without_reason": true,
-  "lead_dev_qa_workflow_standard_pro": true,
-  "task_pages_standard_pro": true,
-  "qa_agent_duplicate_checklist": true,
-  "auto_advance_after_self_qa": true,
-  "skill_memory_enabled": true,
-  "skill_memory_write_policy": "auto_after_verified_task",
-  "skill_memory_scope": "universal_only",
-  "role_subskills_enabled": true,
-  "mandatory_subagents_standard_pro": true,
-  "subagent_fallback_policy": "only_when_tools_unavailable",
-  "gd_before_lead": true,
-  "designer_before_lead_when_visual": true,
-  "minimal_change": true,
-  "preserve_serialized_contracts": true,
-  "library_policy": "discover_before_plan",
-  "pattern": "auto",
-  "project_frameworks": []
-}
-```
+Use the defaults from [templates/DEV_PROFILE.json](templates/DEV_PROFILE.json) — the canonical schema,
+copied into `Docs/DEV_PROFILE.json` at bootstrap — unless the user or an existing `Docs/DEV_PROFILE.json`
+overrides them. Do not duplicate the JSON here or elsewhere; `tools/validate-skill.ps1` validates the template.
 
 Important policy meanings:
 
@@ -114,9 +64,7 @@ Important policy meanings:
 - `qa_tests_required_standard_pro: true`: write and run EditMode/PlayMode tests for standard/pro tasks that involve logic, runtime behavior, or risky flows.
 - `qa_screenshot_evidence_required: true`: visual/runtime-visible checks need screenshot evidence linked from task/feature/QA docs.
 - `interactive_qa_requires_runtime_driver: true`: screenshot-only checks cannot pass interactive gameplay, input, UI flow, collision, spawn, scene transition, pause, or restart behavior.
-- `qa_max_attempts_before_degraded_report: 2`: QA gets at most two serious attempts per required verification item before it must stop retrying.
-- `qa_continue_after_degraded_report: true`: after the second failed/unavailable QA attempt, write a degraded report, create a follow-up defect/automation-gap task, and continue instead of waiting for the user.
-- `qa_degraded_report_required: true`: degraded QA must list attempts, why testing failed, skipped checks, available evidence, risk, and the follow-up task.
+- `qa_max_attempts_before_degraded_report` / `qa_continue_after_degraded_report` / `qa_degraded_report_required`: bounded QA — 2 serious attempts per required check, then a degraded report + follow-up task and continue. Canonical rules and report fields: [tools/playmode-qa-automation.md](tools/playmode-qa-automation.md) ("Bounded QA Attempts").
 - `auto_install_mcp_in_manifest: true`: if MCP is missing in a Unity project, add the adapter package to `Packages/manifest.json` before falling back to file-only mode.
 - `neoxider_tools: "ask"`: ask before using NeoxiderTools systems when the project/task could benefit from them.
 - `external_reference_discovery: true`: search local and credible external ready solutions before planning nontrivial implementation work.
@@ -164,7 +112,8 @@ and QA policy always still apply. To add a pattern, see [patterns/README.md](pat
 - Development patterns: [patterns/README.md](patterns/README.md); casual games on NeoxiderTools: [patterns/casual-neoxider/pattern.md](patterns/casual-neoxider/pattern.md)
 - UI stack profiles: `project-profiles/` — runtime UI Toolkit on Unity 6.5 / `PanelRenderer`: [project-profiles/ui-toolkit/README.md](project-profiles/ui-toolkit/README.md)
 - Provider-neutral MCP workflow: [tools/mcp-provider-neutral.md](tools/mcp-provider-neutral.md)
-- CoplayDev command adapter: [mcp-commands.md](mcp-commands.md)
+- Unity MCP install/enable: [mcp-commands.md](mcp-commands.md). Tool usage: read the live MCP tool
+  schemas and, if installed, the dedicated `unity-mcp-skill` — do not rely on a static command catalog.
 - NeoxiderTools reuse rules: [tools/neoxider-tools-reuse.md](tools/neoxider-tools-reuse.md)
 - Mode cadences: [POLICY_MATRIX.md](POLICY_MATRIX.md) and `modes/<fast|standard|pro>.md`
 - Docs/templates: [reference.md](reference.md) and `templates/`
@@ -440,8 +389,8 @@ Feature QA and auto-advance:
 2. Developer/orchestrator fills the Agent result column in `Docs/QA/FEAT-NNN-slug-qa.md`.
 3. Run an independent QA role pass against `Docs/QA_AGENT/FEAT-NNN-slug-qa.md`. Use a QA subagent when available; otherwise switch context mentally, follow only the checklist and player-facing expected behavior, and avoid relying on implementation assumptions.
 4. If QA passes, mark the feature done in the feature page, `DEV_PLAN.md`, `DEV_STATE.md`, and `DEV_LOG`, then continue to the next task/feature automatically.
-5. If QA finds an implementation defect, create or reopen a task page for the defect, fix it, and rerun the affected QA check. Limit each required QA check/driver to two serious attempts.
-6. If QA cannot execute a required check after two attempts because tooling, Play Mode, tests, screenshots, or runtime drivers remain unavailable/failing, do not retry indefinitely. Fill a degraded QA report, list what was attempted, why testing failed, what was skipped, available evidence, risk, and the follow-up defect/automation-gap task, then continue to the next task/feature.
+5. If QA finds an implementation defect, create or reopen a task page for the defect, fix it, and rerun the affected QA check.
+6. If QA cannot execute a required check, apply the bounded-QA policy from [tools/playmode-qa-automation.md](tools/playmode-qa-automation.md): two serious attempts, then fill a degraded QA report with a follow-up defect/automation-gap task and continue to the next task/feature.
 7. Stop for human input only on blockers that cannot be bypassed with degraded reporting, missing required assets/credentials, destructive changes, or unresolved product decisions. Do not ask solely because QA reached the retry limit.
 
 ## Verification Gate
@@ -476,13 +425,7 @@ Verification:
 - Tests/build validation: pass | fail | skipped (<reason>)
 ```
 
-Mode-specific minimums:
-
-| Mode | Close task only after |
-|---|---|
-| fast | compile/import clean, no new console errors, screenshot/Play Mode per cadence or visible change |
-| standard | compile/import clean, Play Mode smoke test, console checked during Play Mode, relevant visual/mechanic checked |
-| pro | standard checks plus relevant tests and stricter architecture/docs updates |
+Mode-specific minimums: see [POLICY_MATRIX.md](POLICY_MATRIX.md) (single source of truth for cadence), row "Before closing task".
 
 ## Mode And Docs Rules
 

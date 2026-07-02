@@ -27,7 +27,8 @@ in scenes. **Not for:** general C#/Unity API questions without building a game, 
 - **What is in the package** (components, modules, full API): the standalone `neoxider-tools` skill if
   installed, plus `Assets/Neoxider/Docs/**` (RU) and `DocsEn/**` in the NeoxiderTools repo.
 - **Driving the Editor via MCP:** [../../tools/mcp-provider-neutral.md](../../tools/mcp-provider-neutral.md)
-  and [../../mcp-commands.md](../../mcp-commands.md).
+  (workflow + gotchas); install/enable: [../../mcp-commands.md](../../mcp-commands.md); tool usage —
+  live MCP schemas / the `unity-mcp-skill`.
 - Reference games: study existing casual games in project-provided samples, local references, or approved repos before building.
 
 ---

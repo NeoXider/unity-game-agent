@@ -250,51 +250,7 @@ Docs/            # Outside Assets (project root)
 
 ## DEV_PROFILE.json Schema
 
-```json
-{
-  "dev_mode": "standard",
-  "skill_mode": "full_cycle",
-  "ui_mode": "enabled",
-  "ui_stack": "ui_toolkit",
-  "mcp_mode": "use",
-  "mcp_adapter": "coplaydev-unity-mcp",
-  "auto_install_mcp_in_manifest": true,
-  "provider_neutral_tool_mapping": true,
-  "strict_preflight": true,
-  "visual_verification": true,
-  "visual_verification_max_resolution": 512,
-  "final_console_check": true,
-  "final_playmode_tests_standard_pro": true,
-  "final_tests_when_relevant": true,
-  "final_build_validation_when_relevant": true,
-  "qa_verification_driver_required": true,
-  "qa_tests_required_standard_pro": true,
-  "qa_screenshot_evidence_required": true,
-  "interactive_qa_requires_runtime_driver": true,
-  "qa_max_attempts_before_degraded_report": 2,
-  "qa_continue_after_degraded_report": true,
-  "qa_degraded_report_required": true,
-  "ask_about_neoxider_tools": true,
-  "neoxider_tools": "ask",
-  "qa_per_feature": true,
-  "qa_final": true,
-  "screenshot_policy": "per_feature",
-  "reuse_first": true,
-  "external_reference_discovery": true,
-  "no_reinventing_without_reason": true,
-  "lead_dev_qa_workflow_standard_pro": true,
-  "task_pages_standard_pro": true,
-  "qa_agent_duplicate_checklist": true,
-  "auto_advance_after_self_qa": true,
-  "skill_memory_enabled": true,
-  "skill_memory_write_policy": "auto_after_verified_task",
-  "skill_memory_scope": "universal_only",
-  "role_subskills_enabled": true,
-  "mandatory_subagents_standard_pro": true,
-  "subagent_fallback_policy": "only_when_tools_unavailable",
-  "gd_before_lead": true,
-  "designer_before_lead_when_visual": true,
-  "library_policy": "discover_before_plan",
-  "project_frameworks": []
-}
-```
+The canonical schema (all fields with defaults) is the template itself:
+[templates/DEV_PROFILE.json](templates/DEV_PROFILE.json). SKILL.md → "Runtime Policy" carries the same
+defaults inline for the orchestrator; `tools/validate-skill.ps1` keeps the two in sync. Do not copy
+the JSON into more places.

@@ -42,3 +42,6 @@ Flow: **GM changes State -> calls EM -> EM/G broadcast `UnityEvent` -> subsystem
 2. Grep the package: `Assets/Neoxider/Scripts/**` (or `Library/PackageCache` for UPM).
 3. Docs: `Assets/Neoxider/Docs/**` (RU) and `DocsEn/**` (EN).
 4. Via MCP: `unity_reflect` (search type -> get_member) — live C# API.
+
+> MCP gotcha: `GameObject.Find` can't see inactive pages/objects — use `transform.Find("PM/Some Page")`
+> from an active root or `GetComponentInChildren<T>(true)` instead.

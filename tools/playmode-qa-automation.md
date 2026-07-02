@@ -38,6 +38,15 @@ When tests or automation are required, Developer must add the smallest test seam
 - PlayMode tests for scene/runtime behavior.
 - Scenario runner or custom MCP tool for multi-step flows when PlayMode tests are awkward but runtime driving is needed.
 
+Input injection recipe (level 6) via MCP `execute_code`: uGUI buttons whose handler implements
+`IPointerClickHandler` (e.g. NeoxiderPages `BtnChangePage`) have zero `onClick` listeners, so
+`button.onClick.Invoke()` does nothing — simulate the click instead:
+
+```csharp
+var ped = new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current);
+UnityEngine.EventSystems.ExecuteEvents.Execute(buttonGo, ped, UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);
+```
+
 Developer must run the required tests through MCP (`run_tests` + `get_test_job`) when available. If MCP is unavailable, use Unity CLI batchmode when practical. If neither works, mark verification `degraded`, not `pass`.
 
 ## Bounded QA Attempts

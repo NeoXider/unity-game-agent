@@ -1,6 +1,6 @@
 # Mode: Fast
 
-**For:** Validate idea quickly OR get to playable build fast. Merges former Prototype and Fast modes.
+**For:** Validate idea quickly OR get to playable build fast.
 
 ## Scope Limits (guidelines, not hard limits)
 - Mechanics: **1–4**

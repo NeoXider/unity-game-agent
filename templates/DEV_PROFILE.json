@@ -41,6 +41,8 @@
   "subagent_fallback_policy": "only_when_tools_unavailable",
   "gd_before_lead": true,
   "designer_before_lead_when_visual": true,
+  "minimal_change": true,
+  "preserve_serialized_contracts": true,
   "library_policy": "discover_before_plan",
   "pattern": "auto",
   "project_frameworks": []

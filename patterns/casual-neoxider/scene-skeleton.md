@@ -60,7 +60,9 @@ PM   {PM, Canvas, CanvasScaler, GraphicRaycaster}   // screen manager
 - Switching:
   - By button — **`BtnChangePage`**: `Action = OpenPage` + `targetPageId` (or `Cancel`/`CloseCurrent`),
     optional `GameState.State` (Start/Restart/Pause/Resume).
-  - By code — `UIKit.ShowPage(pageId)` / `PM.I.ChangePage(pageId)` / `PM.I.ChangePageByName("Game")`.
+  - By code — `UIKit.ShowPage(pageId)` / `PM.I.ChangePage(pageId)` / `PM.I.ChangePageByName("PageGame")`.
+    **`ChangePageByName` takes the PageId ASSET name (e.g. "PageGame"), not the page GameObject name**
+    ("Game Page" fails with a console error). When unsure, use `ChangePage(page.PageId)`.
   - React — `PM.I.OnPageChanged(UIPage)`.
 - A `popup` opens on top (`ActivePage`); a normal page opens exclusively (`SetPage`).
   `Ignore On Exclusive Change` — don't close on exclusive transitions.
