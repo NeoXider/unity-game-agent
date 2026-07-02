@@ -49,8 +49,14 @@ read [managers.md](managers.md), the reuse policy, and grep the package. Typical
 | Sound | `AM` (`Neo.Audio`) — `AM.I.Play(index)` |
 | Saves | `SaveManager`/`SaveProvider` (`Neo.Save`) — not raw `PlayerPrefs` |
 | Shop/purchases | `Shop` + `ShopItemData` + `ButtonPrice` (`Neo.Shop`) |
+| Shop categories | `ShopItemData.Category` + `ShopListView.SetCategory` + `ShopCategoryButton` (tabs) / `ShopCategorySelector` (prev/next pill) |
+| Dress-up / skins equip | `EquipmentManager` + `EquipItemDefinition` (`Neo.Shop`, 9.7.0) — per-category slots, persist, buy-then-wear |
+| Regenerating resource (energy/lives) | `ResourceRegen` (`Neo.Bonus`, 9.7.0) = `Money` cap + `CooldownReward` auto-claim + `TimeToText`, one component |
 | Screens/navigation | `PM` / `UIPage` / `BtnChangePage` (`Neo.Pages`) |
 | Slots / wheel / chance | `SpinController`/`Row`, `WheelFortune`, `ChanceManager` (`Neo.Bonus`/`Neo.Tools`) |
+| Slot symbol economy (weights/payouts/wild) | `SlotEconomyDefinition` (`Neo.Bonus`, 9.7.0) — `PickWeightedId`/`ApplySpecialRule`/`EvaluateLine` |
+| Multiplayer value sync (Money/Score/HP) | `NetworkReactiveSync` (`Neo.Network`, 9.7.0) — reactive property over Mirror, no code |
+| Player nickname / LAN quick play | `NetworkPlayerName`, `NeoNetworkDiscovery.QuickPlay()` (`Neo.Network`, 9.7.0) |
 | Spawn/pool | `Spawner` / `PoolManager` (`Neo.Tools`) |
 | Fly "object -> UI slot" | `AnimationFly` (`Neo.UI`) |
 | Inspector cheat buttons | `[Button]` (`Neo`) — on **any** MonoBehaviour, no custom Editor |

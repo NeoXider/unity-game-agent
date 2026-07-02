@@ -29,7 +29,11 @@ Flow: **GM changes State -> calls EM -> EM/G broadcast `UnityEvent` -> subsystem
 | **LevelComponent** | `Neo.Core.Level` | XP progression: `AddXp(int)`, `SetLevel(int)`; `Level/TotalXp/XpToNextLevel`; `OnLevelUp/OnXpGained`. Curve — `LevelCurveDefinition`. |
 | **HealthComponent** | `Neo.Core.Resources` | pools by id (`Hp/Mana`): `GetCurrent/Decrease/Increase/TrySpend/Restore`; events `OnDamage/OnHeal/OnDeath`. Good for lives. |
 | **SaveManager / SaveProvider / SaveField** | `Neo.Save` | saves; don't write raw `PlayerPrefs`. `SaveProvider.SetFloat/GetFloat/SetBool/SetString`; for lists — JSON to string. |
-| **Money / Shop** | `Neo.Shop` | wallet `Money.I` (`Add/Spend/TrySpend/CanSpend`, reactive `CurrentMoney`); `Shop`+`ShopItemData`+`ShopItem`+`ButtonPrice`; `TextMoney`. |
+| **Money / Shop** | `Neo.Shop` | wallet `Money.I` (`Add/Spend/TrySpend/CanSpend`, reactive `CurrentMoney`, soft cap `MaxMoney`+`AddOverflow`); `Shop`+`ShopItemData`+`ShopItem`+`ButtonPrice`; `TextMoney`; categories via `ShopListView.SetCategory`+`ShopCategoryButton`/`ShopCategorySelector`. |
+| **EquipmentManager / EquipItemDefinition** | `Neo.Shop` | (9.7.0) multi-category dress-up/skins: `EquipById/Unequip/ToggleById`, sprite slots (`SpriteRenderer`/`Image`+SetNativeSize), persist via SaveProvider, `OnEquipChanged`. |
+| **SlotEconomyDefinition** | `Neo.Bonus` | (9.7.0) slot symbol economy SO: weights, money/bonus payouts, special symbol; `PickWeightedId()`, `ApplySpecialRule(ids)`, `EvaluateLine(ids)` -> `LineResult`. |
+| **ResourceRegen** | `Neo.Bonus` | (9.7.0) energy/lives in one component: forces `CooldownReward.AutoClaim`, deposits into capped `Money`, drives `TimeToText` countdown. |
+| **NetworkReactiveSync / NetworkPlayerName / QuickPlay** | `Neo.Network` | (9.7.0) NoCode Mirror: reactive Money/Score/HP sync from inspector; replicated nickname; `NeoNetworkDiscovery.QuickPlay()` = join-or-host one button. |
 | **Spawner / PoolManager** | `Neo.Tools` | prefab spawning, waves, area, spawn points (`Spawn Points[]`), pool. |
 | **TextScore / TextMoney / TextLevel / SetText / TimeToText / StarView** | `Neo.Tools` / `Neo.UI` | output values to UI (reactive, auto-binding). `TimeToText.Set(float)` — timer -> `mm:ss`. |
 | **AnimationFly** | `Neo.UI` | sprite flight "world -> UI slot": `PlaySpriteWorldToCanvas(spr, n, worldStart, uiSlot)`. Needs `parentCanvas`/`spawnParent` inside a Canvas. |
