@@ -82,6 +82,26 @@ Cheap to verify by measurement, and all of them were shipped-and-missed at least
   disabled tint actually reaches the visible graphic — a gated button that still looks enabled reads
   as a broken button.
 
+## Sprite import mode: Single, always
+
+Import every standalone sprite as **Sprite Mode = Single**. Reserve `Multiple` for genuine sprite
+sheets and atlases — a texture that really does contain several frames.
+
+A single-image texture imported as `Multiple` gets a sliced sub-rect trimmed to its opaque content.
+Two icons drawn on the same canvas size then arrive with *different* sprite rects and different
+internal padding, so identical `RectTransform` boxes no longer render identically — especially with
+`preserveAspect`, where the fitted size follows the sprite's aspect, not the box. The result is a
+row of buttons that measure equal and look unequal, and the cause is invisible in the Inspector's
+transform values.
+
+Concrete case: two menu icons, both in a 255 x 255 box at mirrored offsets with scale 1, still looked
+mismatched — the sliced rects were 94 x 88 and 92 x 92, so `preserveAspect` rendered them 255 x 238.7
+and 255 x 255. Re-importing as `Single` makes both the full texture, and they line up exactly.
+
+Check this before chasing layout numbers: `grep -rl "spriteMode: 2" --include=*.png.meta` over the art
+folder. If the count is high, the convention was never enforced and other alignment bugs are queued
+behind it.
+
 ## Mockup fidelity
 
 Mockups contain mistakes. Fix them in the product and record the deviation instead of copying them:

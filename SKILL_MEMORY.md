@@ -110,3 +110,10 @@ Allowed categories: workflow, verification, reuse, unity-mcp, docs, qa, architec
 - Apply when: Any multi-round UI acceptance with a human reviewer.
 - Evidence: TropicMania 2026-08-06: second acceptance round carried every first-round comment forward with its resolution, so closed items stayed auditable after the old file was deleted.
 - Skill impact: templates/QA_CHECKLIST.md; acceptance-document conventions.
+
+### 2026-08-06 - anti-pattern
+- Trigger: Two icon buttons with identical boxes, offsets and scale still rendered at different sizes.
+- Learning: Import every standalone sprite as Sprite Mode = Single; keep Multiple only for real sprite sheets and atlases. A single-image texture imported as Multiple gets a sub-rect trimmed to its opaque content, so two icons drawn on the same canvas arrive with different sprite rects and different internal padding - with preserveAspect the fitted size then follows the sprite aspect, not the box, and identical transforms render unequal. The cause is invisible in the Inspector's transform values, so it burns hours of layout debugging. Audit with `grep -rl "spriteMode: 2" --include=*.png.meta`.
+- Apply when: Importing art, and first thing when two elements that measure equal look unequal.
+- Evidence: TropicMania 2026-08-06: menu Settings/Collection icons, both in a 255x255 box at mirrored offsets, rendered 255x238.7 and 255x255 because the sliced rects were 94x88 and 92x92; 56 of 61 project sprites were Multiple.
+- Skill impact: project-profiles/plain-ugui.md ("Sprite import mode: Single, always").
