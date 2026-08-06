@@ -22,10 +22,22 @@ All notable changes to this skill are documented here.
   context, treat the editor as a single-writer resource, and audit the editor side effects
   (`UnityConnectSettings`, TMP fallbacks, `EditorSettings`, IDE files) that builds cause on their own.
 
+### 🎯 Added — non-UI field lessons from the same project
+- **`tools/playmode-qa-automation.md`**: verify the factual premises of a task brief before delegating
+  (a wrong premise would have disabled UI input project-wide) and treat agent findings as leads;
+  effects and game feel need visual capture across the effect lifetime, since prewarm/lifetime/cleanup
+  defects survive code review; economy values belong in bet multipliers, never absolute currency.
+- **`tools/mcp-provider-neutral.md` gotchas**: Play Mode refuses scene mutation and discards edits made
+  during it; file-level scene edits are clobbered by an open dirty scene; builds and editor restarts
+  silently flip analytics, TMP fallbacks, `EditorSettings`, and drop IDE files; test asmdefs need
+  `defineConstraints: ["UNITY_INCLUDE_TESTS"]`.
+
 ### 🧠 Skill memory
-- Six entries covering screenshot truthfulness, measuring instead of eyeballing, one-editor agent
+- Eleven entries covering screenshot truthfulness, measuring instead of eyeballing, one-editor agent
   orchestration, the CanvasScaler/safe-area contract, builder-versus-hand-authored scene ownership,
-  and the Input System port of Android Back.
+  the Input System port of Android Back, verifying delegated briefs and agent findings, visual
+  verification of VFX, bet-multiplier economy, feature-removal/build hygiene, and acceptance-document
+  conventions that survive multiple review rounds.
 
 ---
 

@@ -79,3 +79,37 @@ Tests that exercise visible runtime behavior should capture or trigger screensho
 - QA must create/reopen a defect task when a feature lacks the required automation hook.
 - QA may use vision to judge screenshots, but vision does not replace runtime input/test execution.
 - QA must stop after two failed/unavailable attempts for the same check, write the degraded report, and continue.
+
+## Delegated Work: Verify Before You Believe
+
+Two failure modes appear as soon as work is split across agents. Both were paid for in production.
+
+**A wrong premise in the task brief propagates.** A delegated task stated that both scenes used
+`StandaloneInputModule`; a grep proved the opposite (`standalone=0`, `newmodule=1`). Acting on the
+brief would have disabled UI input across the whole game. Verify the factual claims in a task prompt
+against the repository *before* delegating, not after the agent reports.
+
+**Agent findings are leads, not conclusions.** In one pass, three of the reported "missing art"
+defects were false: the objects carried placeholder names but held real sprites, which a guid lookup
+settled in seconds. Re-check any finding that would change product behaviour, and say plainly which
+of your own earlier claims a re-check overturned.
+
+## Effects and Feel Need Visual Capture, Not Code Review
+
+Particle and animation defects survive code review because the code is correct in isolation:
+
+- A prewarm that silently did not apply — emitted particles reached only the top quarter of the screen.
+- An authored lifetime too short for the distance travelled — the effect died mid-screen.
+- Leftover state from a previous round still on screen during the next one, because the interrupt path
+  stopped gracefully instead of immediately.
+
+Capture the effect at several points in its lifetime and compare against the video reference. If a
+feature has a reference recording, densities and timings are checkable numbers, not opinions.
+
+## Economy Values Belong in Bet Multipliers
+
+Express progressive/jackpot seeding, contributions, and thresholds as multipliers of the current bet,
+never as absolute currency. Absolute values invert the intended relationship at the ends of the bet
+ladder — a seed tuned at the top of the ladder consumed over 7 % of turnover at the bottom. Also
+confirm what the displayed unit actually is before tuning: a config in "coins" that an adapter treats
+as display dollars turns a documented ladder into a wrong one.

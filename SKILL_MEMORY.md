@@ -75,3 +75,38 @@ Allowed categories: workflow, verification, reuse, unity-mcp, docs, qa, architec
 - Apply when: Changing Active Input Handling, or handling Back/Escape on Android.
 - Evidence: TropicMania 2026-08-06: IL of the compiled method confirmed the legacy branch was stripped; the frame-guard inversion would have closed the app on every in-game Back press.
 - Skill impact: tools/code-writing.md input handling; platform verification checklist.
+
+### 2026-08-06 - anti-pattern
+- Trigger: A delegated task brief contained a factual claim about the project that was wrong.
+- Learning: Verify the factual premises of a task prompt against the repository before delegating. A brief that asserted both scenes used `StandaloneInputModule` was contradicted by grep (`standalone=0`, `newmodule=1`); executing it would have disabled UI input across the whole game. Symmetrically, treat agent findings as leads: re-check anything that would change product behaviour, and state plainly which of your own earlier claims the re-check overturned.
+- Apply when: Writing any subagent prompt, and when reading any subagent report.
+- Evidence: TropicMania 2026-08-06: the input-handling brief was wrong; separately, three reported "missing art" defects were false - the objects held real sprites under placeholder names, settled by a guid lookup.
+- Skill impact: tools/playmode-qa-automation.md ("Delegated Work: Verify Before You Believe").
+
+### 2026-08-06 - verification
+- Trigger: Particle and animation defects passed code review and failed on screen.
+- Learning: Effects need visual capture across their lifetime, not code review. Real defects found only by looking: a prewarm that silently did not apply (particles reached only the top quarter of the screen), an authored lifetime too short for the travel distance (effect died mid-screen), and leftover emitters from the previous round still visible during the next one because the interrupt path stopped gracefully instead of immediately. When a video reference exists, densities and timings become checkable numbers.
+- Apply when: Any VFX, animation, or "game feel" task.
+- Evidence: TropicMania 2026-08-06: money-rain VFX passed review three times; each defect surfaced only from captured frames compared against the reference video.
+- Skill impact: tools/playmode-qa-automation.md ("Effects and Feel Need Visual Capture").
+
+### 2026-08-06 - architecture
+- Trigger: Jackpot seeding tuned in absolute currency inverted the intended economy at the bottom of the bet ladder.
+- Learning: Express progressive seeds, contributions, and thresholds as multipliers of the current bet, never absolute currency - absolute values consumed over 7% of turnover at the low end while behaving at the high end. Before tuning, confirm what the displayed unit actually is: a config in "coins" that an adapter treats as display dollars silently turns a documented ladder into a different one.
+- Apply when: Tuning any bet-scaled economy - jackpots, progressive pots, thresholds, payout tables.
+- Evidence: TropicMania 2026-08-06: contribution was 7.2% at the ladder bottom; the documented $10-$1000 ladder did not match the config until the adapter's unit was checked.
+- Skill impact: tools/playmode-qa-automation.md ("Economy Values Belong in Bet Multipliers"); tools/core-mechanics.md.
+
+### 2026-08-06 - workflow
+- Trigger: Removing a feature left the project compiling but the scenes dirty with orphaned data.
+- Learning: Deleting a feature is not finished when the code is gone. Sweep the scene/prefab YAML for dangling serialized overrides pointing at the removed members, and remove the objects the feature owned. Keep test assemblies out of player builds with `defineConstraints: ["UNITY_INCLUDE_TESTS"]` in the test asmdef, and check third-party demo content before shipping - vendored sample scenes and textures dominated build size (20.3 MB of 28.2 MB of user textures).
+- Apply when: Removing a feature, or preparing a first real build.
+- Evidence: TropicMania 2026-08-06: a removed column-frame feature left 7 dangling YAML overrides; the first Android build shipped with AutoRotation enabled on a portrait-only game until player settings were audited.
+- Skill impact: Feature-removal checklist; build-preparation checklist.
+
+### 2026-08-06 - qa
+- Trigger: The acceptance document needed to survive several review rounds without losing history.
+- Learning: Structure a UI acceptance document as: mockup beside the build frame, one comment field and one approve checkbox per page, and a rule that only the user ticks approve. Duplicate the mockups into the document's own screenshots folder - relative links into the art folder do not render a preview in Markdown. Keep the intentional deviations in their own section so the reviewer skips them, and when superseding an older acceptance file, migrate the reviewer's verbatim comments into the new one before deleting it.
+- Apply when: Any multi-round UI acceptance with a human reviewer.
+- Evidence: TropicMania 2026-08-06: second acceptance round carried every first-round comment forward with its resolution, so closed items stayed auditable after the old file was deleted.
+- Skill impact: templates/QA_CHECKLIST.md; acceptance-document conventions.

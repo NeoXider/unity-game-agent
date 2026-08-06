@@ -130,6 +130,10 @@ Provider-agnostic Unity Editor automation traps (each verified in production):
 | `GameObject.Find` returns null | Target is inactive → `transform.Find(path)` from an active root or `GetComponentInChildren<T>(true)` |
 | Code-execution tool rejects valid-looking C# | Legacy compiler backends are C# 6: no string interpolation, no `using` in the body, qualify `UnityEngine.Object` explicitly |
 | Relaunch after editor crash exits instantly | Stale `Temp/UnityLockfile` → delete it and relaunch |
+| Mutation tool answers "cannot be used during play mode" | Editor is in Play Mode → read editor state first; edits applied in Play Mode are discarded on exit, and `SaveScene` is refused outright |
+| Scene edit silently reverts | The scene was open and dirty in the editor while you patched the YAML on disk → check loaded scenes and `isDirty` before any file-level scene edit |
+| Tracked files change without you touching them | A build or editor restart flipped `UnityConnectSettings` analytics `0 → 1`, cleared a TMP fallback list, changed `EditorSettings.m_EnterPlayModeOptions`, or dropped `.slnx`/`.vsconfig` → audit `git status` after every build/restart and revert what nobody asked for |
+| Test assemblies end up in the player build | Missing `defineConstraints: ["UNITY_INCLUDE_TESTS"]` in the test asmdef |
 
 ## File-Only Fallback
 
