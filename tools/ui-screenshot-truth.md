@@ -77,8 +77,11 @@ Mode under each other, and every screenshot taken during the overlap is of an un
   edits applied in Play Mode are discarded on exit. Read the editor state before editing.
 - Require every editor agent to exit Play Mode and restore any device/profile it changed. A left-on
   Play Mode blocks the next agent and burns wall-clock time silently.
-- Watch progress externally (file count in the output folder, plus a stall signal), so a dead agent is
-  noticed in minutes rather than after a timeout.
+- Watch progress externally (a stall signal on the output folder), so a dead agent is noticed in
+  minutes rather than after a timeout. Track the **newest write time**, not the file count: a
+  re-shoot overwrites existing files, so a counter sits still while the work runs fine and cries
+  "stalled" at a healthy agent. A progress signal that can look plausible while being wrong is
+  worse than none.
 
 ## Editor side effects to audit afterwards
 
