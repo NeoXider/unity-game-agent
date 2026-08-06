@@ -2,7 +2,7 @@
 name: unity-game-agent
 description: "Unity Game Agent: autonomous Unity game development pipeline for quick fixes, direct feature work, full game builds, verification, Play Mode checks, and MCP-driven Unity Editor automation. Use when working on Unity games, gameplay systems, scenes, UI, ScriptableObjects, builds, tests, or project continuation with Docs/ state files."
 metadata:
-  version: 3.2.0
+  version: 3.3.0
   author: Neoxider
   homepage: https://github.com/NeoXider/unity-game-agent
 ---
@@ -110,7 +110,8 @@ and QA policy always still apply. To add a pattern, see [patterns/README.md](pat
 ## Reference Map
 
 - Development patterns: [patterns/README.md](patterns/README.md); casual games on NeoxiderTools: [patterns/casual-neoxider/pattern.md](patterns/casual-neoxider/pattern.md)
-- UI stack profiles: `project-profiles/` — runtime UI Toolkit on Unity 6.5 / `PanelRenderer`: [project-profiles/ui-toolkit/README.md](project-profiles/ui-toolkit/README.md)
+- UI stack profiles: `project-profiles/` — runtime UI Toolkit on Unity 6.5 / `PanelRenderer`: [project-profiles/ui-toolkit/README.md](project-profiles/ui-toolkit/README.md);
+  uGUI adaptivity canon (CanvasScaler `Expand`, safe-area insets, layout defects worth measuring): [project-profiles/plain-ugui.md](project-profiles/plain-ugui.md)
 - Provider-neutral MCP workflow: [tools/mcp-provider-neutral.md](tools/mcp-provider-neutral.md)
 - Unity MCP install/enable: [mcp-commands.md](mcp-commands.md). Tool usage: read the live MCP tool
   schemas and, if installed, the dedicated `unity-mcp-skill` — do not rely on a static command catalog.
@@ -121,6 +122,7 @@ and QA policy always still apply. To add a pattern, see [patterns/README.md](pat
 - Mechanics patterns: [tools/core-mechanics.md](tools/core-mechanics.md)
 - Library policy: [tools/libraries-setup.md](tools/libraries-setup.md)
 - Play Mode QA automation: [tools/playmode-qa-automation.md](tools/playmode-qa-automation.md)
+- Trustworthy UI screenshots (Device Simulator, one-editor rule, measuring instead of eyeballing): [tools/ui-screenshot-truth.md](tools/ui-screenshot-truth.md)
 - Skill memory: [SKILL_MEMORY.md](SKILL_MEMORY.md) and [tools/append-skill-memory.ps1](tools/append-skill-memory.ps1)
 - Role subskills: [roles/game-designer.md](roles/game-designer.md), [roles/designer.md](roles/designer.md), [roles/lead.md](roles/lead.md), [roles/developer.md](roles/developer.md), [roles/qa.md](roles/qa.md)
 - Standard/Pro feature docs generator: [tools/new-feature-docs.ps1](tools/new-feature-docs.ps1)

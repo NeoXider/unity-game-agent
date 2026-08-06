@@ -100,6 +100,7 @@ These are implemented in the skill today.
 | Development patterns | Done | `patterns/README.md` |
 | casual-neoxider pattern | Done | `patterns/casual-neoxider/` |
 | UI Toolkit profile (6.5 / PanelRenderer) | Done | `project-profiles/ui-toolkit/` |
+| uGUI adaptivity canon (Expand + safe area) | Done | `project-profiles/plain-ugui.md` |
 | Fast / standard / pro mode matrix | Done | `POLICY_MATRIX.md`, `modes/` |
 | Reuse-first discovery policy | Done | `SKILL.md`, `tools/libraries-setup.md` |
 | Role subskills | Done | `roles/game-designer.md`, `roles/designer.md`, `roles/lead.md`, `roles/developer.md`, `roles/qa.md` |
@@ -108,6 +109,7 @@ These are implemented in the skill today.
 | Play Mode QA automation policy | Done | `tools/playmode-qa-automation.md` |
 | EditMode/PlayMode test expectations | Done | Feature/task verification fields |
 | Screenshot evidence policy | Done | QA templates and Play Mode QA reference |
+| Trustworthy UI capture (Device Simulator) | Done | `tools/ui-screenshot-truth.md` |
 | Two-attempt QA failure recovery | Done | `qa_max_attempts_before_degraded_report: 2` |
 | Skill memory | Done | `SKILL_MEMORY.md`, `tools/append-skill-memory.ps1` |
 | Project bootstrap | Done | `setup_project.bat` |

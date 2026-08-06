@@ -4,6 +4,31 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.3.0] — 2026-08-06
+
+### 🎯 Added — field lessons from a full mobile uGUI project (TropicMania)
+- **`project-profiles/plain-ugui.md` grew an adaptivity canon**: one project-wide `CanvasScaler`
+  contract (`Scale With Screen Size`, single reference resolution, `Screen Match Mode = Expand`) with
+  a guard test over scenes *and* prefabs; the top safe-area rule (100 px with a top pivot/anchor,
+  150 px otherwise, against a real ~141 px notch inset) built from anchors and `Screen.safeArea`;
+  adaptivity ranked above pixel-perfect mockup matching; a list of layout defects that are cheap to
+  measure and were each shipped-and-missed once; and the rule that mockup typos get fixed in the
+  product, not copied.
+- **`tools/ui-screenshot-truth.md` (new)**: how to produce UI evidence that cannot lie. Never force
+  `canvas.scaleFactor` or render at a resolution the player never sees; capture through the Device
+  Simulator so `Screen.safeArea` is real; verify each PNG by parsing IHDR; work around
+  `DeviceLoader.LoadDevices()` ignoring custom `.device` assets and declare synthetic profiles as
+  inset-free. Also: measure before claiming a visual defect, never read PNGs back into an agent's
+  context, treat the editor as a single-writer resource, and audit the editor side effects
+  (`UnityConnectSettings`, TMP fallbacks, `EditorSettings`, IDE files) that builds cause on their own.
+
+### 🧠 Skill memory
+- Six entries covering screenshot truthfulness, measuring instead of eyeballing, one-editor agent
+  orchestration, the CanvasScaler/safe-area contract, builder-versus-hand-authored scene ownership,
+  and the Input System port of Android Back.
+
+---
+
 ## [3.2.0] — 2026-07-02
 
 ### 🔧 Improvements (independent audit follow-up)
