@@ -48,17 +48,28 @@ Implement exactly one task page at a time, verify it, and record evidence withou
 - Do not change architecture boundaries, packages, scene/build settings, or serialized contracts unless the task page explicitly allows it.
 - Do not revert user or other-agent changes.
 - Do not write universal lessons to `SKILL_MEMORY.md` unless the orchestrator applies the skill memory rules after verification.
+- Do not create or retain Editor builders/setup scripts that generate, rewire, or save scenes,
+  prefabs, UI, or configuration assets.
+- Do not add a test that fails the Test Value Gate or an abstraction whose only purpose is enabling a
+  low-value test.
+- Do not implement a common nontrivial system from scratch after a NeoxiderTools/local miss until the
+  task records the external-solution search and candidate decision. Tiny adapters and genuinely
+  game-specific rules are exempt.
 
 ## Workflow
 
 1. Re-read the task page, linked feature page, and current files before editing.
 2. Confirm write scope and detect concurrent changes.
-3. Implement the smallest change satisfying the task acceptance criteria.
-4. Add required test seam, EditMode test, PlayMode test, scenario runner, input injection hook, or QA hook before claiming runtime behavior is verified.
-5. Run compile/import readiness, console checks, declared driver, required tests, and screenshots when required.
-6. Review screenshots for nonblank/correct state/no incoherent overlap.
-7. Update the task page with touched files, verification driver result, test results, screenshots, skipped checks with reasons, and remaining risk.
-8. Mark the task done only when acceptance criteria and required verification pass.
+3. Confirm the approved reuse decision. If a common nontrivial gap remains after local/Unity/Neo
+   discovery, apply the external solution reuse gate before implementing the smallest safe change.
+4. Apply the Test Value Gate. Add only the smallest valuable test seam, focused test, scenario runner,
+   input hook, or QA hook before claiming runtime behavior is verified.
+5. Keep every new file in the feature-owned runtime/Editor/test/typed-asset location defined by
+   [tools/project-structure.md](../tools/project-structure.md).
+6. Run compile/import readiness, console checks, declared driver, required tests, and screenshots when required.
+7. Review screenshots for nonblank/correct state/no incoherent overlap.
+8. Update the task page with touched files, verification driver result, test results, screenshots, skipped checks with reasons, and remaining risk.
+9. Mark the task done only when acceptance criteria and required verification pass.
 
 ## Done Gate
 

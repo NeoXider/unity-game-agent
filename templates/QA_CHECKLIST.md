@@ -17,6 +17,8 @@
 - [ ] Required test data/assets are present.
 - [ ] Verification Driver is declared in the Feature/Task.
 - [ ] Required EditMode/PlayMode tests are listed or explicitly marked Not Needed.
+- [ ] Every listed test passes the Test Value Gate and protects a named regression or contract.
+- [ ] Project structure audit has no Editor Builder or test mutation errors.
 - [ ] Screenshot requirement is declared.
 - [ ] Max QA Attempts is 2 before degraded report and continue.
 
@@ -24,6 +26,8 @@
 
 - Driver: CompileConsole | PassivePlayMode | ScreenshotOnly | EditModeTest | PlayModeTest | ScenarioRunner | InputInjection | BuildOrBrowserE2E | ManualOnly
 - Tests Required: EditMode | PlayMode | Both | Not Needed
+- Regression/contract protected: [named behavior] | Not Needed
+- Test Value Gate: pass | rejected; reason: [why]
 - Screenshot Required: yes | no | on-failure
 - Automation Gap: none | [missing hook/test/driver task]
 - Interactive behavior: yes | no

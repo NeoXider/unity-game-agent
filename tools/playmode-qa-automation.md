@@ -29,11 +29,47 @@ Every standard/pro Feature and Task must declare:
 
 If a feature requires player input, UI clicks, collision, spawning, scene transitions, pause, restart, or runtime state changes, `ScreenshotOnly` is not sufficient.
 
+## Test Value Gate
+
+Write a test only when all answers are concrete:
+
+1. What player-facing behavior, domain invariant, serialization contract, or previously observed
+   defect can regress?
+2. What production action is exercised?
+3. What observable output/state proves success without repeating the production algorithm?
+4. Why is this cheaper and more stable than a focused Play Mode scenario, validator, compile check,
+   screenshot measurement, or manual inspection?
+
+If these cannot be answered, set `Tests Required: Not Needed` and use the appropriate verification
+driver. `pro` increases evidence quality; it does not create a test quota.
+
+Valuable tests commonly cover deterministic rules, money/reward idempotency, save/reload recovery,
+state transitions, platform input, destructive regressions, and critical scene wiring.
+
+Reject or consolidate tests that only:
+
+- assert a class, private field, method name, folder, or default constant exists;
+- use reflection to drive private implementation when a public behavior can be exercised;
+- assert `DoesNotThrow`, non-null references, or exact serialized values without a meaningful outcome;
+- duplicate the same contract across model, service, presenter, scene, and end-to-end fixtures;
+- mirror the production algorithm as the expected-value oracle;
+- test Unity, a third-party package, or framework behavior owned outside the project;
+- scan source text/YAML as a Unity test when a read-only audit script can enforce the rule faster;
+- lock exact RectTransform coordinates, object names, or visual composition as a substitute for
+  measured multi-resolution visual QA;
+- invoke an Editor builder, save/reload a user's open scene, write prefabs/assets, or otherwise mutate
+  project content during a test.
+
+Structural hygiene belongs in a read-only project audit/CI script. Visual composition belongs in
+measured screenshots or a narrow invariant test (safe-area containment, no overlap, required sprite
+assigned), not hundreds of pixel-lock assertions.
+
 ## Developer Responsibilities
 
-When tests or automation are required, Developer must add the smallest test seam needed:
+When tests or automation pass the Test Value Gate, Developer adds the smallest seam needed:
 
-- `IInputProvider`, fake service, test prefab, test scene, deterministic seed, test-only harness, or Editor-only QA hook.
+- Existing public APIs, deterministic seed, focused fake, test prefab/scene, scenario runner, or input
+  seam. Do not add an interface/service solely to make a low-value test possible.
 - EditMode tests for pure logic.
 - PlayMode tests for scene/runtime behavior.
 - Scenario runner or custom MCP tool for multi-step flows when PlayMode tests are awkward but runtime driving is needed.

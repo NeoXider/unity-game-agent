@@ -25,6 +25,9 @@
 - Scene save after every batch.
 - Screenshots after each batch (not each feature).
 - DEV_STATE update after each batch.
+- The universal feature-owned folder structure is still required. Fast mode permits fewer folders,
+  not mixed runtime/editor/test code or loose Prefabs/Settings/Sprites.
+- Author scenes and prefabs directly through Unity/MCP. Editor builders are forbidden.
 
 ### VERIFY
 - Play Mode + `read_console` + final screenshot — **required before handoff**.
@@ -37,10 +40,13 @@
 - Components + SO. Fast scripts, few abstractions.
 - **Singletons OK** (`GameManager.Instance`, `AudioManager.Instance`).
 - `[SerializeField]` for Inspector fields.
-- No C# namespaces.
+- Do not add namespaces to new project scripts; keep them in the global namespace. Preserve existing
+  namespaced code when editing it, but do not expand the namespace pattern or migrate unrelated files.
 - No XML docs (except non-obvious).
 - Magic numbers OK **except settings** (those in SO always).
-- **No DI/ServiceLocator** without clear reason.
+- **No DI/ServiceLocator** without a concrete dependency/lifetime problem.
+- Add a focused test only for a named high-risk regression that passes the Test Value Gate; fast mode
+  has no test quota.
 
 ## Logging
 - **No `//` comments.** Use `Debug.Log` instead — key events only.
@@ -57,6 +63,8 @@
 - Direct `[SerializeField]` references between components.
 - No ServiceLocator, no DI.
 - Manual scene setup (Unity Editor / MCP).
+- Follow [../tools/project-structure.md](../tools/project-structure.md) even for a one-scene prototype.
+- Do not create Editor setup/build scripts to compensate for moving fast.
 
 ## Input
 - Default: `Old` or `Both`.
@@ -75,6 +83,7 @@
 - [ ] 1–3 questions → minimal outline
 - [ ] 2–3 big stages, no detailed checklists
 - [ ] Implement in batches (2–4 features), all data in SO
+- [ ] Runtime, Editor, tests, Prefabs, Settings, and Sprites are in their owned folders; no Editor builders
 - [ ] Compile check after each feature
 - [ ] Play Mode + `read_console` + screenshot after each batch
 - [ ] Before handoff: Play Mode + `read_console` + final screenshot

@@ -48,7 +48,8 @@ PM   {PM, Canvas, CanvasScaler, GraphicRaycaster}   // screen manager
   at Play** — it is already in the scene; at Play only pieces spawn into `Pieces`.
 - **`PM`** — separate Canvas, children = pages. One active; the rest `inactive`.
 - Game world (field/piece sprites) — in world space under `Main Camera`; UI — in `PM`/`Canvas bg`.
-- **Editor builders** that assembled scene statics (cells, frames) are **one-shot**, deleted afterward.
+- **No tracked Editor builders.** Assemble scene statics directly through Unity/MCP. If a temporary
+  migration is unavoidable, remove it before handoff and verify the serialized result.
 
 ## Screens: NeoxiderPages (PM / UIPage)
 
@@ -94,9 +95,13 @@ a new Canvas.
 
 ```text
 Assets/_source/
-  Scripts/Runtime/   gameplay scripts   (>10 files -> functional folders Gameplay/ Config/ UI/)
-  Scripts/Editor/    editor tools       (one-shot builders deleted afterward)
-  Prefabs/  Sprites/  Audio/  TTF/  Docs/
-  Settings/          game SO configs
-Assets/Scenes/SampleScene.unity
+  Scripts/<Feature>/<CodeArea>/
+  Editor/<Feature>/                 read-only tooling/inspectors; no builders
+  Scripts/Tests/<Feature>/EditMode|PlayMode/
+  Prefabs/<Feature>/
+  Settings/<Feature>/
+  Sprites/<FeatureOrScreen>/
+  Materials/ Animations/ Audio/ Models/ Textures/ Fonts/ Scenes/ Docs/
 ```
+
+The complete all-mode contract is [../../tools/project-structure.md](../../tools/project-structure.md).

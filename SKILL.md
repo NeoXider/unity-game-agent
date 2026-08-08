@@ -27,6 +27,13 @@ Act as a senior Unity C# game development agent that makes working, verified cha
 - Prefer adapters, extension points, and small isolated components over rewriting managers/controllers.
 - Use `rg` / `rg --files` for project search. Reuse project-local systems, installed packages, Unity built-in APIs, prefabs, ScriptableObjects, editor tools, scenes, and tests before building new framework code.
 - Do not revert user changes or run destructive git commands unless explicitly requested.
+- Keep runtime code, editor code, tests, and typed assets separated in every mode, including `fast`
+  and Quick Fix. Follow [tools/project-structure.md](tools/project-structure.md).
+- Tracked Editor builders are forbidden. Do not create or keep code that generates, rebuilds,
+  rewires, or saves gameplay scenes, prefabs, UI, or configuration assets. Author through Unity/MCP;
+  use read-only validators for repeatable enforcement.
+- Development mode controls verification depth and planning cadence, not architecture complexity.
+  `pro` does not imply Clean Architecture, DI, ServiceLocator, interfaces, services, or extra layers.
 
 ## Reference And Reuse Discovery
 
@@ -36,8 +43,17 @@ Search in this order:
 
 1. Existing project code, prefabs, scenes, ScriptableObjects, tests, packages, samples, and Docs/.
 2. Unity built-in APIs, installed packages, official Unity samples, and package documentation.
-3. Maintained external options: UPM/GitHub packages, open-source Unity games, reusable feature slices, Unity Asset Store packages, free/open asset packs, shaders, controllers, UI kits, AI/navigation/combat/dialogue/inventory examples, and other credible source repos.
-4. Public examples from shipped games, tutorials, talks, reverse-engineering notes, and technical breakdowns as behavior/design references when direct reuse is not appropriate.
+3. NeoxiderTools package source/docs/samples when the project uses the package or the selected pattern
+   makes it the default.
+4. If no suitable Neo/local/Unity solution exists and the problem is common and nontrivial, search
+   maintained GitHub/UPM repositories, official package sources, open-source Unity games, reusable
+   feature slices, and reputable Asset Store options before writing custom code.
+5. Use shipped-game examples, technical articles, talks, and breakdowns as reference-only evidence
+   when direct reuse is inappropriate.
+
+The external search in step 4 is mandatory unless the change is obviously tiny, a narrow adapter, or
+genuinely specific to this game's rules. Apply [tools/external-solution-reuse.md](tools/external-solution-reuse.md),
+including compatibility, maintenance, license, dependency, performance, and rollback checks.
 
 Selection rules:
 
@@ -59,25 +75,31 @@ Important policy meanings:
 - `strict_preflight: true`: do not mutate Unity state until readiness, target scene/context, console baseline, and task-relevant capabilities are known.
 - `strict_preflight: false`: allowed only for narrow file-only edits or explicit user quick fixes. Still avoid destructive scene, package, and build changes without context.
 - `visual_verification: true`: visual scene, UI, camera, material, animation, lighting, prefab, and VFX changes need a screenshot or equivalent visual capture.
-- `final_playmode_tests_standard_pro: true`: standard and pro tasks must run Play Mode before closing when MCP or equivalent Unity automation is available.
+- `final_playmode_tests_standard_pro: "when_runtime_or_visual_behavior_changes"`: run Play Mode for changed runtime/player behavior; record a concrete skip reason for code/docs/editor-only work.
 - `qa_verification_driver_required: true`: every standard/pro Feature and Task declares how runtime behavior will be driven and verified.
-- `qa_tests_required_standard_pro: true`: write and run EditMode/PlayMode tests for standard/pro tasks that involve logic, runtime behavior, or risky flows.
+- `qa_tests_required_standard_pro: "risk_based_value_gate"`: add/run tests only when they protect a named behavior or contract and pass the Test Value Gate; `Not Needed` is valid with a reason.
 - `qa_screenshot_evidence_required: true`: visual/runtime-visible checks need screenshot evidence linked from task/feature/QA docs.
 - `interactive_qa_requires_runtime_driver: true`: screenshot-only checks cannot pass interactive gameplay, input, UI flow, collision, spawn, scene transition, pause, or restart behavior.
 - `qa_max_attempts_before_degraded_report` / `qa_continue_after_degraded_report` / `qa_degraded_report_required`: bounded QA — 2 serious attempts per required check, then a degraded report + follow-up task and continue. Canonical rules and report fields: [tools/playmode-qa-automation.md](tools/playmode-qa-automation.md) ("Bounded QA Attempts").
 - `auto_install_mcp_in_manifest: true`: if MCP is missing in a Unity project, add the adapter package to `Packages/manifest.json` before falling back to file-only mode.
 - `neoxider_tools: "ask"`: ask before using NeoxiderTools systems when the project/task could benefit from them.
 - `external_reference_discovery: true`: search local and credible external ready solutions before planning nontrivial implementation work.
+- `external_solution_search_after_neoxider_miss: "required_for_common_nontrivial_tasks"`: after a
+  NeoxiderTools/local/Unity miss, search credible internet sources before custom implementation;
+  tiny or genuinely project-specific work is exempt.
+- `namespace_policy: "fast_standard_global_pro_project_driven"`: new `fast` and `standard` project
+  scripts use the global namespace; `pro` follows project architecture and may use product/feature
+  namespaces. Preserve existing namespaces instead of performing collateral migrations.
 - `no_reinventing_without_reason: true`: prefer libraries, open-source feature slices, samples, reusable assets, and reference implementations unless custom code is smaller, safer, or explicitly requested.
 - `lead_dev_qa_workflow_standard_pro: true`: standard/pro work uses Lead planning pages, Developer task execution, then Agent QA before advancing.
 - `task_pages_standard_pro: true`: standard/pro features must have one file per task under `Docs/Tasks/`.
-- `qa_agent_duplicate_checklist: true`: each standard/pro feature gets `Docs/QA/` and duplicate `Docs/QA_AGENT/` checklists.
+- `qa_agent_duplicate_checklist: "when_independent_qa_runs"`: create `QA_AGENT` only for an actual independent QA pass.
 - `auto_advance_after_self_qa: true`: after Agent QA passes, or after degraded QA is reported with a follow-up task, continue to the next task/feature without waiting for human approval unless blocked or ambiguous.
 - `skill_memory_enabled: true`: use `SKILL_MEMORY.md` for universal improvements to this skill, separate from project memory.
 - `skill_memory_write_policy: "auto_after_verified_task"`: append a memory entry after a verified task when a reusable skill-level lesson was found.
 - `skill_memory_scope: "universal_only"`: store only lessons that apply across Unity projects, not project-local decisions.
 - `role_subskills_enabled: true`: load compact role files from `roles/` instead of expanding the main orchestrator.
-- `mandatory_subagents_standard_pro: true`: when subagent tools are available, standard/pro role passes must run as subagents.
+- `mandatory_subagents_standard_pro: "when_useful_and_available"`: use subagents for genuinely independent role work, not as a quota.
 - `subagent_fallback_policy: "only_when_tools_unavailable"`: local role switching is allowed only when subagent tools are unavailable or blocked.
 - `gd_before_lead: true`: Game Designer role prepares/updates `GAME_DESIGN.md` before Lead planning when design is incomplete or gameplay changes are broad.
 - `designer_before_lead_when_visual: true`: Designer role prepares/updates `UI_BRIEF.md` before Lead planning when UI/UX/visual work is involved.
@@ -116,6 +138,7 @@ and QA policy always still apply. To add a pattern, see [patterns/README.md](pat
 - Unity MCP install/enable: [mcp-commands.md](mcp-commands.md). Tool usage: read the live MCP tool
   schemas and, if installed, the dedicated `unity-mcp-skill` — do not rely on a static command catalog.
 - NeoxiderTools reuse rules: [tools/neoxider-tools-reuse.md](tools/neoxider-tools-reuse.md)
+- External solution reuse gate: [tools/external-solution-reuse.md](tools/external-solution-reuse.md)
 - Mode cadences: [POLICY_MATRIX.md](POLICY_MATRIX.md) and `modes/<fast|standard|pro>.md`
 - Docs/templates: [reference.md](reference.md) and `templates/`
 - C# examples: [tools/code-writing.md](tools/code-writing.md)
@@ -127,6 +150,8 @@ and QA policy always still apply. To add a pattern, see [patterns/README.md](pat
 - Role subskills: [roles/game-designer.md](roles/game-designer.md), [roles/designer.md](roles/designer.md), [roles/lead.md](roles/lead.md), [roles/developer.md](roles/developer.md), [roles/qa.md](roles/qa.md)
 - Standard/Pro feature docs generator: [tools/new-feature-docs.ps1](tools/new-feature-docs.ps1)
 - Script smoke tests: [tools/test-scripts.ps1](tools/test-scripts.ps1)
+- Universal project structure and Editor Builder ban: [tools/project-structure.md](tools/project-structure.md)
+- Read-only project structure audit: [tools/audit-project-structure.ps1](tools/audit-project-structure.ps1)
 - Ready prompts: [PROMPTS.md](PROMPTS.md)
 
 Load references progressively. Do not load command catalogs or long examples unless the active task needs them.
@@ -169,7 +194,9 @@ Subagent rules:
 - Do not delegate the orchestrator's accountability: read role outputs, check contradictions, and choose the next step.
 - If subagents are unavailable or blocked, record degraded mode in `DEV_STATE`/`DEV_LOG`, then execute the role locally by following the role file.
 - For `fast`, Quick Fix, narrow file-only edits, or explicitly free-form/direct tasks, role subagents are optional and usually skipped.
-- Role outputs go to `Docs/*`. Universal role improvements may go to `SKILL_MEMORY.md` only under the skill memory rules.
+- Role outputs go to the resolved docs root. Reuse the existing project-root `Docs/` or authoring-root
+  `Assets/_source/Docs/`; never create a competing second tree. Universal role improvements may go
+  to `SKILL_MEMORY.md` only under the skill memory rules.
 
 ## Session Routing
 
@@ -181,10 +208,10 @@ Start by classifying the user request.
    -> Use Quick Fix. Do not create Docs/ or ask mode questions.
 
 2. Existing tracked agent project?
-   Docs/DEV_PROFILE.json or Docs/DEV_STATE.md exists.
-   -> Resume from Docs/.
+   DEV_PROFILE.json or DEV_STATE.md exists in project-root Docs/ or the existing authoring-root Docs/.
+   -> Resolve that directory as DOCS_ROOT and resume from it.
 
-3. Existing Unity project without Docs/?
+3. Existing Unity project without a canonical docs root?
    Assets/ and ProjectSettings/ exist.
    -> Ask whether user wants full game pipeline, direct feature work, or quick fix.
 
@@ -194,11 +221,13 @@ Start by classifying the user request.
 
 After classifying, **select a development pattern** (see Development Patterns): detect from the project,
 or match the request for a new project. A selected pattern (e.g. `casual-neoxider`) sets the stack
-defaults and reuse posture for the rest of the session; record it in `Docs/DEV_PROFILE.json`.
+defaults and reuse posture for the rest of the session; record it in `DOCS_ROOT/DEV_PROFILE.json`.
 
 Defaults:
 
-- Mode: `standard` for "make a game"; `fast` for prototypes/simple games; `pro` for scalable architecture, tests, or larger systems.
+- Mode: `standard` for "make a game"; `fast` for prototypes/simple games; `pro` for stronger
+  risk control, long-lived work, platform/build validation, and evidence. Select architecture from
+  the project and problem, never from the mode name.
 - Platform: PC unless mobile/WebGL is implied.
 - UI: detect existing stack first; default to UI Toolkit for new projects.
 - MCP: assume available. If unavailable, install the adapter in `Packages/manifest.json` when allowed, let Unity resolve packages, retry MCP, and only then degrade to `file_only` with limitations.
@@ -217,6 +246,8 @@ Required facts:
 - active or requested scene; load/create/switch scenes when the task clearly implies the target;
 - baseline console errors and warnings before changes;
 - relevant project architecture, existing scenes, prefabs, ScriptableObjects, editor tools, and tests;
+- project-owned authoring root and the runtime/editor/test/typed-asset boundaries from
+  [tools/project-structure.md](tools/project-structure.md), including any forbidden Editor builders;
 - task-relevant capabilities: UI Toolkit, uGUI, TMP, Input System, URP/HDRP/Built-in, Cinemachine, ProBuilder, tests, build support, NeoxiderTools;
 - status classification: `READY`, `BUSY`, `BLOCKED`, or `DEGRADED`.
 
@@ -289,6 +320,14 @@ Do not overwrite concurrent user edits. If a hash/version changed, re-read the f
 - Cache required components in `Awake` or explicit initialization.
 - Avoid new global singletons unless the project already uses them consistently.
 - Keep `Update` loops small; move decisions into named methods.
+- In `fast` and `standard`, keep new project scripts in the global namespace. In `pro`, follow the
+  project's namespace convention. Never strip an existing namespace as collateral migration.
+
+### Test Value Gate
+
+Before adding a test, identify the real defect or contract it detects and the observable assertion.
+Do not add tests merely because the mode is `pro`, a class exists, or coverage can be increased.
+Follow the test-value rules in [tools/playmode-qa-automation.md](tools/playmode-qa-automation.md).
 
 ## Pipeline
 
@@ -310,13 +349,13 @@ No Docs/ bootstrap, no mode selection, no full plan.
 
 ### Resume
 
-When Docs/ exists:
+When a canonical docs root exists, resolve it once as `DOCS_ROOT`:
 
 ```text
-1. Read Docs/DEV_PROFILE.json.
-2. Read Docs/DEV_CONFIG.md, GAME_DESIGN.md, DEV_STATE.md, AGENT_MEMORY.md, DEV_PLAN.md.
+1. Read `DOCS_ROOT/DEV_PROFILE.json`.
+2. Read `DEV_CONFIG.md`, `GAME_DESIGN.md`, `DEV_STATE.md`, `AGENT_MEMORY.md`, and `DEV_PLAN.md` from `DOCS_ROOT`.
 3. Read ARCHITECTURE.md only for standard/pro or architecture work.
-4. For standard/pro, read the active feature page, active task page, `Docs/QA/` checklist, and `Docs/QA_AGENT/` duplicate when referenced by DEV_STATE/DEV_PLAN.
+4. For standard/pro, read referenced active feature/task/QA records and `QA_AGENT/` only when it exists for a scheduled independent pass.
 5. Create the next iteration log/screenshot folder if continuing a feature.
 6. Run preflight.
 7. Continue the next unchecked or in-progress task.
@@ -371,8 +410,8 @@ Lead phase:
 6. Create one task page per implementation task in `Docs/Tasks/TASK-NNN-slug.md` from `templates/TASK.md`.
 7. For each Feature and Task, declare `Verification Driver`, `Tests Required`, `Screenshot Required`, and any `Automation Gap` using [tools/playmode-qa-automation.md](tools/playmode-qa-automation.md).
 8. Link every task page from its feature page and from `DEV_PLAN.md`.
-9. Create `Docs/QA/FEAT-NNN-slug-qa.md` from `templates/QA_CHECKLIST.md`.
-10. Create a duplicate independent checklist at `Docs/QA_AGENT/FEAT-NNN-slug-qa.md` from `templates/QA_AGENT_CHECKLIST.md`.
+9. For tracked/risky work, create `DOCS_ROOT/QA/FEAT-NNN-slug-qa.md` from `templates/QA_CHECKLIST.md`.
+10. Create `DOCS_ROOT/QA_AGENT/FEAT-NNN-slug-qa.md` only when an independent QA pass is scheduled; pass `-CreateIndependentQa` to the generator.
 11. Ask the user only for decisions that materially change product behavior, require paid/large external assets, alter architecture boundaries, or cannot be inferred safely. Otherwise proceed autonomously.
 
 Developer phase:
@@ -380,7 +419,10 @@ Developer phase:
 1. Pick the next unchecked task from `DEV_PLAN.md` and its task page.
 2. Mark it in progress in `Docs/DEV_STATE.md`, the task page, and the current iteration log.
 3. Implement the smallest change that satisfies the task acceptance criteria.
-4. Add required EditMode/PlayMode tests, scenario runner, input seam, or QA hook declared by the task. If the automation hook is missing, create/fix it before claiming the task is verified.
+4. Apply the Test Value Gate, then add only the smallest valuable EditMode/PlayMode test, scenario
+   runner, input seam, or QA hook required by the task. Do not create an abstraction solely for a
+   low-value test. If a required runtime driver is missing, create/fix the narrow seam before claiming
+   the task is verified.
 5. After each task, run compile/import readiness, console checks, declared tests, and screenshot capture/review when required.
 6. Record touched files, verification driver, test results, screenshots/logs, skipped checks with reasons, and remaining risk in the task page and `DEV_LOG`.
 7. Mark the task done only when its acceptance criteria and verification steps pass.
@@ -389,7 +431,7 @@ Feature QA and auto-advance:
 
 1. When all task pages for a feature are done, Developer/orchestrator runs feature self-check: declared verification driver, Play Mode, console during Play Mode, changed behavior check, required tests, and screenshot capture/review when required.
 2. Developer/orchestrator fills the Agent result column in `Docs/QA/FEAT-NNN-slug-qa.md`.
-3. Run an independent QA role pass against `Docs/QA_AGENT/FEAT-NNN-slug-qa.md`. Use a QA subagent when available; otherwise switch context mentally, follow only the checklist and player-facing expected behavior, and avoid relying on implementation assumptions.
+3. For tracked/risky work that warrants independent QA, create `Docs/QA_AGENT/FEAT-NNN-slug-qa.md` and run the QA role pass. Use a QA subagent when useful and available; otherwise perform a clearly separated player-facing pass. Do not create a duplicate checklist when no independent pass will run.
 4. If QA passes, mark the feature done in the feature page, `DEV_PLAN.md`, `DEV_STATE.md`, and `DEV_LOG`, then continue to the next task/feature automatically.
 5. If QA finds an implementation defect, create or reopen a task page for the defect, fix it, and rerun the affected QA check.
 6. If QA cannot execute a required check, apply the bounded-QA policy from [tools/playmode-qa-automation.md](tools/playmode-qa-automation.md): two serious attempts, then fill a degraded QA report with a follow-up defect/automation-gap task and continue to the next task/feature.
@@ -402,15 +444,18 @@ Before closing any Unity-changing task:
 - Always run final console check when `final_console_check` is enabled.
 - For C# changes, wait for import/compile and report new compile/runtime errors.
 - For visual work, take and review a screenshot when `visual_verification` is enabled.
-- For gameplay/system changes in standard/pro, enter Play Mode before closing the task when MCP or equivalent automation is available.
+- For runtime/player-visible gameplay or system changes in standard/pro, enter Play Mode before closing the task when MCP or equivalent automation is available. For pure docs, read-only audits, or editor-only changes with no runtime effect, record why Play Mode is not relevant.
 - During Play Mode, check console while running, then verify the changed mechanic/UI/scene/camera behavior directly.
 - For interactive behavior, use the declared runtime driver. Do not accept screenshot-only verification for player input, UI flows, collision, spawn, scene transition, pause, restart, or runtime state changes.
-- For required tests, write and run EditMode/PlayMode tests. If tests cannot run, mark verification `degraded` and explain why.
+- For required tests, run the smallest focused set that proves the changed contract. Run broader
+  suites at integration/release milestones or when the blast radius justifies them. If tests cannot
+  run, mark verification `degraded` and explain why.
 - For QA verification failures caused by unavailable/failing tooling, make at most two serious attempts, then record a degraded report with skipped checks and continue with a follow-up task.
 - For screenshot evidence, capture, review, and link the image. Screenshots must be nonblank, correctly framed, and show the expected state.
 - For mechanics, verify runtime state, inputs/outputs, reset/restart, pause/time scale when relevant, scene reload behavior, and object lifecycle.
 - For physics/cameras, verify layers, colliders, Rigidbody/Rigidbody2D settings, time scale, and camera framing when relevant.
-- For pro mode, run relevant EditMode/PlayMode tests when available.
+- For pro mode, use risk-based focused tests plus integration/build/performance checks where the
+  change warrants them; do not require a full suite or new test for every task by default.
 - For build settings, platform, scene-in-build, serialization, package, or player-impacting changes, run build validation when practical.
 - If a check is skipped because tooling is unavailable, project lacks tests, or policy/user disabled it, report the reason.
 
@@ -436,7 +481,7 @@ Use [POLICY_MATRIX.md](POLICY_MATRIX.md) as the source of truth for cadence. Loa
 Docs rules:
 
 - Project agent memory files live under `Docs/`, never project root. Skill-level memory lives only in this skill's `SKILL_MEMORY.md`.
-- For standard/pro, create and maintain `Docs/Features/`, `Docs/Tasks/`, `Docs/QA/`, and `Docs/QA_AGENT/`.
+- For tracked/risky standard/pro work, create and maintain feature/task/QA records under the resolved docs root. Create `QA_AGENT/` only when an independent QA pass actually runs.
 - `DEV_STATE.md` stays small and current.
 - `DEV_LOG/iteration-NN-YYYYMMDD-HHMM.md` uses datetime in the filename.
 - Screenshots go under `Docs/Screenshots/iter-NN/`.
@@ -455,7 +500,12 @@ Docs rules:
 - Reuse existing audio, save, settings, inventory, quest, economy, UI navigation, and progression systems before adding new ones.
 - Discover packages before adding libraries. Install only for a concrete need or explicit user request.
 - Prefer reuse: Unity built-ins, installed packages, project systems, NeoxiderTools if opted in, then new code.
-- Keep fast mode simple, standard mode component/event-oriented, and pro mode testable with interfaces/services where justified.
+- When NeoxiderTools/local/Unity discovery has no fit, search credible internet sources before custom
+  code for every common nontrivial problem; skip only tiny or genuinely game-specific work. Apply
+  the external solution reuse gate and record why candidates were reused or rejected.
+- Keep every mode as simple as the problem allows. Add interfaces/services only when there are real
+  multiple implementations, a dependency boundary, or a proven testing/integration need; `pro`
+  alone is never justification.
 
 ## Error Recovery
 
@@ -470,10 +520,18 @@ Docs rules:
 - Start full-cycle work without a plan.
 - Skip preflight before Unity mutations in strict mode.
 - Skip final console check.
-- Close standard/pro tasks without Play Mode verification when tooling is available.
+- Add or retain an Editor Builder that generates, rewires, or saves project scenes, prefabs, UI, or
+  configuration assets.
+- Mix runtime scripts, editor scripts, tests, prefabs, settings, sprites, or other non-code assets in
+  the same folder, even in `fast` mode.
+- Add tautological, reflection-heavy, source-text, exact-layout, no-throw, or package-behavior tests
+  without a named regression/contract and an observable failure signal.
+- Close runtime/player-visible standard/pro tasks without Play Mode verification when tooling is available and no concrete skip reason applies.
 - Report visual work as done without reviewing a screenshot.
 - Hardcode settings that belong in ScriptableObjects.
 - Add packages before discovery.
+- Write a common nontrivial system after a NeoxiderTools/local miss without searching and evaluating
+  credible internet solutions first.
 - Force NeoxiderTools reuse without user opt-in (unless a selected/detected development pattern declares it the stack default, e.g. casual-neoxider).
 - Impose a new folder structure over an existing project convention.
 - Trust sub-agent or tool output without verification.

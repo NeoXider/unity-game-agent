@@ -23,6 +23,7 @@ Convert approved design inputs into decision-complete implementation structure: 
 - `Docs/GAME_DESIGN.md`, `Docs/UI_BRIEF.md` when visual work exists, `Docs/DEV_CONFIG.md`, `Docs/DEV_PROFILE.json`, `Docs/AGENT_MEMORY.md`, `Docs/DEV_STATE.md`.
 - Existing `Docs/DEV_PLAN.md`, `Docs/Features/`, `Docs/Tasks/`, `Docs/QA/`, `Docs/QA_AGENT/`.
 - Unity preflight summary, package/capability discovery, reference/reuse discovery, relevant architecture docs, and [tools/playmode-qa-automation.md](../tools/playmode-qa-automation.md).
+- Existing project structure and [tools/project-structure.md](../tools/project-structure.md).
 
 ## Outputs
 
@@ -48,15 +49,25 @@ Convert approved design inputs into decision-complete implementation structure: 
 - Do not mutate scenes, prefabs, packages, build settings, or assets except documentation.
 - Do not leave tasks with unresolved implementation decisions that Developer must guess.
 - Do not assign overlapping write ownership to parallel Developer subagents.
+- Do not plan Editor builders or mode-driven Clean/DI/service/interface layers.
+- Do not declare tests by quota. Every requested test must pass the Test Value Gate and name the
+  regression/contract it protects.
+- Do not plan a custom common nontrivial system after a local/Unity/NeoxiderTools miss without applying
+  the external solution reuse gate and recording candidate decisions.
 
 ## Workflow
 
 1. Verify Game Designer and Designer inputs are sufficient. If not, route back before planning implementation.
 2. Break work into Epics, SubEpics, Features, and task pages sized for one focused Developer pass.
-3. For each Feature, define purpose, affected systems/files, expected player behavior, acceptance criteria, verification driver, tests required, screenshot requirement, QA checklist, QA-agent duplicate, and rollback risk.
-4. Prefer `tools/new-feature-docs.ps1` to generate feature/task/QA files, then fill them with task-specific content.
-5. Assign each task a narrow write scope, expected files/modules, checks, and evidence requirements.
-6. Update `DEV_PLAN`, `DEV_STATE`, and `DEV_LOG` so Developer can take the next unchecked task without asking planning questions.
+3. For each Feature, define purpose, affected systems/files, expected player behavior, reuse candidates,
+   acceptance criteria, verification driver, tests required, screenshot requirement, QA checklist,
+   QA-agent duplicate when needed, and rollback risk.
+4. Confirm runtime, Editor, tests, Prefabs, Settings, Sprites, and other typed assets have feature
+   ownership in every mode. Reject Editor builders and mixed-folder plans.
+5. Prefer `tools/new-feature-docs.ps1` for tracked nontrivial features, then fill only the files the
+   workflow actually needs.
+6. Assign each task a narrow write scope, expected files/modules, checks, and evidence requirements.
+7. Update `DEV_PLAN`, `DEV_STATE`, and `DEV_LOG` so Developer can take the next unchecked task without asking planning questions.
 
 ## Done Gate
 

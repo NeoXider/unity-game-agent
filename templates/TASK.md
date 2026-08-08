@@ -45,6 +45,8 @@
 
 - Verification Driver: CompileConsole | PassivePlayMode | ScreenshotOnly | EditModeTest | PlayModeTest | ScenarioRunner | InputInjection | BuildOrBrowserE2E | ManualOnly
 - Tests Required: EditMode | PlayMode | Both | Not Needed
+- Regression/contract protected by each test: [named behavior and realistic failure] | Not Needed
+- Test Value Gate: pass | rejected; reason: [why this test provides signal beyond implementation details]
 - Screenshot Required: yes | no | on-failure
 - Automation Gap: none | [missing hook/test/driver task]
 - Max QA Attempts: 2 before degraded report and continue
@@ -57,6 +59,8 @@
 - [ ] PlayMode tests: pending or skipped reason
 - [ ] Screenshot: pending or skipped reason
 - [ ] Tests/build validation: pending or skipped reason
+- [ ] Project structure audit: pending or skipped reason
+- [ ] No tracked Editor Builder or test-side asset/scene mutation: pending
 
 ## Evidence
 

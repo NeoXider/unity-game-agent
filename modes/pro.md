@@ -1,147 +1,115 @@
 # Mode: Pro
 
-**For:** Scalable project, long development, architecture, tests, full state tracking.
+**For:** Long-lived or high-risk Unity work that needs stronger evidence, recovery behavior,
+platform/build validation, and durable project tracking.
 
-## Scope Limits (guidelines, not hard limits)
-- Mechanics: **6+** or systemic gameplay
-- Screens: **6+** (0 if `ui_mode = no_ui`)
-- Scenes: **5+**
-- Features per iteration: **1** (deep implementation + full check)
+`pro` changes rigor, not architecture style. It does not imply Clean Architecture, DI,
+ServiceLocator, mandatory interfaces/services, more managers, or deeper folders.
 
-## Pipeline Adjustments
+## Scope
 
-### INTAKE
-- Use mandatory role subagents when tools are available: Game Designer for game design gaps, Designer for UI/visual work, Lead for planning, Developer for tasks, QA for independent feature verification.
-- **Detailed questions:** genre, all mechanics, screens, systems, style, platform, extensibility, priorities.
-- Ask: "Autotests on by default; disable?" Record in DEV_CONFIG.
-- Ask about QA per feature and final QA checklist.
+- Any size project may use `pro` when correctness or release risk justifies it.
+- Work on one small shippable behavior or defect at a time.
+- Preserve the existing architecture unless a concrete requirement proves it insufficient.
 
-### PLAN
-- Full outline: systems, screens, data, extensibility.
-- Detailed stages with acceptance criteria per stage.
-- Library discovery with Reuse Decision Matrix (compare 1–3 options).
-- Record choices in ARCHITECTURE.md.
-- **Before each feature — ask if in doubt.** Clarify edge cases, behavior, SO structure.
+## INTAKE
 
-### BUILD
-- **Per task checks** within a feature + **per feature checks.**
-- After each task in feature: compile + `read_console`.
-- After each feature: full Play Mode + `read_console` + screenshot + try to play.
-- Scene save after every task.
-- DEV_STATE + DEV_LOG update after every task.
-- **Run autotests** after features (if enabled).
-- Before closing any task/feature, run Play Mode when MCP or equivalent automation is available, check console during Play Mode, verify changed mechanics/UI/scene behavior directly, and run relevant tests.
+- Inspect the real project, docs, packages, scenes, console, build target, tests, and current dirty
+  worktree before planning.
+- Resolve product behavior, platform constraints, save/recovery requirements, verification driver,
+  and rollback surface.
+- Ask only for decisions that materially change behavior or architecture.
 
-### VERIFY
-- Full Play Mode walkthrough of all game paths.
-- `read_console` — completely clean.
-- Run full test suite (`run_tests`).
-- Final screenshot series.
-- Performance check (`manage_profiler` if needed).
-- Final QA checklist if enabled.
+## PLAN
 
-### SHIP
-- Full report with test results, screenshot gallery, known issues.
-- All docs complete and current.
+- Break work into meaningful Features and implementation tasks; do not create one document per tiny
+  edit merely to satisfy a count.
+- Record acceptance criteria, affected ownership boundaries, runtime driver, focused tests (if any),
+  screenshot needs, build/platform checks, and rollback risk.
+- Perform reuse discovery before adding packages or framework code.
+- Treat architecture escalation as an explicit decision with evidence, not a mode default.
 
-## Code Style
-- **Architecture-first** — SO for data, services for logic, MonoBehaviour as view/entry.
-- **Interfaces** for key systems: `IDamageable`, `IInteractable`, `ISaveable`, `IInputProvider`.
-- **Namespaces** by system: `Game.Combat`, `Game.Inventory`, `Game.UI`.
-- **Services** via ServiceLocator or DI (VContainer / Zenject) when justified.
-- Data vs logic: SO for data, MonoBehaviour for Unity binding, POCO for pure logic.
-- Events / Observer for cross-system communication.
-- **XML docs required** for: classes, public methods, public fields/properties, interfaces.
-- **No plain `//` comments.** Code self-documenting. Only: `// TODO:`, `// HACK:`, `// NOTE:`.
-- `[SerializeField]`, cache components, null checks.
-- Assembly Definitions for compile speed.
-- Object pool for frequent create/destroy.
-- State machine for complex behavior.
+## BUILD
 
-## Logging
-- **No `//` comments.** Use `Debug.Log` instead — plenty, with params and state info.
-- Format: `Debug.Log($"[Feature.Class.Method] Damage={amount}, HP={_currentHealth}")`
-- `Debug.LogError` for errors, `Debug.LogWarning` for suspicious cases.
-
-## Testing
-- **Autotests ON by default.** User can disable.
-- EditMode tests for pure logic (combat math, inventory add/remove).
-- PlayMode tests for integration (scene load, interaction flow).
-- Run via MCP: `run_tests mode="EditMode"` → `get_test_job id=<id>`.
-- Tests must pass before feature is done.
-
-## Docs
-- **Everything required.** DEV_STATE, DEV_PLAN, DEV_LOG, AGENT_MEMORY, ARCHITECTURE.
-- Feature pages, task pages, agent QA checklists, and QA-agent duplicate checklists are required for every feature.
-- Full format: detailed entries with timestamps, screenshots, file lists.
-- Update on every action — not optional.
+- Follow [../tools/project-structure.md](../tools/project-structure.md) for runtime, Editor, tests,
+  Prefabs, Settings, Sprites, and other typed assets.
+- Editor builders are forbidden. Author scene/prefab/config state directly through Unity/MCP and use
+  read-only validators for repeatable checks.
+- Make the smallest change that satisfies the behavior. Preserve serialized names and package code.
+- After each meaningful code task: compile/import readiness and console comparison.
+- After each runtime/visual feature: drive the changed behavior in Play Mode, inspect the console,
+  and capture/review visual evidence when relevant.
+- Update state/log documents at meaningful verified checkpoints, not after every tool call.
 
 ## Architecture
-- Main logic in classes/services.
-- MonoBehaviour mainly as view/entry points.
-- DI/LifetimeScope when composition justifies it.
-- **Document DI decisions** in ARCHITECTURE.md: what problem, why needed, benefit, risks.
-- Architecture escalation: simple components → service layer → DI.
 
-## Input
-- Default: `New Input System`.
-- `Both`/`Old` only for confirmed legacy limits. Document reason.
+- Prefer project-local feature ownership and explicit Unity composition.
+- Use MonoBehaviours for scene behavior and plain C# objects for deterministic rules when useful.
+- Use ScriptableObjects for authored/shared configuration when they improve authoring or reuse.
+- Use direct typed references and C# events when sufficient.
+- Add an interface only for a real dependency boundary, multiple implementations, platform adapter,
+  or demonstrated test seam. Do not add one merely because a class is called a service.
+- Add DI/ServiceLocator only when the existing composition cannot safely manage real lifetimes or
+  dependency variation; document the concrete problem, alternatives, cost, and rollback.
+- Add an asmdef at a meaningful dependency/compile boundary, not for every folder.
+- Add pooling only when spawn/despawn frequency or profiling justifies it.
+- Preserve the project's input stack; `pro` does not force migration to the New Input System.
 
-## QA
-- Standard/Pro Lead-Dev-QA workflow overrides any human-wait default: agent creates `Docs/QA/` and `Docs/QA_AGENT/` checklists, fills both through self QA/independent pass, and auto-advances after pass or degraded report with follow-up task.
-- After 2 failed/unavailable attempts for the same QA check, write a degraded report with skipped checks, create a follow-up defect/automation-gap task, and continue.
-- Ask the user only for blockers that cannot be bypassed with degraded reporting, missing required assets/credentials, destructive/broad changes, or ambiguous product decisions.
-- **QA per feature:** on/off in DEV_CONFIG. If on, agent writes and fills feature QA plus QA-agent duplicate with edge cases, then auto-advances after both pass or after a degraded report with follow-up task.
-- **Final QA:** if enabled — full checklist including performance.
+## Code Quality
 
-## MCP Usage
-- Follow provider-neutral preflight from `tools/mcp-provider-neutral.md`.
-- If MCP is missing and `auto_install_mcp_in_manifest` is enabled, add the adapter package to `Packages/manifest.json`, retry MCP detection, then fall back to file-only only if still unavailable.
-- Full MCP or equivalent automation every step:
-  - before task: editor readiness + console baseline;
-  - after task: compile/import readiness + console comparison + screenshot when visual;
-  - after feature: full Play Mode check, console during Play Mode, screenshot, relevant tests.
-- Use script validation after each script edit when available.
-- Use bulk/batch capabilities for complex object systems.
-- Create prefabs immediately for reusable scene objects.
-- Use profiler/performance capabilities for major systems and final verification.
+- Follow existing namespaces; for a new long-lived project, namespace by product and feature.
+- Keep serialized fields private with `[SerializeField]` and preserve names where possible.
+- Cache required components and keep lifecycle ownership explicit.
+- Write XML docs only for public APIs and non-obvious contracts.
+- Write comments for non-obvious intent, constraints, and workarounds. Do not replace comments with
+  runtime logs.
+- Log only actionable failures or diagnostic state; no logging quota and no per-frame spam.
 
-## Checklist
+## Testing
 
-Final gate (details in the sections above):
+- Apply the Test Value Gate in [../tools/playmode-qa-automation.md](../tools/playmode-qa-automation.md).
+- Add the smallest focused test only when it protects a named domain invariant, player flow,
+  serialization/recovery contract, platform behavior, or observed regression.
+- Prefer EditMode for deterministic rules and PlayMode/scenario drivers for actual Unity lifecycle,
+  input, UI, physics, scene, or integration behavior.
+- Do not add reflection-heavy private-method tests, `DoesNotThrow` tests, source/YAML scans, exact
+  layout locks, duplicated model/service/presenter tests, or tests of Unity/package behavior without
+  a concrete regression that cannot be verified more directly.
+- Structural rules belong in read-only audit/CI scripts, not Unity test assemblies.
+- Run focused affected tests after a task. Run broader integration/full suites at milestones,
+  release/build gates, dependency changes, or when blast radius justifies them.
+- A green suite is supporting evidence, not a substitute for Play Mode/runtime verification.
 
-- [ ] Lead docs complete: feature/task pages with acceptance criteria + QA and QA-agent checklists; DEV_CONFIG records autotests/QA choices
-- [ ] Per task: compile + `read_console`; per feature: Play Mode + console during play + screenshot reviewed + tests pass
-- [ ] DEV_STATE + DEV_LOG updated after every task
-- [ ] QA + QA-agent pass, or degraded report + follow-up task, before auto-advancing
-- [ ] Before handoff: full Play Mode walkthrough of all paths + full test suite + clean console + final screenshots
-- [ ] All text uses TextMeshPro (never legacy Text)
+## VERIFY
 
-## Example
+- Re-run preflight after compilation/domain reload.
+- Exercise the changed path and relevant recovery/reset/reload behavior.
+- Compare console baseline with current state.
+- Review screenshots for visual work and use measurements for layout claims.
+- Run focused tests and any justified broader regression suite.
+- Run platform/build validation when settings, serialization, packages, scenes-in-build, native input,
+  or release behavior changed.
+- Use profiler evidence for performance claims or systems with a plausible performance risk; do not
+  profile merely because the mode is `pro`.
 
-```
-Genre: RPG with turn-based combat.
-Goal: scalable project with room for content.
+## Docs And QA
 
-Systems:
-- Combat: turn-based, abilities, effects. SO: AbilityData, StatusEffectData.
-- Inventory: items, equipment. SO: ItemData, EquipmentData.
-- Dialogue: NPCs, quests. SO: DialogueData, QuestData.
-- Progression: levels, XP. SO: LevelCurveData.
+- Keep `DEV_STATE`, `DEV_PLAN`, `DEV_LOG`, `AGENT_MEMORY`, and `ARCHITECTURE` proportionate and current.
+- Use Feature/Task/QA pages for tracked nontrivial work. One task page represents one meaningful
+  implementation slice.
+- Create a separate `QA_AGENT` checklist only when an independent QA pass is actually performed.
+- Record evidence, skipped checks, and remaining risk. Do not duplicate the same evidence into every
+  document when links are sufficient.
+- After two serious failures of the same verification path, write a degraded report and create a
+  focused follow-up task rather than looping indefinitely.
 
-Screens: MainMenu, WorldMap, Battle, Inventory, Dialogue, Settings.
-Tests: combat, inventory, progression.
+## Final Gate
 
-Stage 1: Architecture — GameManager, SceneLoader, ServiceLocator.
-  Criteria: scenes switch, services available. Test: SceneLoadTest.
-Stage 2: Combat system.
-  2.1: Combat model (BattleManager, TurnSystem). Test: TurnOrderTest.
-  2.2: Abilities (AbilitySystem + AbilityData SO). Test: DamageCalcTest.
-  2.3: Battle UI. Editor check.
-Stage 3: Inventory.
-  3.1: Model (Inventory, ItemData SO). Test: InventoryAddRemoveTest.
-  3.2: Inventory UI. Editor check.
-Stage 4: Dialogue and quests.
-Stage 5: World, navigation, integrate all systems.
-Stage 6: Polish, balance, final tests.
-```
+- [ ] Existing architecture preserved or an approved, evidence-backed change is documented
+- [ ] Feature-owned project structure passes; no Editor builders or mixed asset/code dumps exist
+- [ ] Compile/import ready and no new attributable console errors
+- [ ] Changed runtime/player behavior driven and verified in Play Mode when relevant
+- [ ] Visual evidence measured/reviewed when relevant
+- [ ] Focused valuable tests pass; broader suite/build/profiler checks run only when justified
+- [ ] Save/restart/pause/scene reload/platform lifecycle checked where relevant
+- [ ] Docs contain current outcome, evidence, skipped checks, rollback surface, and remaining risk

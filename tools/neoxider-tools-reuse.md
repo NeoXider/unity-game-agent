@@ -102,7 +102,10 @@ Use this pattern for new games: keep gameplay/data/adapters in the project, and 
 - Do not assume `Neo.Pages` exists from the package alone; verify that the `NeoxiderPages` sample was imported or import/instantiate it only after opt-in.
 - Do not hardcode `AM` sound indices without checking the scene or `AMSettings`/sound arrays.
 - Do not edit `Packages/packages-lock.json` by hand.
-- If NeoxiderTools is unavailable after opt-in, fall back to standalone and report the limitation.
+- If NeoxiderTools has no suitable module or is unavailable after opt-in, do not immediately build a
+  common nontrivial system from scratch. Apply [external-solution-reuse.md](external-solution-reuse.md)
+  and search maintained external solutions first. Skip that search only for tiny adapters or genuinely
+  game-specific behavior, and report the exception.
 
 ## Docs Updates
 

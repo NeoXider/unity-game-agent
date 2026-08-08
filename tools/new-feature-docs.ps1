@@ -11,7 +11,11 @@ param(
 
     [string]$FeatureSlug = "",
 
-    [string[]]$Tasks = @()
+    [string[]]$Tasks = @(),
+
+    [string]$DocsRoot = "",
+
+    [switch]$CreateIndependentQa
 )
 
 $ErrorActionPreference = "Stop"
@@ -69,14 +73,22 @@ $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $skillRoot = Split-Path -Parent $scriptRoot
 $templates = Join-Path $skillRoot "templates"
 
-$project = Resolve-Path -LiteralPath $ProjectRoot
-$docs = Join-Path $project "Docs"
+$project = (Resolve-Path -LiteralPath $ProjectRoot).Path
+if (-not [string]::IsNullOrWhiteSpace($DocsRoot)) {
+    $docs = if ([System.IO.Path]::IsPathRooted($DocsRoot)) { $DocsRoot } else { Join-Path $project $DocsRoot }
+} elseif ((Test-Path -LiteralPath (Join-Path $project "Assets/_source/Docs")) -and -not (Test-Path -LiteralPath (Join-Path $project "Docs"))) {
+    $docs = Join-Path $project "Assets/_source/Docs"
+} else {
+    $docs = Join-Path $project "Docs"
+}
 $featuresDir = Join-Path $docs "Features"
 $tasksDir = Join-Path $docs "Tasks"
 $qaDir = Join-Path $docs "QA"
 $qaAgentDir = Join-Path $docs "QA_AGENT"
 
-foreach ($dir in @($docs, $featuresDir, $tasksDir, $qaDir, $qaAgentDir)) {
+$requiredDirs = @($docs, $featuresDir, $tasksDir, $qaDir)
+if ($CreateIndependentQa) { $requiredDirs += $qaAgentDir }
+foreach ($dir in $requiredDirs) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
 }
 
@@ -136,13 +148,15 @@ Copy-TemplateIfMissing `
         "FEAT-NNN-name.md" = "$featureStem.md"
     }
 
-Copy-TemplateIfMissing `
-    -TemplatePath (Join-Path $templates "QA_AGENT_CHECKLIST.md") `
-    -DestinationPath $qaAgentFile `
-    -Replacements @{
-        "[FEAT-NNN Name]" = "$FeatureId $FeatureName"
-        "FEAT-NNN-name-qa.md" = "$featureStem-qa.md"
-        "FEAT-NNN-name.md" = "$featureStem.md"
-    }
+if ($CreateIndependentQa) {
+    Copy-TemplateIfMissing `
+        -TemplatePath (Join-Path $templates "QA_AGENT_CHECKLIST.md") `
+        -DestinationPath $qaAgentFile `
+        -Replacements @{
+            "[FEAT-NNN Name]" = "$FeatureId $FeatureName"
+            "FEAT-NNN-name-qa.md" = "$featureStem-qa.md"
+            "FEAT-NNN-name.md" = "$featureStem.md"
+        }
+}
 
 Write-Output "[DONE] Feature docs created for $featureStem"

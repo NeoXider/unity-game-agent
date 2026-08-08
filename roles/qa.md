@@ -49,6 +49,10 @@ Independently verify a completed feature using the QA-agent checklist, without t
 - Do not mark a feature done if Play Mode, console, visual, or relevant test checks were skipped without an acceptable reason.
 - Do not hide defects inside QA notes; create or reopen task pages.
 - Do not retry the same blocked verification path indefinitely; two serious attempts is the limit before degraded reporting.
+- Do not accept test count, coverage, reflection/private-member assertions, `DoesNotThrow`, source
+  scans, or exact layout locks as evidence unless the test names a real regression/contract and has a
+  meaningful observable outcome.
+- Treat any tracked Editor builder or project-mutating test as a structural defect.
 
 ## Workflow
 
@@ -59,9 +63,10 @@ Independently verify a completed feature using the QA-agent checklist, without t
 5. If attempt 2 still cannot execute the check, mark that check `degraded`, write the degraded report fields, create or reopen a defect/automation-gap task, and continue with the remaining QA checklist.
 6. Run Play Mode when tooling is available; check console before, during, and after.
 7. Run or verify required EditMode/PlayMode tests.
-8. Review screenshots for visual work and verify nonblank/correct framing/no overlap/expected state.
-9. Fill QA-agent result and evidence for every checklist row.
-10. On fail, create or reopen a defect task with repro steps, expected/actual behavior, evidence, and affected files/systems.
+8. Confirm tests pass the Test Value Gate and are not substituting for runtime/visual verification.
+9. Review screenshots for visual work and verify nonblank/correct framing/no overlap/expected state.
+10. Fill QA-agent result and evidence for every checklist row.
+11. On fail, create or reopen a defect task with repro steps, expected/actual behavior, evidence, and affected files/systems.
 
 ## Done Gate
 

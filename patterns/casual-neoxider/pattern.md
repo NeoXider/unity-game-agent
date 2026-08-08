@@ -61,7 +61,10 @@ read [managers.md](managers.md), the reuse policy, and grep the package. Typical
 | Fly "object -> UI slot" | `AnimationFly` (`Neo.UI`) |
 | Inspector cheat buttons | `[Button]` (`Neo`) — on **any** MonoBehaviour, no custom Editor |
 
-No ready component -> write a thin adapter/component, not a duplicate system.
+No ready component -> for common nontrivial behavior, apply the
+[external solution reuse gate](../../tools/external-solution-reuse.md) and search maintained GitHub/UPM,
+official samples, and reputable package sources before custom code. Only then write the smallest thin
+adapter/component. Skip internet search only for obviously tiny or genuinely game-specific behavior.
 
 ---
 
@@ -76,6 +79,7 @@ INTAKE -> SCAFFOLD -> REUSE -> CONFIG(SO) -> PAGES -> DYNAMICS(prefab) -> POLISH
    the project's `Sprites/`.
 2. **SCAFFOLD.** Scene skeleton per [scene-skeleton.md](scene-skeleton.md): `-System--` root for
    managers, `PM` + pages, `AM`, `Canvas bg`. Static objects sit in the scene and are wired — no bootstraps.
+   Author them directly through Unity/MCP; tracked Editor builders are forbidden.
 3. **REUSE.** Wire the needed managers (see STOP table) — one per object under `-System--`.
 4. **CONFIG (SO).** Balance/rules/levels in `ScriptableObject` (see Decisions: SO vs fields).
 5. **PAGES.** Menu / Game / Pause / Win / Lose / End. Game-screen content lives **inside its `UIPage`**.
@@ -91,7 +95,7 @@ INTAKE -> SCAFFOLD -> REUSE -> CONFIG(SO) -> PAGES -> DYNAMICS(prefab) -> POLISH
 
 1. **Don't write from scratch** — assemble from Neoxider managers. No component? Check docs, then write.
 2. **Minimal code.** Wire references/events in the inspector (UnityEvent/refs); keep branching and game rules in typed C#. **No NoCode.**
-3. **No comments** — clear names. (Exception: one "why" line for nontrivial logic is fine.)
+3. **No obvious narration comments** — clear names; keep concise `why`/constraint/workaround comments.
 4. **State via `GM`/`G`**, not your own bool flags for game flow.
 5. **Hook logic through a `<Game>Manager` bridge** that listens to `G.On*` (the bridge is optional for
    simple games — see Decisions).
@@ -134,8 +138,9 @@ From real games (`lotto`, `FootballPing`, `matchamadness`, `4PingPong`, `Basket 
   your own manager (`StarsWallet`/`BettingManager`) instead of bending a Neo component past its intent.
 - **Input.** Default to simple direct input: `Input.GetMouseButton`/`GetTouch` or
   `IPointerClickHandler` (EventSystem). Swipes -> `SwipeController` utility. Complex input -> Input System.
-- **Folder structure.** `<5` scripts -> flat in `Scripts/Runtime/`. `>10` -> functional folders
-  (`Gameplay/`, `Config/`, `UI/`), mirror the namespace in folders. Editor tools -> `Scripts/Editor/`.
+- **Folder structure.** Keep feature-owned code under `Scripts/<Feature>/<CodeArea>` and editor code
+  under `Editor/<Feature>`. In `fast` and `standard`, new project scripts stay in the global namespace;
+  functional folders do not imply namespaces.
 
 ---
 
@@ -163,6 +168,7 @@ From real games (`lotto`, `FootballPing`, `matchamadness`, `4PingPong`, `Basket 
 
 ## Anti-patterns
 
+❌ Editor Builder/setup script that generates, rewires, or saves scenes/prefabs/configs.
 ❌ Bootstrap that creates scene statics in `Awake`/`Start`. ❌ Logic/navigation baked into
 buttons/controller. ❌ Balance as code constants instead of SO (when reusable/per-level). ❌ Game-screen
 content in a separate Canvas instead of the `Game Page (UIPage)`. ❌ Own `PlayerPrefs`/sound/score

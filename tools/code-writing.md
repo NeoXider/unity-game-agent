@@ -55,7 +55,8 @@ public class GameManager : MonoBehaviour
 }
 ```
 
-**Usage:** fast — freely. standard — OK. pro — prefer DI/ServiceLocator.
+**Usage:** keep an existing singleton when it is already the project's ownership model. Do not add a
+new global casually, and do not replace one with DI/ServiceLocator merely because the mode is `pro`.
 
 ---
 
@@ -159,14 +160,13 @@ public class GameHUD : MonoBehaviour
 
 ---
 
-## No Obvious Comments — Use Debug.Log Instead
+## Comments And Logging
 
-**No obvious `//` comments.** Code must be self-documenting. Use `Debug.Log` to explain logic at runtime.
+Code should not narrate obvious operations. Comments are appropriate for non-obvious intent,
+constraints, platform quirks, algorithms, and workarounds. Runtime logs are not comments and must not
+be added to explain code.
 
-- ✅ Allowed: **XML docs** (`/// <summary>`), `// TODO:`, `// HACK:`, `// WORKAROUND:`
-- ❌ Banned: `// calculate damage`, `// increment counter`, `// get component`
-
-Pattern: `Debug.Log($"[Feature.Class.Method] description with params")`
+Use logs only when the information is actionable during play, QA, or diagnosis:
 
 ```csharp
 Debug.Log($"[Spawn.WaveSpawner.StartNextWave] Wave {wave}: {count} enemies");
@@ -174,13 +174,11 @@ Debug.LogError($"[Save.SaveSystem.Load] File not found: {path}");
 Debug.LogWarning($"[Combat.Health.TakeDamage] Damage={amount} but HP already 0");
 ```
 
-**Only allowed:** `// TODO:`, `// HACK:`, `// WORKAROUND:` (temporary markers).
+- `Debug.LogError` for failures requiring action;
+- `Debug.LogWarning` for recoverable suspicious state;
+- `Debug.Log` only for intentional diagnostics that are not emitted every frame.
 
-| Mode | Debug.Log volume |
-|------|-------------------|
-| fast | Key events only |
-| standard | Plenty — key events, state changes |
-| pro | Plenty — key events, params, state changes |
+Never use log volume as a quality target.
 
 ---
 
@@ -190,15 +188,15 @@ Debug.LogWarning($"[Combat.Health.TakeDamage] Damage={amount} but HP already 0")
 |-------|------|----------|-----|
 | Settings in SO | ✅ | ✅ | ✅ |
 | Single responsibility | — | ✅ | ✅ |
-| XML docs | — | Public methods | All public |
-| `//` comments | **No** | **No** | **No** |
-| Debug.Log | Key events | Plenty | Plenty + params |
+| XML docs | Public/non-obvious contracts only | Same | Same |
+| `//` comments | Non-obvious why/constraint only | Same | Same |
+| Debug.Log | Actionable diagnostics only | Same | Same |
 | [SerializeField] | OK | ✅ | ✅ |
 | Cache components | — | ✅ | ✅ |
-| Interfaces | — | — | ✅ |
-| Namespaces | — | — | ✅ |
-| Tests | — | — | ✅ |
-| Singleton | ✅ | OK | DI |
+| Interfaces | Real boundary only | Same | Same |
+| Namespaces | Global namespace for new project scripts | Global namespace for new project scripts | Follow project; use product/feature namespaces in new projects when useful |
+| Tests | Test Value Gate | Test Value Gate | Risk-based Test Value Gate |
+| Singleton | Follow project ownership | Same | Same |
 | Events | Optional | ✅ | ✅ |
-| Object Pool | — | If needed | ✅ |
+| Object Pool | When justified | When justified | When justified |
 | TextMeshPro (never legacy) | ✅ | ✅ | ✅ |

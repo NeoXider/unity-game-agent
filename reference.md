@@ -125,7 +125,7 @@ Use `tools/new-feature-docs.ps1` to generate Standard/Pro feature, task, QA, and
 **Project (overall):** 25% `|██░░░░░░░░|` (3 / 12 tasks) · **Status:** 🟦
 ```
 
-**Update frequency:** EVERY action. Keep DEV_STATE small and current.
+**Update frequency:** after a meaningful task/checkpoint or when state changes. Keep DEV_STATE small and current; do not churn it after every command.
 
 ---
 

@@ -42,8 +42,8 @@ try {
     Assert-True -Condition ($LASTEXITCODE -eq 0) -Message "setup_project.bat existing project run failed with exit code $LASTEXITCODE"
     Assert-True -Condition (-not (Test-Path -LiteralPath (Join-Path $existingProjectRoot "Assets/_source"))) -Message "Assets/_source should not be created for non-empty Assets"
 
-    powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $SkillRoot "tools/new-feature-docs.ps1") -ProjectRoot $projectRoot -FeatureId "001" -FeatureName "Player Movement" -Tasks "Input Adapter, Move Controller"
-    powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $SkillRoot "tools/new-feature-docs.ps1") -ProjectRoot $projectRoot -FeatureId "001" -FeatureName "Player Movement" -Tasks "Input Adapter, Move Controller"
+    powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $SkillRoot "tools/new-feature-docs.ps1") -ProjectRoot $projectRoot -FeatureId "001" -FeatureName "Player Movement" -Tasks "Input Adapter, Move Controller" -CreateIndependentQa
+    powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $SkillRoot "tools/new-feature-docs.ps1") -ProjectRoot $projectRoot -FeatureId "001" -FeatureName "Player Movement" -Tasks "Input Adapter, Move Controller" -CreateIndependentQa
     & (Join-Path $SkillRoot "tools/new-feature-docs.ps1") -ProjectRoot $projectRoot -FeatureId "002" -FeatureName "Combat Loop" -Tasks @("Aim", "Shoot", "Reload")
 
     powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $SkillRoot "tools/append-skill-memory.ps1") `
@@ -56,6 +56,11 @@ try {
         -SkillImpact "tools"
 
     powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $SkillRoot "tools/validate-skill.ps1") $SkillRoot
+    $fixtureDir = Join-Path $projectRoot "Assets/_source/Scripts/Sample/EditModeSafe"
+    New-Item -ItemType Directory -Path $fixtureDir -Force | Out-Null
+    Set-Content -LiteralPath (Join-Path $fixtureDir "SampleRuntime.cs") -Value "internal sealed class SampleRuntime {}" -Encoding UTF8
+    & (Join-Path $SkillRoot "tools/audit-project-structure.ps1") -ProjectRoot $projectRoot
+    Assert-True -Condition ($LASTEXITCODE -eq 0) -Message "audit-project-structure.ps1 failed on the bootstrapped project"
 
     foreach ($relativePath in @(
         "Docs/DEV_CONFIG.md",
@@ -73,7 +78,11 @@ try {
         "Docs/Tasks/TASK-002-02-shoot.md",
         "Docs/Tasks/TASK-002-03-reload.md",
         "Assets/_source/Scripts",
-        "Assets/_source/UI"
+        "Assets/_source/Scripts/Tests",
+        "Assets/_source/Editor",
+        "Assets/_source/Prefabs",
+        "Assets/_source/Settings",
+        "Assets/_source/Sprites"
     )) {
         Assert-Path -Path (Join-Path $projectRoot $relativePath)
     }

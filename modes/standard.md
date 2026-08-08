@@ -29,6 +29,7 @@
 - DEV_STATE + DEV_LOG update after every feature.
 - **Do NOT move to next feature until current passes all checks.**
 - Before closing any task/feature, run Play Mode when MCP or equivalent automation is available, check console during Play Mode, and verify the changed mechanic/UI/scene behavior directly.
+- Follow the universal feature-owned project structure; Editor builders are forbidden.
 
 ### VERIFY
 - Full Play Mode walkthrough of complete game flow.
@@ -48,22 +49,25 @@
 - Data in SO, references via `[SerializeField]`.
 - Prefabs for repeated objects.
 - Events / UnityEvents for cross-system communication.
-- No C# namespaces.
-- XML docs for public methods.
+- Do not add namespaces to new project scripts; keep them in the global namespace. Preserve an
+  existing namespace only when editing code already inside it; never perform namespace migration as
+  collateral work.
+- XML docs only for public APIs and non-obvious contracts.
 - `[Header]`, `[Tooltip]`, `[Range]` on SO fields.
 
-## Logging
-- **No `//` comments.** Use `Debug.Log` instead — plenty, for key events and state changes.
-- Format: `Debug.Log($"[Feature.Class.Method] description with params")`
-- `Debug.LogError` for errors, `Debug.LogWarning` for warnings.
-- Do not log every frame in Update.
+## Logging And Comments
+- Comments explain non-obvious intent, constraints, or workarounds. Do not replace comments with logs.
+- Log actionable lifecycle/state diagnostics only; do not add log volume as a quality target.
+- Use `Debug.LogError` for actionable failures and `Debug.LogWarning` for recoverable suspicious state.
+- Do not log every frame or duplicate state already visible in the debugger.
 
 ## Docs
-- `Docs/DEV_STATE.md` — **required**, update every action.
+- `Docs/DEV_STATE.md` — **required**, update at meaningful checkpoints.
 - `Docs/DEV_PLAN.md` — **required**, all tasks with checkboxes.
-- `Docs/Features/FEAT-*.md` — **required**, one page per feature.
-- `Docs/Tasks/TASK-*.md` — **required**, one page per implementation task.
-- `Docs/QA/FEAT-*-qa.md` and `Docs/QA_AGENT/FEAT-*-qa.md` — **required** for feature QA.
+- `Docs/Features/FEAT-*.md` — required for tracked nontrivial features.
+- `Docs/Tasks/TASK-*.md` — one page per meaningful implementation slice, not per tiny edit.
+- `Docs/QA/FEAT-*-qa.md` — required for tracked/risky feature QA; create the `QA_AGENT` duplicate only
+  when an independent QA pass is actually used.
 - `Docs/DEV_LOG/iteration-*.md` — **required**, completed task entries.
 - `Docs/AGENT_MEMORY.md` — **required**.
 - `Docs/ARCHITECTURE.md` — create when structure decisions are made.
@@ -74,12 +78,17 @@
 - MonoBehaviour for feature logic — no extra infra layers.
 - DI only when it clearly pays off.
 - Hierarchy: GameManager + Core/Features/UI, separate Environment.
+- Folder ownership follows [../tools/project-structure.md](../tools/project-structure.md); mode never
+  permits a mixed `Scripts`/assets dump.
+- No Editor setup/build scripts. Author scene and prefab state directly through Unity/MCP.
 
 ## Input
 - Default: `Old` or `Both`.
 - Change only by agreement.
 
 ## QA
+- Apply the Test Value Gate before declaring or adding tests. Prefer the smallest focused regression
+  or runtime driver; `standard` has no coverage quota.
 - Standard/Pro Lead-Dev-QA workflow overrides any human-wait default: agent creates `Docs/QA/` and `Docs/QA_AGENT/` checklists, fills both through self QA/independent pass, and auto-advances after pass or degraded report with follow-up task.
 - After 2 failed/unavailable attempts for the same QA check, write a degraded report with skipped checks, create a follow-up defect/automation-gap task, and continue.
 - Ask the user only for blockers that cannot be bypassed with degraded reporting, missing required assets/credentials, or ambiguous product decisions.
@@ -98,6 +107,7 @@
 Final gate (details in the sections above):
 
 - [ ] Lead docs complete: feature/task pages with acceptance criteria + QA and QA-agent checklists
+- [ ] Project structure audit passes and no Editor builders exist
 - [ ] Per feature: compile + Play Mode + `read_console` during play + screenshot reviewed; behavior verified
 - [ ] DEV_STATE + DEV_LOG updated after each feature
 - [ ] QA + QA-agent pass, or degraded report + follow-up task, before auto-advancing

@@ -34,6 +34,7 @@ $requiredProfileFields = @(
     "screenshot_policy",
     "reuse_first",
     "external_reference_discovery",
+    "external_solution_search_after_neoxider_miss",
     "no_reinventing_without_reason",
     "lead_dev_qa_workflow_standard_pro",
     "task_pages_standard_pro",
@@ -47,6 +48,11 @@ $requiredProfileFields = @(
     "subagent_fallback_policy",
     "gd_before_lead",
     "designer_before_lead_when_visual",
+    "architecture_complexity",
+    "project_structure_policy",
+    "editor_builders",
+    "test_policy",
+    "namespace_policy",
     "library_policy",
     "pattern",
     "project_frameworks"
@@ -73,12 +79,15 @@ $requiredTemplates = @(
     "templates/TASK.md",
     "templates/QA_CHECKLIST.md",
     "templates/QA_AGENT_CHECKLIST.md",
-    "tools/playmode-qa-automation.md"
+    "tools/playmode-qa-automation.md",
+    "tools/project-structure.md",
+    "tools/external-solution-reuse.md"
 )
 $requiredScripts = @(
     "setup_project.bat",
     "tools/append-skill-memory.ps1",
     "tools/new-feature-docs.ps1",
+    "tools/audit-project-structure.ps1",
     "tools/test-scripts.ps1",
     "tools/validate-skill.ps1"
 )
@@ -215,6 +224,9 @@ $linksSkillMemory = $skill.Contains("SKILL_MEMORY.md") -and $skill.Contains("too
 $linksRoles = $skill.Contains("roles/game-designer.md") -and $skill.Contains("roles/designer.md") -and $skill.Contains("roles/lead.md") -and $skill.Contains("roles/developer.md") -and $skill.Contains("roles/qa.md")
 $linksPlayModeQa = $skill.Contains("tools/playmode-qa-automation.md")
 $linksScriptTests = $skill.Contains("tools/test-scripts.ps1")
+$linksProjectStructure = $skill.Contains("tools/project-structure.md")
+$linksStructureAudit = $skill.Contains("tools/audit-project-structure.ps1")
+$linksExternalReuse = $skill.Contains("tools/external-solution-reuse.md")
 $playModeQa = Get-Content -Path (Join-Path $SkillRoot "tools/playmode-qa-automation.md") -Raw -Encoding UTF8
 $hasPlayModeGate = $skill.Contains("final_playmode_tests_standard_pro")
 $hasManifestPolicy = $skill.Contains("auto_install_mcp_in_manifest")
@@ -226,6 +238,13 @@ Assert-True -Condition $linksSkillMemory -Message "SKILL.md must link skill memo
 Assert-True -Condition $linksRoles -Message "SKILL.md must link all role subskills"
 Assert-True -Condition $linksPlayModeQa -Message "SKILL.md must link Play Mode QA automation reference"
 Assert-True -Condition $linksScriptTests -Message "SKILL.md must link script smoke tests"
+Assert-True -Condition $linksProjectStructure -Message "SKILL.md must link project structure policy"
+Assert-True -Condition $linksStructureAudit -Message "SKILL.md must link project structure audit"
+Assert-True -Condition $linksExternalReuse -Message "SKILL.md must link external solution reuse gate"
+Assert-True -Condition $skill.Contains("external_solution_search_after_neoxider_miss") -Message "SKILL.md must define the external search fallback after a NeoxiderTools miss"
+Assert-True -Condition $skill.Contains("namespace_policy") -Message "SKILL.md must define the mode-specific namespace policy"
+Assert-True -Condition $skill.Contains("Test Value Gate") -Message "SKILL.md must define the Test Value Gate"
+Assert-True -Condition ($skill -match '(?i)Editor builders?') -Message "SKILL.md must explicitly forbid Editor Builders"
 Assert-True -Condition $hasPlayModeGate -Message "SKILL.md must include standard/pro Play Mode close gate"
 Assert-True -Condition $hasManifestPolicy -Message "SKILL.md must include MCP manifest auto-install policy"
 Assert-True -Condition $hasDegradedQaPolicy -Message "SKILL.md must include bounded degraded QA policy"

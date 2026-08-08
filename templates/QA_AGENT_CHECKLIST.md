@@ -25,12 +25,16 @@
 - [ ] Feature tasks are marked done.
 - [ ] Verification Driver is declared in the Feature/Task.
 - [ ] Required EditMode/PlayMode tests have results or explicit skipped reasons.
+- [ ] Listed tests protect named behavior rather than implementation details.
+- [ ] Project structure audit has no Editor Builder or test mutation errors.
 - [ ] Screenshot requirement is declared.
 
 ## Verification Driver
 
 - Driver: CompileConsole | PassivePlayMode | ScreenshotOnly | EditModeTest | PlayModeTest | ScenarioRunner | InputInjection | BuildOrBrowserE2E | ManualOnly
 - Tests Required: EditMode | PlayMode | Both | Not Needed
+- Regression/contract protected: [named behavior] | Not Needed
+- Test Value Gate: pass | rejected; reason: [why]
 - Screenshot Required: yes | no | on-failure
 - Automation Gap: none | [missing hook/test/driver task]
 - Interactive behavior: yes | no

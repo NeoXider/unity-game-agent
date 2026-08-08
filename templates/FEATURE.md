@@ -54,6 +54,8 @@
 
 - Verification Driver: CompileConsole | PassivePlayMode | ScreenshotOnly | EditModeTest | PlayModeTest | ScenarioRunner | InputInjection | BuildOrBrowserE2E | ManualOnly
 - Tests Required: EditMode | PlayMode | Both | Not Needed
+- Regression/contract protected by tests: [named behavior and realistic failure] | Not Needed
+- Test Value Gate: pass | rejected; reason: [why each test is worth maintaining]
 - Screenshot Required: yes | no | on-failure
 - Automation Gap: none | [missing hook/test/driver task]
 - Max QA Attempts: 2 before degraded report and continue
@@ -62,11 +64,12 @@
 - [ ] Play Mode scenario: [scenario]
 - [ ] Screenshot/visual check: [required or skipped reason]
 - [ ] Tests/build validation: [required or skipped reason]
+- [ ] Project structure audit and Editor Builder ban
 
 ## QA
 
 - Agent checklist: [Docs/QA/FEAT-NNN-name-qa.md](../QA/FEAT-NNN-name-qa.md)
-- QA-agent duplicate: [Docs/QA_AGENT/FEAT-NNN-name-qa.md](../QA_AGENT/FEAT-NNN-name-qa.md)
+- Independent QA: not planned | [QA_AGENT checklist link, only when an independent pass is scheduled]
 
 ## Rollback Risk
 

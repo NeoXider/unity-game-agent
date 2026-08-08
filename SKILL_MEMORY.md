@@ -117,3 +117,31 @@ Allowed categories: workflow, verification, reuse, unity-mcp, docs, qa, architec
 - Apply when: Importing art, and first thing when two elements that measure equal look unequal.
 - Evidence: TropicMania 2026-08-06: menu Settings/Collection icons, both in a 255x255 box at mirrored offsets, rendered 255x238.7 and 255x255 because the sliced rects were 94x88 and 92x92; 56 of 61 project sprites were Multiple.
 - Skill impact: project-profiles/plain-ugui.md ("Sprite import mode: Single, always").
+
+### 2026-08-08 - architecture
+- Trigger: Unity project work in any mode, including fast and Quick Fix
+- Learning: Preserve a feature-owned structure: runtime scripts under Scripts/<Feature>/<CodeArea>, editor tooling under Editor/<Feature>, tests under Scripts/Tests/<Feature>/EditMode or PlayMode, and authored assets under typed roots such as Settings, Prefabs, and Sprites. Tracked Editor Builders are forbidden; author state directly and use read-only validators.
+- Apply when: Planning, implementing, reviewing, or bootstrapping any Unity level of work
+- Evidence: TropicMania audit exposed 10 tracked Editor Builders while its feature-owned runtime/test/asset layout provided the desired baseline.
+- Skill impact: workflow, templates, modes, project structure audit
+
+### 2026-08-08 - qa
+- Trigger: Choosing architecture and tests in pro mode
+- Learning: Pro means stronger risk analysis and evidence, not Clean Architecture, DI, interface quotas, or test-count quotas. Add a test only when it protects a named behavior/contract and can realistically fail; reject tautological, private-reflection, source-text, exact-layout, no-throw, and package re-tests unless a concrete regression justifies them.
+- Apply when: Selecting pro mode or planning EditMode/PlayMode coverage
+- Evidence: TropicMania contains a broad suite with 38 files flagged for reflection/source-text review, showing that test volume alone is not quality.
+- Skill impact: pro mode, test value gate, QA templates
+
+### 2026-08-08 - workflow
+- Trigger: A common nontrivial Unity need has no suitable project-local, Unity, or NeoxiderTools implementation
+- Learning: Before writing custom code, search official documentation and samples, maintained GitHub/UPM repositories, and reputable package sources. Evaluate compatibility, maintenance, license, dependency footprint, performance, and rollback cost; classify candidates as direct reuse, adapt, reference-only, or reject. Skip internet search only for obviously tiny adapters or genuinely game-specific rules.
+- Apply when: Planning or implementing any reusable Unity system after a local or NeoxiderTools miss
+- Evidence: User established internet reuse discovery as the required fallback before custom implementation.
+- Skill impact: reference discovery, NeoxiderTools fallback, Lead planning, Developer gate
+
+### 2026-08-08 - architecture
+- Trigger: Creating or editing project scripts in fast or standard mode
+- Learning: New fast and standard project scripts stay in the global namespace. Pro follows the existing project and may use product/feature namespaces. Preserve existing namespace declarations during targeted edits; never perform a collateral namespace migration merely because the selected mode differs.
+- Apply when: Selecting namespace style for Unity C# authoring
+- Evidence: User explicitly defined fast and standard as namespace-free modes.
+- Skill impact: mode policy, code writing, project structure

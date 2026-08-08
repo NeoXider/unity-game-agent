@@ -98,9 +98,10 @@ if exist "%SOURCE%" (
   if defined ASSETS_HAS_CONTENT (
     echo [SKIP] Assets/_source/ not created because Assets/ already has project content
   ) else (
-    for %%D in (Scripts Editor Data Prefabs Scenes Materials Textures Audio UI Resources) do (
+for %%D in (Scripts Editor Prefabs Settings Sprites Scenes Materials Animations Textures Models Audio Fonts) do (
       mkdir "%SOURCE%\%%D" 2>nul
     )
+    mkdir "%SOURCE%\Scripts\Tests" 2>nul
     echo [OK] Assets/_source/ structure created
   )
 )
