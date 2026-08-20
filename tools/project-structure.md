@@ -6,8 +6,11 @@ delivery cadence, not folder hygiene.
 Run the read-only policy check with:
 
 ```powershell
-& tools/audit-project-structure.ps1 -ProjectRoot <UnityProjectRoot>
+& tools/audit-project-structure.ps1 -ProjectRoot <UnityProjectRoot> [-AuthoringRoot Assets/_source]
 ```
+
+Pass `-AuthoringRoot` when the project uses a different project-owned root; the audit does not detect
+it. Exit code 1 means at least one `ERROR`; `WARN` findings are advisory.
 
 ## Existing Project
 
@@ -65,6 +68,19 @@ Clean Architecture layers. Use only the folders the feature needs.
   namespace; `pro` follows the existing project and may use product/feature namespaces. Never strip
   an existing namespace merely to satisfy the selected mode. Create asmdefs only at meaningful
   dependency boundaries, never as a mode-driven quota.
+
+## Editing A Versioned Package In The Project
+
+When the task touches an embedded/local UPM package (a `Packages/<id>` folder or an in-`Assets` package
+such as NeoxiderTools):
+
+- **A version bump must update every file that repeats the version**, not only `package.json`:
+  changelog, README badges, docs headers, and any constant in code. Projects that ship a version-parity
+  test fail on the first missed file.
+- **Run the parity/version test before you change anything.** It is frequently already red from an
+  earlier bump; discovering that after your edit costs a debugging round on someone else's defect. Say
+  in the report whether it was red on arrival.
+- Package content stays outside the project-owned authoring root; do not mix project code into it.
 
 ## Editor Builder Ban
 

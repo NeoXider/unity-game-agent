@@ -21,7 +21,7 @@
 
 ### BUILD
 - **Batch checks allowed:** can implement 2–4 features, then do one Play Mode check for the batch.
-- Compile check (`refresh_unity` + `read_console`) still required after EVERY feature.
+- Compile/import readiness + console check still required after EVERY feature.
 - Scene save after every batch.
 - Screenshots after each batch (not each feature).
 - DEV_STATE update after each batch.
@@ -48,15 +48,23 @@
 - Add a focused test only for a named high-risk regression that passes the Test Value Gate; fast mode
   has no test quota.
 
-## Logging
-- **No `//` comments.** Use `Debug.Log` instead — key events only.
-- Format: `Debug.Log($"[Feature.Class.Method] ...")` when used.
+## Logging And Comments
+- Comments explain non-obvious intent, constraints, or workarounds. Do not narrate obvious code, and do
+  not replace a comment with a runtime log.
+- Log actionable events only. Format: `Debug.Log($"[Feature.Class.Method] ...")`.
 
 ## Docs
+
+Required set per [../POLICY_MATRIX.md](../POLICY_MATRIX.md); `fast` keeps each file brief.
+
+- `Docs/DEV_CONFIG.md` and `Docs/DEV_PROFILE.json` — **required**, created at bootstrap.
 - `Docs/DEV_STATE.md` — context + current + next. Brief.
 - `Docs/DEV_PLAN.md` — optional, brief if created.
 - `Docs/DEV_LOG/` — brief entries on batch completion.
 - `Docs/AGENT_MEMORY.md` — important decisions only.
+- `Docs/Screenshots/iter-NN/` — **required**, one folder per iteration.
+- `Docs/Features/`, `Docs/Tasks/`, `Docs/QA/`, `Docs/QA_AGENT/` — optional in `fast`; create only if the
+  user asks for stronger tracking.
 
 ## Architecture
 - MonoBehaviour-first, minimal abstraction.

@@ -4,6 +4,73 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.4.0] — 2026-08-20
+
+### 🎯 Added — field lessons from a mobile uGUI game (BladeVault, casual-neoxider)
+- **Pre-vetted uGUI effect packages** (`project-profiles/plain-ugui.md`, referenced from
+  `tools/external-solution-reuse.md`, `tools/libraries-setup.md`, `patterns/casual-neoxider/pattern.md`):
+  the three MIT mob-sakai packages — `com.coffee.ui-particle` (real `ParticleSystem` through
+  `CanvasRenderer`, no extra camera/RenderTexture; multiple sprites via Texture Sheet Animation in
+  Sprites mode), `com.coffee.softmask-for-ugui` (soft/shaped masks, tutorial cut-outs),
+  `com.coffee.ui-effect` (shadow, glow, blur, dissolve, gradation) — with components, versions, and
+  documented limits, plus OpenUPM/git install steps. Rule: evaluate all three before writing a custom
+  UI effect. "Particles are invisible in my canvas" is an ordering problem (nested Canvas with
+  `Override Sorting`), not a reason to hand-roll one.
+- **Sprite Shaders Ultimate** (`project-profiles/plain-ugui.md`, linked from
+  `tools/external-solution-reuse.md`): an Asset Store shader family that, when a project already owns
+  it, covers uGUI, `SpriteRenderer`, 2D-lit URP, meshes and TextMeshPro with one set — ~113 keywords
+  (tint/colour-replace, outlines, shadow, shine, glow, dissolve, status looks, UV motion, blur,
+  pixelate, extra texture layers), plus `_TOGGLEUNSCALEDTIME_ON` for effects that must keep running
+  while `Time.timeScale` is 0.
+- **`tools/external-solution-reuse.md` — inventory before searching**: a numbered step to check
+  third-party folders under `Assets/`, then `manifest.json` and `PackageCache`, then the shortlists,
+  and only then the internet. Asset-store packages do not show up in `manifest.json`, so an installed
+  answer is easy to miss — which is exactly how a hand-written flash shader got authored next to a
+  package that had the feature behind a toggle.
+- **`project-profiles/plain-ugui.md` — RectTransform geometry rules**: `sizeDelta` is the delta from the
+  parent under stretching anchors, so verify `rect.width/height` after setting a size; rotation and
+  scale happen around the pivot; uGUI draw *and* input order is sibling order — prove it with
+  `EventSystem.RaycastAll`, and never park a full-screen catcher last "so it is on top".
+- **`tools/code-writing.md` — serialized-data traps**: changing a field's default/range does not
+  migrate already-serialized scenes, prefabs, and assets; a serialized `Ease` of `0` is `Ease.Unset`
+  and DOTween silently substitutes its own default; `SpriteRenderer`/`Image` colour multiplies the
+  texture and cannot brighten a dark sprite.
+- **`tools/core-mechanics.md`**: where the drawn silhouette is much larger than the collider, add a
+  logical occupancy check on top of physics instead of tuning the collider blindly.
+- **`tools/mcp-provider-neutral.md`**: new *Unity CLI / Batch Mode* section (`-quit` with `-runTests`
+  aborts the run; a stale `Temp/UnityLockfile` exits 1 with no output; always pass `-logFile -`) plus
+  gotchas for the ~30 s eval timeout, two open scenes producing a phantom second `EventSystem`, and
+  `PrefabUtility.RecordPrefabInstancePropertyModifications` for instance property edits.
+- **`tools/project-structure.md`**: version-parity rules when editing an embedded UPM package — bump
+  every file that repeats the version, and run the parity test *before* editing since it is often
+  already red.
+- **`tools/playmode-qa-automation.md` and `roles/qa.md`**: a screenshot taken after an effect finished
+  proves nothing — hold the state or read the value; QA re-runs after every significant fix batch, and
+  the report must name what was not re-verified.
+- **`SKILL.md`**: guardrail against normalising import settings / serialized values a human set
+  deliberately, plus the matching anti-patterns and verification-gate lines.
+
+### 🔧 Fixed (self-audit)
+- `modes/fast.md` no longer bans `//` comments in favour of `Debug.Log` — it contradicted
+  `POLICY_MATRIX.md`, `tools/code-writing.md`, and the other two modes. Its Docs list now includes the
+  files `POLICY_MATRIX.md` marks REQUIRED for `fast` (DEV_CONFIG, DEV_PROFILE, Screenshots) and marks
+  Features/Tasks/QA as optional.
+- `modes/standard.md` VERIFY asked for a "completely clean" console, which is impossible on a project
+  with a pre-existing baseline; it now asks for no *new* entries versus baseline.
+- `reference.md` Docs Baseline Gate was "mandatory" for every file including `QA_AGENT/`, contradicting
+  SKILL.md and POLICY_MATRIX; it is now per-mode and defers to POLICY_MATRIX. Its claim that SKILL.md
+  duplicates the DEV_PROFILE defaults inline was wrong and is corrected.
+- Provider-specific tool names (`validate_script`, `refresh_unity`, `manage_scene action=save`) removed
+  from `reference.md` and `modes/fast.md` per the provider-neutral policy.
+- `project-profiles/plain-ugui.md`: the "import every sprite as Single" convention now explicitly does
+  not authorise rewriting import settings a human tuned.
+- `tools/audit-project-structure.ps1` failed a project with no `Editor`/`Prefabs`/`Settings`/`Sprites`
+  folder, contradicting "use only the folders the feature needs" in `tools/project-structure.md`. Only
+  `Scripts` is an ERROR now; the rest are advisory `WARN`. The doc also documents `-AuthoringRoot` and
+  the exit-code contract.
+
+---
+
 ## [3.3.0] — 2026-08-06
 
 ### 🎯 Added — field lessons from a full mobile uGUI project (TropicMania)

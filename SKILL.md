@@ -2,7 +2,7 @@
 name: unity-game-agent
 description: "Unity Game Agent: autonomous Unity game development pipeline for quick fixes, direct feature work, full game builds, verification, Play Mode checks, and MCP-driven Unity Editor automation. Use when working on Unity games, gameplay systems, scenes, UI, ScriptableObjects, builds, tests, or project continuation with Docs/ state files."
 metadata:
-  version: 3.3.0
+  version: 3.4.0
   author: Neoxider
   homepage: https://github.com/NeoXider/unity-game-agent
 ---
@@ -27,6 +27,9 @@ Act as a senior Unity C# game development agent that makes working, verified cha
 - Prefer adapters, extension points, and small isolated components over rewriting managers/controllers.
 - Use `rg` / `rg --files` for project search. Reuse project-local systems, installed packages, Unity built-in APIs, prefabs, ScriptableObjects, editor tools, scenes, and tests before building new framework code.
 - Do not revert user changes or run destructive git commands unless explicitly requested.
+- Do not normalize asset import settings, serialized values, or inspector configuration a human set
+  deliberately. Report the suspect setting and the defect it causes; change it only when that is the
+  task or the user agrees.
 - Keep runtime code, editor code, tests, and typed assets separated in every mode, including `fast`
   and Quick Fix. Follow [tools/project-structure.md](tools/project-structure.md).
 - Tracked Editor builders are forbidden. Do not create or keep code that generates, rebuilds,
@@ -133,7 +136,8 @@ and QA policy always still apply. To add a pattern, see [patterns/README.md](pat
 
 - Development patterns: [patterns/README.md](patterns/README.md); casual games on NeoxiderTools: [patterns/casual-neoxider/pattern.md](patterns/casual-neoxider/pattern.md)
 - UI stack profiles: `project-profiles/` — runtime UI Toolkit on Unity 6.5 / `PanelRenderer`: [project-profiles/ui-toolkit/README.md](project-profiles/ui-toolkit/README.md);
-  uGUI adaptivity canon (CanvasScaler `Expand`, safe-area insets, layout defects worth measuring): [project-profiles/plain-ugui.md](project-profiles/plain-ugui.md)
+  uGUI canon (pre-vetted effect packages before custom code, `sizeDelta`/pivot/sibling-order rules,
+  CanvasScaler `Expand`, safe-area insets, layout defects worth measuring): [project-profiles/plain-ugui.md](project-profiles/plain-ugui.md)
 - Provider-neutral MCP workflow: [tools/mcp-provider-neutral.md](tools/mcp-provider-neutral.md)
 - Unity MCP install/enable: [mcp-commands.md](mcp-commands.md). Tool usage: read the live MCP tool
   schemas and, if installed, the dedicated `unity-mcp-skill` — do not rely on a static command catalog.
@@ -451,7 +455,8 @@ Before closing any Unity-changing task:
   suites at integration/release milestones or when the blast radius justifies them. If tests cannot
   run, mark verification `degraded` and explain why.
 - For QA verification failures caused by unavailable/failing tooling, make at most two serious attempts, then record a degraded report with skipped checks and continue with a follow-up task.
-- For screenshot evidence, capture, review, and link the image. Screenshots must be nonblank, correctly framed, and show the expected state.
+- For screenshot evidence, capture, review, and link the image. Screenshots must be nonblank, correctly framed, and show the expected state. A screenshot taken after an animation/effect finished is not evidence that it played — hold the state or read the value.
+- Re-run the affected checks after every significant batch of fixes; a result is only valid for the change set it was taken in. State in the final report which checks were not re-verified afterwards and why.
 - For mechanics, verify runtime state, inputs/outputs, reset/restart, pause/time scale when relevant, scene reload behavior, and object lifecycle.
 - For physics/cameras, verify layers, colliders, Rigidbody/Rigidbody2D settings, time scale, and camera framing when relevant.
 - For pro mode, use risk-based focused tests plus integration/build/performance checks where the
@@ -527,7 +532,11 @@ Docs rules:
 - Add tautological, reflection-heavy, source-text, exact-layout, no-throw, or package-behavior tests
   without a named regression/contract and an observable failure signal.
 - Close runtime/player-visible standard/pro tasks without Play Mode verification when tooling is available and no concrete skip reason applies.
-- Report visual work as done without reviewing a screenshot.
+- Report visual work as done without reviewing a screenshot, or accept a screenshot of a finished effect as proof it played.
+- Write a custom uGUI effect (particles, soft mask, glow, dissolve) before evaluating the pre-vetted packages in `project-profiles/plain-ugui.md`.
+- Trust `sizeDelta` as a size, rotate without checking the pivot, or reason about uGUI draw/input order by eye instead of `EventSystem.RaycastAll`.
+- Rewrite import settings, serialized values, or inspector state a human configured on purpose.
+- Change a field's default, unit, or range without migrating the already-serialized scenes, prefabs, and assets.
 - Hardcode settings that belong in ScriptableObjects.
 - Add packages before discovery.
 - Write a common nontrivial system after a NeoxiderTools/local miss without searching and evaluating

@@ -85,6 +85,30 @@ UnityEngine.EventSystems.ExecuteEvents.Execute(buttonGo, ped, UnityEngine.EventS
 
 Developer must run the required tests through MCP (`run_tests` + `get_test_job`) when available. If MCP is unavailable, use Unity CLI batchmode when practical. If neither works, mark verification `degraded`, not `pass`.
 
+## Transient State Cannot Be Screenshotted Afterwards
+
+A screenshot taken after a tween, particle burst, flash, or timed popup has finished proves nothing —
+it shows the resting state, which looks identical whether the effect ran, ran wrongly, or never ran.
+Do one of these instead:
+
+- **Hold the state:** pause (`EditorApplication.isPaused`) or set `Time.timeScale = 0` at the moment
+  of interest, capture, then resume; or drive the tween to a fixed normalised time.
+- **Read the value:** assert the actual number in code (`tween.Elapsed()`, the eased position, the
+  `fillAmount`, the emitted particle count, the colour channel) and report the number.
+
+A capture whose timing is not controlled must be reported as "not verified", not as evidence.
+
+## QA Re-Runs After Every Fix Batch
+
+One QA pass at the start of a session is worthless: in a real session it was followed by dozens of
+edits, none of them covered by it.
+
+- Re-run the affected QA checks after **each significant batch of fixes**, not once per session.
+- A check's result is only valid for the build state it was taken in; record which change set it
+  covers.
+- The final report must state explicitly **what was not re-verified after the last change and why**.
+  "Everything works" without that list is a false claim.
+
 ## Bounded QA Attempts
 
 QA must not get stuck repeating the same failed verification path.

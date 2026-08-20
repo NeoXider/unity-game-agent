@@ -33,7 +33,8 @@
 
 ### VERIFY
 - Full Play Mode walkthrough of complete game flow.
-- `read_console` — completely clean.
+- `read_console` — no new errors or warnings versus the preflight baseline; pre-existing ones are
+  reported, not silently inherited.
 - Screenshot series of all key screens.
 - QA checklist if enabled in DEV_CONFIG.
 

@@ -126,6 +126,42 @@ Then create Tables, keys, assign locales. Docs: [Unity Localization](https://doc
 
 ---
 
+## uGUI effect packages (mob-sakai, MIT)
+
+Evaluate these **before writing any custom uGUI effect**. What each one does, its components, and its
+limits: [../project-profiles/plain-ugui.md](../project-profiles/plain-ugui.md) → "Ready uGUI effect
+packages".
+
+| Package | Id | Repo |
+|---|---|---|
+| ParticleEffectForUGUI | `com.coffee.ui-particle` | `https://github.com/mob-sakai/ParticleEffectForUGUI` |
+| SoftMaskForUGUI | `com.coffee.softmask-for-ugui` | `https://github.com/mob-sakai/SoftMaskForUGUI` |
+| UIEffect | `com.coffee.ui-effect` | `https://github.com/mob-sakai/UIEffect` |
+
+### How to add
+
+**Option 1: git URL** — Package Manager → **+** → *Add package from git URL*, or add the dependency to
+`Packages/manifest.json`. Use the exact URL from the repo's README (SoftMask and UIEffect are published
+from a subfolder: `https://github.com/mob-sakai/<Repo>.git?path=Packages/src`). Requires Git installed.
+Pin a tag (`#4.13.0`) rather than tracking the default branch.
+
+**Option 2: OpenUPM** — needs a scoped registry once in `Packages/manifest.json`:
+
+```json
+"scopedRegistries": [
+  { "name": "package.openupm.com", "url": "https://package.openupm.com", "scopes": ["com.coffee"] }
+]
+```
+
+then add `"com.coffee.ui-particle": "<version>"` to `dependencies`. Do not hand-edit
+`Packages/packages-lock.json`; Unity regenerates it on resolve.
+
+**After install:** SoftMask and UIEffect require their shader variants to be registered in Project
+Settings, otherwise effects work in the editor and break in the build. Verify in a build, not only in
+Play Mode.
+
+---
+
 ## Other (as needed)
 
 - **VContainer / Zenject** — DI for large projects (Pro mode). Install only when architecture clearly needs IoC. VContainer: UPM/Git; Zenject (Extenject): Asset Store or [GitHub](https://github.com/Mathijs-Bakker/Extenject).

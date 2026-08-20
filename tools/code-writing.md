@@ -182,6 +182,38 @@ Never use log volume as a quality target.
 
 ---
 
+## Serialized-Data Traps
+
+Each of these compiles, reads correctly, and is wrong at runtime.
+
+### Changing a field's default does not change existing data
+
+Serialized values live in the scene, prefab, and asset files. Editing the initializer in C# affects
+only objects created **after** the change. Rescaling a range (`intensity` from `0..5` to `0..1`) or
+changing a default colour therefore leaves every already-authored asset on the old value — a flash
+effect kept an intensity of `3` and a pink tint long after the code said otherwise.
+
+**Rule: any change to a field's meaning, unit, range, or default needs an explicit migration pass over
+the existing scenes/prefabs/SO assets, plus a report of how many assets were touched.** If migration
+is out of scope, keep the old range and add a new field instead.
+
+### `Ease` value `0` is `Ease.Unset`, not `Ease.Linear`
+
+A serialized `Ease` field defaults to `0`, and `0` is `Ease.Unset` — DOTween silently substitutes its
+own global default (`OutQuad`). Every "constant speed" level asset was actually easing. Same class of
+bug for any enum whose zero entry is a sentinel: **give serialized enum fields an explicit default in
+the field initializer** (`private Ease _ease = Ease.Linear;`) and verify the value stored in the asset,
+not the value in code.
+
+### `SpriteRenderer.color` / `Image.color` multiplies, it does not replace
+
+Tint is a per-pixel multiply against the texture. Setting `color = Color.white` cannot brighten a dark
+sprite, and no colour can make it lighter than the source pixels. A "flash the sprite white" effect
+needs a material/shader that lerps towards the target colour (or a second, pre-whitened sprite), never
+a colour tween.
+
+---
+
 ## Code Quality by Mode
 
 | Check | fast | standard | pro |

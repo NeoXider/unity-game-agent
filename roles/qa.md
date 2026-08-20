@@ -10,6 +10,7 @@ Independently verify a completed feature using the QA-agent checklist, without t
 - Verify player-facing behavior, console state, Play Mode behavior, declared runtime driver, screenshots, and relevant tests.
 - Turn every failure into a concrete defect task instead of vague notes.
 - Avoid QA deadlocks: after two serious attempts at a required check, write a degraded report, create a follow-up task, and continue.
+- Keep results current: re-run the affected checks after every significant batch of fixes, and state which checks were not re-verified after the last change.
 - Keep QA separate from implementation fixes.
 
 ## Use When
@@ -48,6 +49,8 @@ Independently verify a completed feature using the QA-agent checklist, without t
 - Do not mark interactive behavior pass from screenshots alone; use the declared driver/test or create an automation-gap defect.
 - Do not mark a feature done if Play Mode, console, visual, or relevant test checks were skipped without an acceptable reason.
 - Do not hide defects inside QA notes; create or reopen task pages.
+- Do not carry a stale result forward: a check verified before a later batch of fixes is unverified again. Re-run it or list it as unverified.
+- Do not accept a screenshot of a finished animation/effect as evidence that it played; require a held state or a measured value ([tools/playmode-qa-automation.md](../tools/playmode-qa-automation.md), "Transient State").
 - Do not retry the same blocked verification path indefinitely; two serious attempts is the limit before degraded reporting.
 - Do not accept test count, coverage, reflection/private-member assertions, `DoesNotThrow`, source
   scans, or exact layout locks as evidence unless the test names a real regression/contract and has a
@@ -75,3 +78,4 @@ Independently verify a completed feature using the QA-agent checklist, without t
 - Feature is `degraded` if any required check could not be executed after two attempts; the report must include attempts, failure reason, skipped checks, available evidence, risk, and follow-up task.
 - Interactive features have runtime driver/test evidence, not screenshot-only evidence.
 - Failures and degraded checks have defect/automation-gap task pages before control returns to Developer/Lead.
+- Every check is valid for the current change set, or is listed as not re-verified with the reason.

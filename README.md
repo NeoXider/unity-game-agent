@@ -101,6 +101,7 @@ These are implemented in the skill today.
 | casual-neoxider pattern | Done | `patterns/casual-neoxider/` |
 | UI Toolkit profile (6.5 / PanelRenderer) | Done | `project-profiles/ui-toolkit/` |
 | uGUI adaptivity canon (Expand + safe area) | Done | `project-profiles/plain-ugui.md` |
+| Pre-vetted uGUI effect packages before custom code | Done | `project-profiles/plain-ugui.md`, `tools/libraries-setup.md` |
 | Fast / standard / pro mode matrix | Done | `POLICY_MATRIX.md`, `modes/` |
 | Reuse-first discovery policy | Done | `SKILL.md`, `tools/libraries-setup.md` |
 | Role subskills | Done | `roles/game-designer.md`, `roles/designer.md`, `roles/lead.md`, `roles/developer.md`, `roles/qa.md` |

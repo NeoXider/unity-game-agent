@@ -45,9 +45,14 @@ $findings = [System.Collections.Generic.List[object]]::new()
 if (-not (Test-Path -LiteralPath $sourceRoot)) {
     Add-Finding $findings 'ERROR' 'STRUCTURE_ROOT' $AuthoringRoot 'Canonical authoring root is missing.'
 } else {
-    foreach ($requiredRoot in @('Scripts', 'Editor', 'Prefabs', 'Settings', 'Sprites')) {
-        if (-not (Test-Path -LiteralPath (Join-Path $sourceRoot $requiredRoot))) {
-            Add-Finding $findings 'ERROR' 'TYPED_ROOT' "$AuthoringRoot/$requiredRoot" 'Required typed root is missing.'
+    if (-not (Test-Path -LiteralPath (Join-Path $sourceRoot 'Scripts'))) {
+        Add-Finding $findings 'ERROR' 'TYPED_ROOT' "$AuthoringRoot/Scripts" 'Required typed root is missing.'
+    }
+    # project-structure.md says "use only the folders the feature needs", so an absent optional typed
+    # root is a reminder, not a defect. Misplaced content is caught by the rules below.
+    foreach ($optionalRoot in @('Editor', 'Prefabs', 'Settings', 'Sprites')) {
+        if (-not (Test-Path -LiteralPath (Join-Path $sourceRoot $optionalRoot))) {
+            Add-Finding $findings 'WARN' 'TYPED_ROOT' "$AuthoringRoot/$optionalRoot" 'Typed root absent; create it before adding content of this type.'
         }
     }
 }

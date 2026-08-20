@@ -30,6 +30,40 @@ rules. State the exception briefly when it is not self-evident.
 Use primary sources for technical decisions whenever possible. Do not rely on a search-result
 snippet when the repository, documentation, release notes, or license can be inspected directly.
 
+## Pre-Vetted Shortlists
+
+Some problem areas already have a checked answer in this skill. Consult them before running a generic
+search, and record why a listed package was rejected if you do not use it:
+
+- **uGUI visual effects** (particles in a Canvas, soft/shaped masks, shadow/glow/blur/dissolve):
+  the three MIT `com.coffee.*` packages in
+  [../project-profiles/plain-ugui.md](../project-profiles/plain-ugui.md) → "Ready uGUI effect packages".
+- **Casual/mobile gameplay systems** on a NeoxiderTools project: the reuse table in
+  [../patterns/casual-neoxider/pattern.md](../patterns/casual-neoxider/pattern.md).
+- **Shader-driven effects on any surface** (tint, outline, shadow, glow, dissolve, status effects,
+  UV motion, colour grading): **Sprite Shaders Ultimate**, if the project already owns it — one
+  shader family covering uGUI, SpriteRenderer, 2D-lit URP, 3D meshes and TextMeshPro. See
+  [../project-profiles/plain-ugui.md](../project-profiles/plain-ugui.md) → "Sprite Shaders Ultimate".
+- **Common libraries and how to install them**: [libraries-setup.md](libraries-setup.md).
+
+## Inventory Before Searching
+
+Search the project **before** searching the internet. A paid asset or a package installed months ago
+already answers a surprising share of "I need a shader / an effect / a UI helper" tasks, and nothing
+about the request will tell you it is there.
+
+Check, in this order:
+
+1. third-party folders under `Assets/` (asset-store packages land there, not in `Packages/`);
+2. `Packages/manifest.json` and `Library/PackageCache/`;
+3. the pattern's reuse table and the shortlists above;
+4. only then an external search, and only then custom code.
+
+WHY this is a numbered step and not advice: on a real project the agent correctly worked out that
+`SpriteRenderer.color` multiplies the texture and therefore cannot whiten a sprite — and then wrote
+its own flash shader, while a shader package sitting in `Assets/` had exactly that feature behind a
+toggle. The analysis was right; the inventory never happened.
+
 ## Candidate Gate
 
 Before importing, copying, or depending on a candidate, check:

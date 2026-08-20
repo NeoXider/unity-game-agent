@@ -60,6 +60,14 @@ read [managers.md](managers.md), the reuse policy, and grep the package. Typical
 | Spawn/pool | `Spawner` / `PoolManager` (`Neo.Tools`) |
 | Fly "object -> UI slot" | `AnimationFly` (`Neo.UI`) |
 | Inspector cheat buttons | `[Button]` (`Neo`) — on **any** MonoBehaviour, no custom Editor |
+| Particles inside a Canvas (confetti, coin burst, sparks) | `UIParticle` / `UIParticleAttractor` (`com.coffee.ui-particle`) — never a hand-written Image-rain component |
+| Soft mask, tutorial spotlight cut-out | `SoftMask` / `MaskingShape` (`com.coffee.softmask-for-ugui`) |
+| UI shadow / glow / blur / dissolve / gradient | `UIEffect` / `UIEffectTweener` (`com.coffee.ui-effect`) |
+
+The three `com.coffee.*` packages are MIT and installable from OpenUPM; details, components, and limits
+are in [../../project-profiles/plain-ugui.md](../../project-profiles/plain-ugui.md) ("Ready uGUI effect
+packages"). "Particles are not visible in my canvas" is an ordering problem (nested Canvas with
+`Override Sorting`, or `UIParticle`), not a reason to write a custom effect.
 
 No ready component -> for common nontrivial behavior, apply the
 [external solution reuse gate](../../tools/external-solution-reuse.md) and search maintained GitHub/UPM,
@@ -175,4 +183,5 @@ content in a separate Canvas instead of the `Game Page (UIPage)`. ❌ Own `Playe
 instead of `SaveManager`/`AM`/`ScoreManager`. ❌ Recording a sound at volume 0 in `AM._sounds`.
 ❌ NoCode (`*NoCodeAction`, NeoCondition NoCode). ❌ `new GameObject` for frequently spawned objects
 instead of prefab/pool. ❌ Own `CustomEditor` just for buttons (it shadows the `[Button]` fallback).
+❌ Hand-written uGUI particle/confetti/glow/soft-mask component instead of `UIParticle`/`UIEffect`/`SoftMask`.
 ❌ Progress/score saved only inside your own `Win()` instead of on `G.OnWin`.

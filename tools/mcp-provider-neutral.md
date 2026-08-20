@@ -134,6 +134,21 @@ Provider-agnostic Unity Editor automation traps (each verified in production):
 | Scene edit silently reverts | The scene was open and dirty in the editor while you patched the YAML on disk → check loaded scenes and `isDirty` before any file-level scene edit |
 | Tracked files change without you touching them | A build or editor restart flipped `UnityConnectSettings` analytics `0 → 1`, cleared a TMP fallback list, changed `EditorSettings.m_EnterPlayModeOptions`, or dropped `.slnx`/`.vsconfig` → audit `git status` after every build/restart and revert what nobody asked for |
 | Test assemblies end up in the player build | Missing `defineConstraints: ["UNITY_INCLUDE_TESTS"]` in the test asmdef |
+| Code-execution call times out with no result | The eval channel has a hard timeout (≈30 s on common adapters) → never run a whole-project `AssetDatabase.FindAssets("t:Prefab")`/`t:Scene` sweep inside it; scope the search to a folder, page it, or grep the files on disk instead |
+| Two `EventSystem` warnings that do not reproduce in a build | Two scenes are open additively in the editor → the build loads the scene in `Single` mode and has one. Check `list_open_scenes` before filing it as a defect |
+| Property set on a prefab instance disappears after reload | Instance property edits need `PrefabUtility.RecordPrefabInstancePropertyModifications(component)`. Sibling-order changes made **inside the prefab asset** do propagate to instances on their own — reorder in the asset, do not patch each instance |
+
+## Unity CLI / Batch Mode
+
+Batch mode fails in ways that look like project defects:
+
+- **`-quit` together with `-runTests` kills the run before the tests start.** Use `-runTests` with
+  `-batchmode` and let the test runner exit on its own; add `-quit` only to non-test invocations.
+- **A stale `Temp/UnityLockfile` from a crashed or still-open editor makes batch mode exit 1 with
+  almost no output.** Before blaming the project: check for a running Unity process, then delete the
+  lockfile and retry. Exit code 1 with an empty log is this, not a compile error.
+- Always pass `-logFile -` (or a file you then read) — the default log location makes a failed batch
+  run indistinguishable from a hung one.
 
 ## File-Only Fallback
 

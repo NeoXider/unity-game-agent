@@ -4,30 +4,31 @@ This file contains ONLY templates and doc structure rules. All pipeline/mode/MCP
 
 ---
 
-## Docs Baseline Gate (mandatory)
+## Docs Baseline Gate
 
-Before implementation starts, verify and create missing:
+Before implementation starts, verify and create the files the selected mode requires.
+[POLICY_MATRIX.md](POLICY_MATRIX.md) → "Docs Requirements" is the source of truth for which are
+`REQUIRED` / `OPTIONAL` per mode; this table only gives their purpose. Quick Fix creates none of them.
 
-| Create | Purpose |
-|--------|---------|
-| `Docs/DEV_CONFIG.md` | Settings (mode, platform, toggles) |
-| `Docs/GAME_DESIGN.md` | Game outline (mechanics, screens, SO) |
-| `Docs/DEV_STATE.md` | Current state (from template) |
-| `Docs/DEV_PLAN.md` | Task plan (after Plan mode) |
-| `Docs/AGENT_MEMORY.md` | Long-term memory (required, never skip) |
-| `Docs/ARCHITECTURE.md` | Architecture decisions (standard/pro) |
-| `Docs/DEV_PROFILE.json` | Machine-readable persistent settings |
-| `Docs/DEV_LOG/` | Iteration log folder |
-| `Docs/Screenshots/` | Screenshot folders (iter-01/, iter-02/) |
-| `Docs/Features/` | Standard/Pro feature pages, one file per Feature |
-| `Docs/Tasks/` | Standard/Pro task pages, one file per implementation task |
-| `Docs/QA/` | Agent-filled feature QA checklists |
-| `Docs/QA_AGENT/` | Duplicate independent QA-agent checklists |
-| First log file | `Docs/DEV_LOG/iteration-01-YYYYMMDD-HHMM.md` |
+| Create | Purpose | When |
+|--------|---------|------|
+| `Docs/DEV_CONFIG.md` | Settings (mode, platform, toggles) | always |
+| `Docs/DEV_PROFILE.json` | Machine-readable persistent settings | always |
+| `Docs/DEV_STATE.md` | Current state (from template) | always |
+| `Docs/AGENT_MEMORY.md` | Long-term memory (never skip) | always |
+| `Docs/DEV_LOG/` + `iteration-01-YYYYMMDD-HHMM.md` | Iteration log folder and first entry | always |
+| `Docs/Screenshots/` | Screenshot folders (`iter-01/`, `iter-02/`) | always |
+| `Docs/GAME_DESIGN.md` | Game outline (mechanics, screens, SO) | standard/pro; optional in fast |
+| `Docs/DEV_PLAN.md` | Task plan (after Plan mode) | standard/pro; optional in fast |
+| `Docs/ARCHITECTURE.md` | Architecture decisions | pro; optional in standard |
+| `Docs/Features/`, `Docs/Tasks/` | Feature and task pages for tracked work | standard/pro tracked features |
+| `Docs/QA/` | Agent-filled feature QA checklists | tracked/risky features |
+| `Docs/QA_AGENT/` | Independent QA-agent checklists | only when an independent QA pass actually runs |
 
-**Anti-patterns:** Do not create docs in project root. Do not skip AGENT_MEMORY. Do not create log files without datetime.
+**Anti-patterns:** Do not create docs in project root. Do not skip AGENT_MEMORY. Do not create log files without datetime. Do not pre-create `QA_AGENT/` "just in case".
 
-Bootstrap: `setup_project.bat "<project-root>"` creates all of the above.
+Bootstrap: `setup_project.bat "<project-root>"` scaffolds the tree; delete or leave empty the folders
+the selected mode does not require.
 
 ---
 
@@ -144,7 +145,7 @@ Use `tools/new-feature-docs.ps1` to generate Standard/Pro feature, task, QA, and
 # Scene Checklist — [FeatureName]
 
 - [ ] Inspector references set, no Missing.
-- [ ] Scene saved (manage_scene action=save).
+- [ ] Scene saved through the MCP scene-save capability.
 - [ ] Play Mode smoke test passed.
 - [ ] Console clean (read_console): no errors.
 - [ ] Final screenshot taken and reviewed by agent.
@@ -185,7 +186,7 @@ User review is optional after both pass. If QA cannot complete a required check 
 ## Iteration Gate Checklist (mandatory before next feature)
 
 - [ ] Implementation done
-- [ ] Compile clean (`validate_script` or `refresh_unity` + `read_console`)
+- [ ] Compile clean (import/compile readiness + `read_console`)
 - [ ] Play Mode test done
 - [ ] `read_console` checked (no new errors)
 - [ ] Screenshot saved and reviewed
@@ -251,6 +252,6 @@ Docs/            # Outside Assets (project root)
 ## DEV_PROFILE.json Schema
 
 The canonical schema (all fields with defaults) is the template itself:
-[templates/DEV_PROFILE.json](templates/DEV_PROFILE.json). SKILL.md → "Runtime Policy" carries the same
-defaults inline for the orchestrator; `tools/validate-skill.ps1` keeps the two in sync. Do not copy
-the JSON into more places.
+[templates/DEV_PROFILE.json](templates/DEV_PROFILE.json). SKILL.md → "Runtime Policy" explains what the
+important fields *mean* but never repeats the JSON; `tools/validate-skill.ps1` checks that the template
+carries every required field and that SKILL.md links it. Do not copy the JSON into more places.

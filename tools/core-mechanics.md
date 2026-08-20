@@ -85,6 +85,20 @@ Rule: **Core** does not know about Feature_* or game name. Feature scripts use C
 
 ---
 
+## Physics geometry vs drawn geometry
+
+Colliders are almost never the shape of the sprite, and the player judges the game by the sprite. A
+thrown blade whose collider was roughly a quarter of the sprite's visual width never triggered
+blade-versus-blade contacts, so blades stacked into a pile that looked like an obvious collision bug.
+
+**Rule: wherever the drawn silhouette is noticeably larger than the collider, add a logical check on
+top of the physical one** — an angular/positional occupancy test, a minimum separation between placed
+objects, or a spatial slot list — and treat physics as the fast rejection pass, not the authority.
+Before tuning gameplay numbers, measure both: collider bounds and sprite bounds, and record the
+intended relationship between them.
+
+---
+
 ## What not to put in core
 
 - Game-specific logic (combos, skills, inventory) — keep in Feature_*.
