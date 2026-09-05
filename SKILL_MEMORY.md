@@ -173,3 +173,10 @@ Allowed categories: workflow, verification, reuse, unity-mcp, docs, qa, architec
 - Apply when: Verifying any uGUI screen, and always before reporting UI work as complete.
 - Evidence: Arrows Flow, 2026-09-05: listener-count and component-walk audits both returned "0 dead" while a live raycast at the sound switch hit only the card and the scrim. Its track Graphic was inactive, and the only other raycast target was the ON/OFF label, 150 px wide and parked 48 px off-centre. The same audit missed four theme cards with no Graphic of their own.
 - Skill impact: QA role verification checklist; Play Mode UI checks; definition of done for any screen.
+
+### 2026-09-05 - anti-pattern
+- Trigger: A game needed sounds and music, the fal.ai generation bridge had no key, and the agent wrote a Python synthesiser to produce the clips from arithmetic.
+- Learning: Do not hand-synthesise game audio. Procedural sine-and-noise clips sound like a test tone no matter how carefully the envelopes are shaped, and shipping them quietly lowers the bar on a deliverable the client will judge by ear. When a generation route is blocked, the order is: (1) find another generation route before concluding there is none - fal.ai, a local ComfyUI with an audio model such as ACE-Step or Stable Audio, or whatever the project already uses for images and video; (2) failing that, source ready-made free clips under a licence that permits shipping; (3) only then report the gap and ask. Hand synthesis is not a third option, it is a way of appearing finished.
+- Apply when: Any task that calls for sound effects or music.
+- Evidence: Arrows Flow, 2026-09-05: the agent shipped eleven synthesised clips and reported audio complete. The client's answer was that generation was available all along through a route the agent had not looked for.
+- Skill impact: audio tasks; Designer and Developer asset sourcing; definition of done for audio.
