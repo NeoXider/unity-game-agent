@@ -59,10 +59,14 @@ quietly lowers the bar on the one deliverable a client judges entirely by ear.
 
 When audio is needed, work down this list and stop at the first that works:
 
-1. **Generate it.** Check every route the project already has before concluding there is none —
-   the `generate_audio` bridge (fal.ai: Stable Audio, CassetteAI, Lyria), or a local ComfyUI with
-   an audio model such as ACE-Step or Stable Audio, or whatever the project already uses for
-   images and video. A blocked route is not the same as no route.
+1. **Generate it.** Check every route before concluding there is none. **Look in the skills
+   folders first** — `~/.codex/skills` and `~/.claude/skills` — because a pipeline packaged as a
+   skill is invisible to any search of project directories. On this machine that is
+   `neoxider-video-studio`, whose `AudioGen/StableAudio3` and `AudioGen/ACEStep1.5` carry ready
+   ComfyUI workflows and whose `providers/*.json` say how to invoke them. Then the `generate_audio`
+   bridge (fal.ai: Stable Audio, CassetteAI, Lyria), or a local ComfyUI with an audio model. A
+   blocked route is not the same as no route, and a route you did not look for is not no route
+   either.
 2. **Source it.** Ready-made clips under a licence that permits shipping, from the packages the
    project already depends on or from a free library.
 3. **Report the gap and ask.** If neither is possible, say so plainly and name what is needed —

@@ -180,3 +180,10 @@ Allowed categories: workflow, verification, reuse, unity-mcp, docs, qa, architec
 - Apply when: Any task that calls for sound effects or music.
 - Evidence: Arrows Flow, 2026-09-05: the agent shipped eleven synthesised clips and reported audio complete. The client's answer was that generation was available all along through a route the agent had not looked for.
 - Skill impact: audio tasks; Designer and Developer asset sourcing; definition of done for audio.
+
+### 2026-09-05 - tools
+- Trigger: A game needed generated audio; the agent searched the drives for a local generation pipeline, found none, and told the client three times that none existed.
+- Learning: The local audio and video generation pipeline lives in the Codex skills folder, not in a project directory: `C:\Users\User\.codex\skills\neoxider-video-studio`. It holds `AudioGen/StableAudio3` and `AudioGen/ACEStep1.5` with ready ComfyUI workflows, plus `providers/stable_audio_3.json` and `providers/ace_step_1_5.json` describing how each is invoked (`scripts/generate_audio.py --kind music|sfx|ambience --prompt ... --duration ...`). Sibling skills `create-youtube-video` and `openclaw-video-toolkit` sit alongside it. Search `~/.codex/skills` and `~/.claude/skills` for existing pipelines before concluding a capability is unavailable - a tool that is packaged as a skill will not be found by scanning project folders or `D:\AI`.
+- Apply when: Any task needing generated audio, music, video or voice; and generally before reporting that a local generation route does not exist.
+- Evidence: Arrows Flow, 2026-09-05: three separate searches of `D:\`, `D:\AI` and the video projects reported no pipeline. The client insisted it existed. It was in `.codex/skills`, and its provider config already encoded the model choice the client had asked for.
+- Skill impact: asset generation; the "generate, then source, then ask" order in the Designer role.
