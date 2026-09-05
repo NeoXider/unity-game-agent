@@ -145,3 +145,31 @@ Allowed categories: workflow, verification, reuse, unity-mcp, docs, qa, architec
 - Apply when: Selecting namespace style for Unity C# authoring
 - Evidence: User explicitly defined fast and standard as namespace-free modes.
 - Skill impact: mode policy, code writing, project structure
+
+### 2026-08-24 - qa
+- Trigger: A Play Mode boot test reported zero captured errors and passed while startup muted Unity logging and teardown threw after XML results were saved.
+- Learning: Boot harnesses should use a reporting helper that restores their logging channel, run only the intended test assembly, assert that at least one interaction was actually driven, and post-scan the complete editor log for exceptions emitted during teardown after test completion.
+- Apply when: Building automated Unity startup, smoke, or reconstructed-project Play Mode checks.
+- Evidence: A deterministic static-constructor probe exposed the critical dependency; assembly filtering reduced 1777 tests to one; the complete log then revealed four post-result exceptions that XML and the in-test callback could not see.
+- Skill impact: Play Mode QA automation and final verification reporting.
+
+### 2026-09-04 - tools
+- Trigger: Bulk-importing designer PNGs as 9-sliced uGUI sprites with no Unity Editor running; borders had to come from the files themselves.
+- Learning: Derive a 9-slice border by measuring corner radius from the alpha silhouette thresholded at alpha>=250, not by scanning for uniform adjacent rows/columns. Modern UI art has gradients and glow, so no two adjacent lines are ever equal and the uniform-middle scan finds almost nothing; loosening its tolerance yields unstable garbage. The high alpha threshold also excludes soft drop shadows, which otherwise smear the edge profile and inflate the border to half the sprite. Force opposing borders symmetric when one exceeds ~2x the other, since asymmetric art (shadow lip, notch) skews a single edge, and zero an axis per-axis rather than globally so a pill-shaped button keeps its horizontal border.
+- Apply when: Importing or fixing 9-slice borders on raster UI sprites in bulk, especially file-only with the Editor closed.
+- Evidence: Arrows Flow, 2026-09-04: uniform-middle scan set a border on 1 of 30 stretchable sprites; alpha-silhouette method set correct symmetric borders on all 30, verified against sprite dimensions and design references.
+- Skill impact: tools/ sprite import guidance; project-profiles/plain-ugui.md 9-slice rules
+
+### 2026-09-04 - anti-pattern
+- Trigger: Reusing a purchased plugin (DOTween Pro) by copying its folder from an older donor project into a Unity 6.3 project.
+- Learning: Copy plugin DLLs but never their .dll.meta files across projects on different Unity versions. An old PluginImporter serializedVersion (1 vs the 2 Unity 6.3 requires) throws inside GetPrecompiledAssemblies and blocks ALL script compilation project-wide. The symptom is badly misleading: the MCP bridge is itself C#, so it never compiles either, and the failure presents as 'MCP is broken' or 'no Unity instances found' rather than as a stale asset meta. Diagnose by grepping Logs/Editor.log for 'below the supported minimum' rather than trusting the surface symptom; fix by deleting the .dll.meta files and letting Unity regenerate them.
+- Apply when: Porting Asset Store plugins, Plugins/ folders, or any precompiled DLL between Unity projects or Unity versions.
+- Evidence: Arrows Flow, 2026-09-04: six Demigiant .dll.meta files at serializedVersion 1 blocked compilation on Unity 6000.6.0f1; deleting them let Unity regenerate and Assembly-CSharp plus MCPForUnity.Editor rebuilt with zero errors.
+- Skill impact: tools/libraries-setup.md plugin reuse; Error Recovery section for misleading MCP-unavailable symptoms
+
+### 2026-09-05 - qa
+- Trigger: A UI audit reported all 28 buttons wired and live, and the client then found that the sound switch and all four theme cards did nothing when tapped.
+- Learning: Counting a Button's onClick listeners proves nothing about whether a player can press it. A Button raycasts against Graphics, and three separate conditions silently kill one: no Graphic on the Button's own object, every child Graphic having raycastTarget off (the usual house rule for decorative art), or the only raycast target being inactive or too small and off-centre to cover where the finger lands. Verify by driving EventSystem.RaycastAll at each button's centre with its page actually open and asserting the Button or one of its descendants is in the hit list - then click it and assert observable state changed. An audit that walks components instead of the event system will report a dead control as healthy.
+- Apply when: Verifying any uGUI screen, and always before reporting UI work as complete.
+- Evidence: Arrows Flow, 2026-09-05: listener-count and component-walk audits both returned "0 dead" while a live raycast at the sound switch hit only the card and the scrim. Its track Graphic was inactive, and the only other raycast target was the ON/OFF label, 150 px wide and parked 48 px off-centre. The same audit missed four theme cards with no Graphic of their own.
+- Skill impact: QA role verification checklist; Play Mode UI checks; definition of done for any screen.

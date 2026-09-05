@@ -71,11 +71,35 @@ Independently verify a completed feature using the QA-agent checklist, without t
 10. Fill QA-agent result and evidence for every checklist row.
 11. On fail, create or reopen a defect task with repro steps, expected/actual behavior, evidence, and affected files/systems.
 
+## Every Button, Actually Pressed
+
+A uGUI control that a player cannot press is indistinguishable, in every audit that walks
+components, from one that works. Counting `onClick` listeners proves only that code is attached.
+
+For each interactive element, with its page actually open in Play Mode:
+
+1. Drive `EventSystem.current.RaycastAll` at the element's **centre** and assert the control or one
+   of its descendants appears in the hit list. If the front-most hit is a panel, a scrim or a card,
+   the control is dead.
+2. Then invoke the interaction and assert **observable state changed** - a value, a page, a saved
+   field, an audio source. A listener that fires into a no-op is still a defect.
+
+Three ways a control ends up unpressable, all of which pass a component walk:
+
+- The object carrying `Button` has no `Graphic` of its own, so there is nothing to raycast against.
+- Every child `Graphic` has `raycastTarget` off, which is the normal house rule for decorative art.
+- The only raycast target is inactive, or is small and off-centre - a label beside a switch handle
+  covers the label, not the switch.
+
+Record the result per element. "All buttons wired" is not a QA result; "all buttons pressed, and
+here is what each one changed" is.
+
 ## Done Gate
 
 - `Docs/QA_AGENT/FEAT-*-qa.md` is fully filled.
 - Feature is `pass` only if all required checks pass or skipped checks have explicit acceptable reasons.
 - Feature is `degraded` if any required check could not be executed after two attempts; the report must include attempts, failure reason, skipped checks, available evidence, risk, and follow-up task.
 - Interactive features have runtime driver/test evidence, not screenshot-only evidence.
+- Every interactive element was raycast-verified and pressed in Play Mode, with the state change it produced recorded. Listener counts are not evidence.
 - Failures and degraded checks have defect/automation-gap task pages before control returns to Developer/Lead.
 - Every check is valid for the current change set, or is listed as not re-verified with the reason.
