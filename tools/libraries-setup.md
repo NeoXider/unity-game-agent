@@ -197,6 +197,17 @@ Play Mode.
 
 ---
 
+## Porting a purchased plugin from another project
+
+Copy plugin DLLs, **not their `.dll.meta` files**, between projects on different Unity versions. An old
+`PluginImporter` `serializedVersion` (1 where Unity 6.3+ needs 2) throws inside
+`GetPrecompiledAssemblies` and blocks **all** script compilation. The symptom misleads: the MCP bridge is
+C# too, so it never compiles, and the failure looks like "MCP is broken / no Unity instances". Grep
+`Logs/Editor.log` for `below the supported minimum`; delete the stale `.dll.meta` files and let Unity
+regenerate them.
+
+---
+
 ## For the agent
 
 - Before adding a library check **Packages/manifest.json** and **Assets** — it may already be installed.

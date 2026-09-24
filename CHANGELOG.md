@@ -4,9 +4,26 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.5.1] — 2026-09-24
+
+### 🧹 Changed — memory compaction and machine-neutral wording
+- **`SKILL_MEMORY.md` compacted** from 30 full entries (224 lines) to a *Promoted lessons* index: every
+  lesson now lives in the skill document that owns it, and the memory keeps only an empty
+  *Active Learnings* inbox plus rules for keeping it small.
+- The six lessons that existed only in memory were promoted: sprite-rename meta fields and 9-slice
+  borders from the alpha silhouette (`project-profiles/plain-ugui.md`), stale `.dll.meta` blocking
+  compilation (`tools/libraries-setup.md`), feature removal sweep (`tools/project-structure.md`), boot
+  harness and UI acceptance document (`tools/playmode-qa-automation.md`).
+- `tools/append-skill-memory.ps1` warns past 10 active entries; `SKILL.md` states the compaction rule.
+- Removed machine-specific paths and local tool names from `tools/audio.md`, `roles/designer.md` and
+  the memory: generation is described as "an installed generation skill, ComfyUI with an audio model,
+  or a hosted API". Project names removed from the changelog headings.
+
+---
+
 ## [3.5.0] — 2026-09-24
 
-### 🎯 Added — field lessons from a shipped mobile puzzle (Dots Linker, casual-neoxider)
+### 🎯 Added — field lessons from a shipped mobile puzzle (casual-neoxider)
 - **`tools/ui-motion-and-monetization.md`**: three motion layers (page / in-page stagger / control
   feedback), stagger rules (alpha + scale only, no taps before visible, rest scale stored once,
   `SetUpdate(true)`, `SetLink`), press feedback injected on every button (sticky-scale fix), result
@@ -21,7 +38,7 @@ All notable changes to this skill are documented here.
 - **`tools/shaders-and-vfx.md`**: recommended libraries by need, when a custom shader is right (data
   texture + SDF "neon path" recipe), the UI shader checklist (masks, vertex colour, atlas UV rect,
   per-graphic materials, unscaled time, variant stripping, precision).
-- **`tools/audio.md`**: generate → source → ask (local Stable Audio / ACE-Step pipeline), prompting,
+- **`tools/audio.md`**: generate (an installed generation skill, ComfyUI with Stable Audio / ACE-Step, or an API) → source → ask, prompting,
   import settings per clip type, one tap sound for all buttons, rate-limited SFX, one
   `AudioListener.pause` owner for background and ads, timers stopping in the background.
 - **`tools/mobile-build-and-size.md`**: measuring texture memory, the ETC2 multiple-of-4 fallback to
@@ -41,7 +58,7 @@ All notable changes to this skill are documented here.
 
 ## [3.4.0] — 2026-08-20
 
-### 🎯 Added — field lessons from a mobile uGUI game (BladeVault, casual-neoxider)
+### 🎯 Added — field lessons from a mobile uGUI game (casual-neoxider)
 - **Pre-vetted uGUI effect packages** (`project-profiles/plain-ugui.md`, referenced from
   `tools/external-solution-reuse.md`, `tools/libraries-setup.md`, `patterns/casual-neoxider/pattern.md`):
   the three MIT mob-sakai packages — `com.coffee.ui-particle` (real `ParticleSystem` through
@@ -108,7 +125,7 @@ All notable changes to this skill are documented here.
 
 ## [3.3.0] — 2026-08-06
 
-### 🎯 Added — field lessons from a full mobile uGUI project (TropicMania)
+### 🎯 Added — field lessons from a full mobile uGUI project
 - **`project-profiles/plain-ugui.md` grew an adaptivity canon**: one project-wide `CanvasScaler`
   contract (`Scale With Screen Size`, single reference resolution, `Screen Match Mode = Expand`) with
   a guard test over scenes *and* prefabs; the top safe-area rule (100 px with a top pivot/anchor,

@@ -69,6 +69,12 @@ Clean Architecture layers. Use only the folders the feature needs.
   an existing namespace merely to satisfy the selected mode. Create asmdefs only at meaningful
   dependency boundaries, never as a mode-driven quota.
 
+## Removing A Feature
+
+Deleting the code is not the end of it. Sweep scene/prefab YAML for serialized overrides that still
+point at the removed members, delete the objects the feature owned, and re-check the build for vendored
+demo content and textures nobody uses — they can dominate build size.
+
 ## Editing A Versioned Package In The Project
 
 When the task touches an embedded/local UPM package (a `Packages/<id>` folder or an in-`Assets` package

@@ -55,3 +55,13 @@ $entry = @"
 
 Add-Content -LiteralPath $memoryPath -Value $entry -Encoding UTF8
 Write-Output "Appended skill memory entry to $memoryPath"
+
+# Memory is an inbox: past 10 active entries it is time to move lessons into the skill documents.
+$text = Get-Content -LiteralPath $memoryPath -Raw -Encoding UTF8
+$activeStart = $text.IndexOf("## Active Learnings")
+if ($activeStart -ge 0) {
+    $active = ([regex]::Matches($text.Substring($activeStart), "(?m)^### \d{4}-\d{2}-\d{2} - ")).Count
+    if ($active -gt 10) {
+        Write-Output "WARNING: $active active learnings. Compact SKILL_MEMORY.md: move each lesson into its skill document, then replace the entry with one index line."
+    }
+}

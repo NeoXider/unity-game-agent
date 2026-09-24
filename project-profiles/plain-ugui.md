@@ -274,6 +274,22 @@ normalising `maxTextureSize` and `Sprite Mode` on the customer's art was a regre
 Report the suspicious asset and the concrete visual defect it causes, and change it only when the task
 is that defect or the user agrees.
 
+### Renaming sprite files
+
+Sliced sprite names live inside the `.png.meta` (`internalIDToNameTable` `second:` entries and
+`sprites[].name`), so renaming the file keeps the old sprite names and silently breaks name-based
+lookups and parsers. Rewrite both meta fields to the new base name and keep each `internalID`.
+Non-ASCII sprite names are stored as quoted `\uXXXX` escape strings — match the whole quoted line.
+
+### 9-slice borders measured from the art
+
+When borders must come from the files (bulk import, editor closed), measure the corner radius from the
+**alpha silhouette thresholded at alpha ≥ 250**, not by scanning for uniform rows/columns: modern UI art
+has gradients and glow, so no two adjacent lines are equal, and a looser tolerance produces garbage. The
+high threshold also ignores soft drop shadows, which otherwise inflate the border to half the sprite.
+Force opposing borders symmetric when one exceeds ~2× the other (a shadow lip skews one edge), and zero
+a border per axis — a pill-shaped button keeps its horizontal border.
+
 ## Mockup fidelity
 
 Mockups contain mistakes. Fix them in the product and record the deviation instead of copying them:

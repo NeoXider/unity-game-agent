@@ -152,6 +152,20 @@ separately. Items the owner already decided are not re-reported.
 - Restore what you changed for the session: Game view resolution, input settings, time scale, test
   devices, opened scenes.
 
+### Boot and smoke harnesses
+
+A boot test that reports "0 errors" can be lying: startup code may mute logging, and teardown can throw
+after the XML result is written. Restore the logging channel in the harness, run only the intended test
+assembly, assert that at least one interaction was actually driven, and scan the full editor log for
+exceptions after the run.
+
+### UI acceptance document for a human reviewer
+
+Mockup beside the build frame, one comment field and one approve checkbox per page, and only the owner
+ticks approve. Copy the mockups into the document's own screenshots folder (relative links into the art
+folder do not preview). Keep intentional deviations in their own section. When a new round supersedes an
+old file, carry the reviewer's comments over verbatim with their resolution before deleting it.
+
 ## Bounded QA Attempts
 
 QA must not get stuck repeating the same failed verification path.

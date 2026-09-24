@@ -2,7 +2,7 @@
 name: unity-game-agent
 description: "Unity Game Agent: autonomous Unity game development pipeline for quick fixes, direct feature work, full game builds, verification, Play Mode checks, and MCP-driven Unity Editor automation. Use when working on Unity games, gameplay systems, scenes, UI, ScriptableObjects, builds, tests, or project continuation with Docs/ state files."
 metadata:
-  version: 3.5.0
+  version: 3.5.1
   author: Neoxider
   homepage: https://github.com/NeoXider/unity-game-agent
 ---
@@ -182,6 +182,12 @@ After a task is completed and verified, append a skill memory entry when the tas
 Do not write project-specific decisions, user preferences for one project, secrets, private paths, one-off fixes, or noisy observations to `SKILL_MEMORY.md`. Put project-local facts in `Docs/AGENT_MEMORY.md`.
 
 Prefer `tools/append-skill-memory.ps1` for entries. If a lesson would materially change skill behavior, propose the change or patch the skill intentionally instead of only recording memory.
+
+Keep the memory small: it is an inbox, not an archive. When `Active Learnings` passes 10 entries (the
+append tool warns), before a skill release, or when entries duplicate each other, compact it — move
+each lesson into the skill document named in its *Skill impact*, delete the entry, and add one line to
+the *Promoted lessons* index. Everything in the skill must hold on any machine and project: no local
+paths, drive letters, local tool or skill names, or one-project facts — describe the capability instead.
 
 ## Role Subskills And Subagents
 

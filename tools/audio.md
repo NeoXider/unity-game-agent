@@ -6,13 +6,13 @@ time's up). Plan the list from the game's events before generating anything.
 
 ## 1. Where audio comes from — in this order
 
-1. **Generate.** Look for an existing pipeline before concluding there is none — packaged skills are
-   not found by scanning project folders:
-   - `~/.codex/skills/neoxider-video-studio` → `scripts/generate_audio.py --kind music|sfx|ambience
-     --prompt "..." --duration N`, providers in `providers/stable_audio_3.json` (SFX, ambience) and
-     `providers/ace_step_1_5.json` (music with structure), ComfyUI workflows under `AudioGen/`.
-   - fal.ai (Stable Audio, ElevenLabs SFX) when a key is configured.
-   - Also search `~/.claude/skills`, `~/.codex/skills`, and the project's own tools.
+1. **Generate.** Check every route before concluding there is none:
+   - **An installed media/audio generation skill.** List the agent's available skills and use one
+     that generates music/SFX; follow its own instructions for models and invocation. A pipeline
+     packaged as a skill is not found by searching project folders.
+   - **ComfyUI directly** with an audio model: Stable Audio (SFX, ambience, short loops) or ACE-Step
+     (music with structure). Use the workflows already on the machine when there are any.
+   - A hosted generation API (e.g. fal.ai Stable Audio, ElevenLabs SFX) when a key is configured.
 2. **Source** free clips whose licence allows shipping (CC0 first: Kenney, freesound CC0 filter,
    OpenGameArt CC0). Record source + licence per file in the project docs.
 3. **Report the gap and ask.**
