@@ -280,11 +280,21 @@ is that defect or the user agrees.
 Unity already slices a sheet into named sub-sprites and stores the names, rects, pivots and 9-slice
 borders in the texture's `.meta`. **Do not cut a kit into separate PNG files** with an external script:
 it duplicates the art, loses the link to the source sheet, and a re-export of the kit then needs the
-whole cut repeated. Cutting into files is right only when the sheet itself is inefficient — mostly
-empty space, far larger than the pieces the game uses, or pieces that must sit in different atlases or
-need different import settings (compression, max size) — and then say why.
+whole cut repeated.
 
-No project tool is needed; drive the Sprite Editor's own API from an editor eval (package
+**1. Decide.** Keep the sheet and slice it — that is the default. The usual objection, "the sheet is
+mostly empty space", is not a reason to cut: once its sub-sprites are in a **sprite atlas**, the build
+contains only the packed pieces and the sheet's empty space never ships. Cut into files only when:
+
+- the project has no atlases and will not get them, and the sheet is sparse or much larger than the
+  pieces the game uses (say why in the task notes);
+- a piece needs import settings the rest of the sheet must not have (a different compression or max
+  size that an atlas cannot give it);
+- the sheet is not really a sheet (one illustration with a few overlays) — then it is `Single`.
+
+**2. Slice.** Humans: Sprite Editor → Slice → **Automatic**, method **Smart** when sprites already exist
+(it keeps existing names and IDs), **Delete Existing** only on a fresh sheet. Agents: the same through
+the Sprite Editor's data provider from an editor eval — no project tool needed (package
 `com.unity.2d.sprite`; in Unity 6 the types are `UnityEditor.SpriteRect`,
 `UnityEditor.SpriteNameFileIdPair`, `UnityEngine.GUID`):
 
@@ -312,15 +322,34 @@ dp.Apply();
 imp.SaveAndReimport();
 ```
 
-- **Naming:** slice first with placeholder names, render a numbered contact sheet of the rects, then
-  write the real names (and borders) in a second pass. Keep the index → name list in the task notes
-  only while working; the `.meta` is the record afterwards.
-- **Renaming later is safe** when the existing `spriteID` is kept (`GetSpriteRects()`, change `name`,
-  `SetSpriteRects`, update the name/ID pairs, `Apply`) — scene and prefab references follow the ID.
-- **Re-slicing is not:** fresh `GUID.Generate()` IDs break every reference to the old sub-sprites. When
-  a kit is re-exported, match new rects to old ones (by name or overlap) and reuse their `spriteID`.
-- Sub-sprites go into sprite atlases like any other sprite; a kit that is itself dense can also be
-  used as-is without an atlas.
+Automatic slicing is a first draft. Check it before naming: a glow or drop shadow separated from its
+button (raise the alpha threshold's reach by padding the rect, or merge the two rects), two pieces that
+touch merged into one (split the rect by hand), tiny specks (raise `minRectSize`).
+
+**3. Name, pivot, border.** Render a numbered contact sheet of the rects (index drawn on each), write the
+index → name table from what each piece is on the mockup (`btn_next`, `card_progress`, `bar_fill_gold`),
+then apply names, pivots (centre for UI) and 9-slice borders (measured from the alpha silhouette, next
+section) in one pass. Names describe the role, not the kit position. The `.meta` is the record
+afterwards; the table only lives in the task notes while working.
+
+**4. Keep IDs stable.** References in scenes and prefabs point at a sub-sprite's `spriteID`, not its
+name or file.
+
+- **Renaming is safe** when the existing `spriteID` is kept: `GetSpriteRects()`, change `name`/`border`,
+  `SetSpriteRects`, update the name/ID pairs, `Apply`.
+- **Re-slicing is not:** fresh `GUID.Generate()` IDs orphan every reference. When the designer
+  re-exports the kit **over the same file** (keep the file name — the `.meta` and its old rects stay),
+  read the old rects first, auto-slice the new art, match each new rect to the old one with the largest
+  overlap (IoU ≥ 0.5; the same name if pieces moved far), and carry over `spriteID`, name, pivot and
+  border. New pieces get new IDs and names; old pieces with no match are reported, not silently dropped.
+
+**5. Verify.** Sprite count equals the table; a contact sheet rendered from the imported sub-sprites
+(not from your rects) shows every name on the right piece with no clipped glow; every scene/prefab
+reference to the sheet still resolves (no missing sprites); stretchable pieces render cleanly at 2–3×
+their width through `Image.Type.Sliced`.
+
+**6. Build.** Put the sheet (or its folder) into the screen's sprite atlas. Sub-sprites drawn with a
+UV-dependent shader effect stay out of atlases (see [../tools/shaders-and-vfx.md](../tools/shaders-and-vfx.md)).
 
 ### Renaming sprite files
 

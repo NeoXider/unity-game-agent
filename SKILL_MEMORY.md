@@ -54,7 +54,7 @@ Each line: when it was learned → where the rule lives now. Read the document, 
 | 2026-09 | Driving Input System input from QA despite editor focus | `tools/input-system.md` |
 | 2026-09 | Dirty scene → modal dialog → MCP timeouts; no QA during the owner's play session | `tools/playmode-qa-automation.md` |
 | 2026-09 | Map markers along a hand-traced road, verified by crops | `tools/meta-progress-map.md` |
-| 2026-09 | Slice designer kits in Unity (Multiple + data provider), keep `spriteID` on rename; cut files only for inefficient sheets | `project-profiles/plain-ugui.md` |
+| 2026-09 | Slice designer kits in Unity (decide → slice → name → stable IDs → verify → atlas); atlases make sparse kits cheap, so cutting files is an exception | `project-profiles/plain-ugui.md`, `tools/mobile-build-and-size.md` |
 
 ## Active Learnings
 

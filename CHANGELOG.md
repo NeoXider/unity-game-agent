@@ -4,6 +4,20 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.5.3] — 2026-09-24
+
+### 🔧 Changed — sprite sheet workflow, end to end
+- `project-profiles/plain-ugui.md`: the kit section is now a process — decide (keep and slice by
+  default; atlases drop a sparse sheet's empty space, so cutting files is only for projects without
+  atlases, per-piece import settings, or non-sheets), slice (Sprite Editor Automatic with the Smart
+  method, or the data provider from an eval), review the automatic draft, name/pivot/border from a
+  numbered contact sheet, keep `spriteID`s stable across renames and designer re-exports (IoU matching
+  over the same file), verify from the imported sub-sprites, and atlas.
+- `tools/mobile-build-and-size.md`: sliced sheets and kits go into atlases (the old advice to keep 2048²
+  sheets out contradicted the rule above).
+
+---
+
 ## [3.5.2] — 2026-09-24
 
 ### 🔧 Changed — slice sprite sheets in Unity

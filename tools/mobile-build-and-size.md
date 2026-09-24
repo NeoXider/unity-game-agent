@@ -50,8 +50,11 @@ Shop, Win …) so a page loads one texture and batches its draw calls.
 - Packing for uGUI: **tight packing off, rotation off**, padding 4, alpha dilation on. Tight packing
   and rotation assume sprite meshes; `Image` draws the rect and shows neighbours' pixels.
 - Add textures/sprites explicitly rather than whole folders when some sprites must stay out.
+- **Sliced sheets and designer kits go into atlases** — packing keeps only the used sub-sprites and
+  drops the sheet's empty space, which is why a sparse kit is not a reason to cut it into files
+  ([../project-profiles/plain-ugui.md](../project-profiles/plain-ugui.md)).
 - **Keep out of atlases:** full-screen backgrounds and anything > ~1300 px (they just waste a page),
-  multi-sprite sheets that are already 2048², and every sprite drawn with a custom material or a
+  and every sprite drawn with a custom material or a
   shader effect that reads UV as "position inside the sprite" (shine sweeps, SDF dots, radial
   fills) — list them from the scenes/prefabs and runtime material owners first. See
   [shaders-and-vfx.md](shaders-and-vfx.md) §3.
