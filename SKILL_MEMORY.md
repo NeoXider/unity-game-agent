@@ -187,3 +187,38 @@ Allowed categories: workflow, verification, reuse, unity-mcp, docs, qa, architec
 - Apply when: Any task needing generated audio, music, video or voice; and generally before reporting that a local generation route does not exist.
 - Evidence: Arrows Flow, 2026-09-05: three separate searches of `D:\`, `D:\AI` and the video projects reported no pipeline. The client insisted it existed. It was in `.codex/skills`, and its provider config already encoded the model choice the client had asked for.
 - Skill impact: asset generation; the "generate, then source, then ask" order in the Designer role.
+
+### 2026-09-24 - anti-pattern
+- Trigger: PlayerSettings saved from the editor showed company, product name and bundle id different from git; the agent "restored" the git values and rebuilt.
+- Learning: Saving PlayerSettings writes the editor's in-memory values. When they differ from the committed file, the difference is usually the owner's newer, uncommitted intent (they renamed the product in the editor). Commit it or ask - never restore the old values from git, and diff ProjectSettings.asset before every commit that touched settings.
+- Apply when: Any automation that saves project settings, before builds, and whenever a settings diff shows fields you did not touch.
+- Evidence: Dots Linker 2026-09-24: the owner had set com.DefaultCompany.FlowFree / FlowFree / splash off; the agent reverted it and shipped an APK under the old id until the owner said "I changed that".
+- Skill impact: tools/input-system.md step 5; tools/mobile-build-and-size.md player-settings audit; SKILL.md anti-patterns.
+
+### 2026-09-24 - tools
+- Trigger: A 1290x2796 art set produced a 166 MB APK.
+- Learning: ETC2 needs dimensions that are multiples of 4; phone-resolution designer art (1290, 1289, 1109 px) silently falls back to RGBA32. Measure with Profiler.GetRuntimeMemorySizeLong per texture, then override Android/iOS to ASTC (6x6 full-screen, 5x5 UI, 4x4 small) and atlas UI per screen with tight packing and rotation off. Keep sprites drawn with UV-dependent shader effects (SSU shine, SDF dots) and their runtime swap sprites out of atlases, or pass the outer UV rect to the shader.
+- Apply when: Before the first build handed to an owner; whenever a build looks too large.
+- Evidence: Dots Linker 2026-09-24: 187 of 224 textures were RGBA32; ASTC + 14 atlases took the APK from 166 MB to 64 MB with no art removed and all 127 tests green.
+- Skill impact: tools/mobile-build-and-size.md; tools/shaders-and-vfx.md.
+
+### 2026-09-24 - qa
+- Trigger: Simulated Input System clicks in Play Mode did nothing while the editor window was unfocused.
+- Learning: Default InputSettings drop pointer/keyboard input when the Game view is unfocused and reset existing devices. Assign a runtime InputSettings instance (IgnoreFocus + AllDeviceInputAlwaysGoesToGameView), add fresh virtual devices, and do move/press/release inside one eval with InputSystem.Update() and a reflected EventSystem.Update() between steps. That drives the real InputSystemUIInputModule, which ExecuteEvents does not.
+- Apply when: Verifying input after switching to the Input System, scroll axes, drags, and the Back key.
+- Evidence: Dots Linker 2026-09-24: age-gate click, city horizontal swipe (page 0 -> 1), locked vertical axis (y stayed 0) and Escape navigation all verified this way.
+- Skill impact: tools/input-system.md; tools/playmode-qa-automation.md.
+
+### 2026-09-24 - workflow
+- Trigger: MCP calls timed out after scene edits, and a QA subagent disturbed the owner's own play session.
+- Learning: An MCP timeout right after a scene edit is almost always the modal "save changes?" dialog - save and assert scene.isDirty == false before tests, Play Mode or scene switches. Never run QA automation while the owner is playing in the same editor, and give QA its own save profile key, deleted afterwards.
+- Apply when: Every editor-mutating step and every QA round.
+- Evidence: Dots Linker 2026-09: the owner had to click the dialog to unblock the editor; the owner saw coins "come back" because the tester's session loaded over theirs.
+- Skill impact: tools/playmode-qa-automation.md "Editor hygiene during QA".
+
+### 2026-09-24 - workflow
+- Trigger: Progress-map stops kept landing on walls, lamps and planters.
+- Learning: Route markers over painted art along a hand-traced, spline-smoothed road centre with HUD/pin obstacle rects, DP placement, per-stop manual overrides and hidden stretches; verify with crops of every stop at its real rendered radius. Colour-mask routing picks up lit walls and plazas and cannot be trusted.
+- Apply when: Any map/world meta-progression with markers on illustrated backgrounds.
+- Evidence: Dots Linker 2026-09: five QA rounds with mask routing still had stops off road; the hand-traced route reached zero off-road stops in two rounds.
+- Skill impact: tools/meta-progress-map.md.

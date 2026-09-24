@@ -30,6 +30,13 @@ in scenes. **Not for:** general C#/Unity API questions without building a game, 
   (workflow + gotchas); install/enable: [../../mcp-commands.md](../../mcp-commands.md); tool usage —
   live MCP schemas / the `unity-mcp-skill`.
 - Reference games: study existing casual games in project-provided samples, local references, or approved repos before building.
+- **Polish and release** (casual games live or die here): motion, reveal order and monetisation
+  priority, reward flights — [../../tools/ui-motion-and-monetization.md](../../tools/ui-motion-and-monetization.md);
+  Input System and Android Back — [../../tools/input-system.md](../../tools/input-system.md);
+  shaders/VFX — [../../tools/shaders-and-vfx.md](../../tools/shaders-and-vfx.md);
+  audio — [../../tools/audio.md](../../tools/audio.md); build size and APK —
+  [../../tools/mobile-build-and-size.md](../../tools/mobile-build-and-size.md); map meta progression —
+  [../../tools/meta-progress-map.md](../../tools/meta-progress-map.md).
 
 ---
 

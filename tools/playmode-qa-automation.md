@@ -83,6 +83,15 @@ var ped = new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems
 UnityEngine.EventSystems.ExecuteEvents.Execute(buttonGo, ped, UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);
 ```
 
+`ExecuteEvents` bypasses the input module. To prove that real input reaches the UI (after switching
+to the Input System, for drag/scroll axes, for the Back key), drive virtual Input System devices
+through the real `InputSystemUIInputModule` — recipe and the two focus traps in
+[input-system.md](input-system.md) "Driving the Input System from QA".
+
+Before any tap, prove the target is hit: `EventSystem.RaycastAll` at the control's screen centre must
+return the control (or a child) first. During an entrance animation an invisible control must *not*
+be hit.
+
 Developer must run the required tests through MCP (`run_tests` + `get_test_job`) when available. If MCP is unavailable, use Unity CLI batchmode when practical. If neither works, mark verification `degraded`, not `pass`.
 
 ## Transient State Cannot Be Screenshotted Afterwards
@@ -108,6 +117,40 @@ edits, none of them covered by it.
   covers.
 - The final report must state explicitly **what was not re-verified after the last change and why**.
   "Everything works" without that list is a false claim.
+
+## The QA Loop With a Tester Agent
+
+For a game heading to the owner, run numbered rounds until nothing Critical or Major remains:
+
+1. **Tester pass** (a QA subagent acting as a player, not a code reviewer): every screen and every
+   button through real taps, every mode start to finish, replays, persistence across an app restart,
+   economy consistency (balance before/after each reward, no double pay, collected items stay
+   collected), the resolution matrix from
+   [../project-profiles/plain-ugui.md](../project-profiles/plain-ugui.md), and targeted crops for
+   anything drawn over art. Output: `Docs/QA/qaN/report.md` with Critical / Major / Minor / Cosmetic,
+   each item with numbers and a screenshot or crop, a status table for the previous round's items,
+   what was *not* checked, and open owner questions.
+2. **Fix pass** by the orchestrator, one commit per round.
+3. **Next round** re-checks the previous items first, then looks for regressions.
+
+The owner receives the final round's report, with accepted items and owner questions listed
+separately. Items the owner already decided are not re-reported.
+
+### Editor hygiene during QA (all learned the hard way)
+
+- **Never run QA while the owner is playing in the editor.** The tester drives the same editor and
+  the same save: the owner saw coins "come back" because the tester's session loaded over theirs.
+  Ask, or wait until the editor is idle.
+- **Use a separate save profile** for QA (a distinct PlayerPrefs/save key) and delete it afterwards;
+  never write to the owner's save.
+- **Never leave a scene dirty** before tests, Play Mode, or the end of a step. Opening another scene,
+  entering Play Mode, or running tests with a dirty scene raises a modal "Save changes?" dialog; the
+  editor's main thread blocks, and every MCP call then times out. An MCP timeout right after a scene
+  edit means that dialog — the owner has to click it. Save and check `scene.isDirty == false`.
+- `ScreenCapture.CaptureScreenshot` writes one file per frame; capturing twice in one eval keeps only
+  the last. Space captures across frames.
+- Restore what you changed for the session: Game view resolution, input settings, time scale, test
+  devices, opened scenes.
 
 ## Bounded QA Attempts
 

@@ -2,7 +2,7 @@
 name: unity-game-agent
 description: "Unity Game Agent: autonomous Unity game development pipeline for quick fixes, direct feature work, full game builds, verification, Play Mode checks, and MCP-driven Unity Editor automation. Use when working on Unity games, gameplay systems, scenes, UI, ScriptableObjects, builds, tests, or project continuation with Docs/ state files."
 metadata:
-  version: 3.4.0
+  version: 3.5.0
   author: Neoxider
   homepage: https://github.com/NeoXider/unity-game-agent
 ---
@@ -148,7 +148,13 @@ and QA policy always still apply. To add a pattern, see [patterns/README.md](pat
 - C# examples: [tools/code-writing.md](tools/code-writing.md)
 - Mechanics patterns: [tools/core-mechanics.md](tools/core-mechanics.md)
 - Library policy: [tools/libraries-setup.md](tools/libraries-setup.md)
-- Play Mode QA automation: [tools/playmode-qa-automation.md](tools/playmode-qa-automation.md)
+- Play Mode QA automation, tester-agent QA rounds, editor hygiene: [tools/playmode-qa-automation.md](tools/playmode-qa-automation.md)
+- Input System: switching, Android Back, driving real input from QA: [tools/input-system.md](tools/input-system.md)
+- UI motion, reveal order, monetisation priority, reward flights: [tools/ui-motion-and-monetization.md](tools/ui-motion-and-monetization.md)
+- Shaders and VFX (recommended libraries, custom UI shader checklist, atlas UV caveat): [tools/shaders-and-vfx.md](tools/shaders-and-vfx.md)
+- Audio (generate → source → ask, import settings, pause in background/ads): [tools/audio.md](tools/audio.md)
+- Mobile build size (ASTC, sprite atlases, player-settings audit, APK, pushing heavy repos): [tools/mobile-build-and-size.md](tools/mobile-build-and-size.md)
+- Meta progress map (stops on a painted road, HUD obstacles, crops): [tools/meta-progress-map.md](tools/meta-progress-map.md)
 - Trustworthy UI screenshots (Device Simulator, one-editor rule, measuring instead of eyeballing): [tools/ui-screenshot-truth.md](tools/ui-screenshot-truth.md)
 - Skill memory: [SKILL_MEMORY.md](SKILL_MEMORY.md) and [tools/append-skill-memory.ps1](tools/append-skill-memory.ps1)
 - Role subskills: [roles/game-designer.md](roles/game-designer.md), [roles/designer.md](roles/designer.md), [roles/lead.md](roles/lead.md), [roles/developer.md](roles/developer.md), [roles/qa.md](roles/qa.md)
@@ -499,7 +505,19 @@ Docs rules:
 - Use TextMeshPro for uGUI text; never use legacy `UnityEngine.UI.Text`.
 - Use null-safe UI references, especially in tests and no_ui mode.
 - Separate UI view updates from game rules.
-- Respect the existing input stack.
+- Respect the existing input stack. New mobile projects use the Input System only; Android Back
+  needs two channels (every keyboard's Escape + `Application.wantsToQuit`) and minimises on the root
+  menu — see [tools/input-system.md](tools/input-system.md).
+- Mobile/casual screens are not done without motion: page transition, staggered entrance with
+  blocked raycasts until visible, press feedback on every button, rewards that fly into their
+  counter, and a reveal order in which the rewarded/paid offer is shown before the free exit and
+  carries the attention effect — [tools/ui-motion-and-monetization.md](tools/ui-motion-and-monetization.md).
+- Choose cover vs fit-to-height per surface; a map or page must not scroll on an axis nobody asked
+  for. Check every UI round at 1290×2796, 1080×2400, 1080×1920 and 1536×2048.
+- Before the first build for the owner: compress with ASTC, atlas UI per screen, audit player
+  settings against the editor's live values — [tools/mobile-build-and-size.md](tools/mobile-build-and-size.md).
+- Music and SFX pause in the background and during ads through one `AudioListener.pause` owner —
+  [tools/audio.md](tools/audio.md).
 - Keep gameplay mechanics deterministic and testable where practical.
 - Keep scene wiring explicit and inspectable.
 - Reuse existing audio, save, settings, inventory, quest, economy, UI navigation, and progression systems before adding new ones.
@@ -548,3 +566,13 @@ Docs rules:
 - Build systems, mechanics, UI frameworks, controllers, asset pipelines, or tools from scratch before checking existing packages, open-source examples, samples, reusable assets, and reference implementations.
 - Reject useful external references just because direct import/copy is not appropriate; use them as reference-only and reimplement the behavior independently.
 - Close with "done" without stating changed files, verification run, skipped checks, and remaining risk.
+- Leave a scene dirty before tests, Play Mode, a scene switch, or the end of a step (the modal save
+  dialog blocks the editor and every MCP call times out); run QA automation while the owner plays in
+  the same editor.
+- "Restore" player settings (bundle id, product name, company, splash) from git when the editor's live
+  values differ — that difference is usually the owner's newer intent; ask.
+- Let a result screen show the free exit before, or as prominently as, the rewarded/paid offer — or
+  hide the exit entirely.
+- Put sprites drawn with UV-dependent shader effects into a sprite atlas without passing the sprite's
+  UV rect to the shader.
+- Place map markers from colour masks instead of a hand-traced route verified by crops.

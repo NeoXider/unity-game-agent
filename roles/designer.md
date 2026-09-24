@@ -49,6 +49,11 @@ Turn gameplay and product intent into UI/UX, visual direction, asset needs, and 
 2. Define user flows, screen inventory, screen states, HUD/menu behavior, feedback rules, and visual hierarchy.
 3. Identify required assets and reusable references: UI kits, icon sets, shaders, VFX, animations, screenshots, or generated asset needs.
 4. Add visual QA criteria: expected screenshots, non-overlap rules, responsiveness, text fit, TMP requirement for uGUI, and accessibility/readability basics.
+4a. Specify motion per screen: page transition, entrance order of its items, press feedback, reward
+    flights and their targets, and for every result/offer screen the reveal order and which control
+    is the monetisation priority (shown before the free exit, carries the attention effect) —
+    [../tools/ui-motion-and-monetization.md](../tools/ui-motion-and-monetization.md). Decide cover vs
+    fit-to-height for every full-bleed image and map ([../project-profiles/plain-ugui.md](../project-profiles/plain-ugui.md)).
 5. Update `Docs/UI_BRIEF.md` so Lead can produce tasks without making design decisions.
 
 ## Audio: generate or source, never hand-synthesise

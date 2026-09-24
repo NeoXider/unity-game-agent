@@ -4,6 +4,41 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.5.0] — 2026-09-24
+
+### 🎯 Added — field lessons from a shipped mobile puzzle (Dots Linker, casual-neoxider)
+- **`tools/ui-motion-and-monetization.md`**: three motion layers (page / in-page stagger / control
+  feedback), stagger rules (alpha + scale only, no taps before visible, rest scale stored once,
+  `SetUpdate(true)`, `SetLink`), press feedback injected on every button (sticky-scale fix), result
+  screen reveal order with the rewarded/paid offer before a delayed free exit and an unscaled-time
+  attention loop on a private material, reward flights into the counter on the destination screen,
+  DOTween capacity, and how to verify each with held-time captures.
+- **`tools/input-system.md`**: switching to Input System only (legacy `Input` audit,
+  `InputSystemUIInputModule` + `AssignDefaultActions`, setting the handler via serialized
+  PlayerSettings, editor restart), Android Back through every keyboard's Escape plus
+  `Application.wantsToQuit` with a per-frame guard, `moveTaskToBack` on the root menu, and a recipe
+  for driving real Input System clicks, drags and keys from QA despite editor focus.
+- **`tools/shaders-and-vfx.md`**: recommended libraries by need, when a custom shader is right (data
+  texture + SDF "neon path" recipe), the UI shader checklist (masks, vertex colour, atlas UV rect,
+  per-graphic materials, unscaled time, variant stripping, precision).
+- **`tools/audio.md`**: generate → source → ask (local Stable Audio / ACE-Step pipeline), prompting,
+  import settings per clip type, one tap sound for all buttons, rate-limited SFX, one
+  `AudioListener.pause` owner for background and ads, timers stopping in the background.
+- **`tools/mobile-build-and-size.md`**: measuring texture memory, the ETC2 multiple-of-4 fallback to
+  RGBA32, ASTC overrides, per-screen sprite atlases and what must stay out of them, player-settings
+  audit against the editor's live values, APK builds from automation, pushing heavy repos in batches.
+- **`tools/meta-progress-map.md`**: placing progress stops on a painted road (hand-traced spline, HUD
+  and pin obstacles, DP placement, manual overrides, hidden stretches, crop verification).
+- **QA**: tester-agent QA rounds with numbered reports, editor hygiene (dirty-scene modal hangs MCP,
+  never QA during the owner's play session, separate save profile), real Input System driving;
+  a mobile casual player-pass checklist in `roles/qa.md`.
+- **uGUI profile**: cover vs fit-to-height per surface, no scroll on unintended axes, design frame in
+  the safe area, and the four-resolution matrix for every UI round.
+- **Libraries**: the proven mobile casual stack with install sources; Input System is the mobile
+  default.
+
+---
+
 ## [3.4.0] — 2026-08-20
 
 ### 🎯 Added — field lessons from a mobile uGUI game (BladeVault, casual-neoxider)

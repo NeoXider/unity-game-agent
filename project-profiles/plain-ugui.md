@@ -187,6 +187,45 @@ at every target resolution, not just the one you authored in.
 top HUD row at `y = 34`, straight under the cutout. Record this once as an accepted deviation and stop
 re-reporting it in every QA round.
 
+### Full-bleed art, painted maps, and scrolling
+
+A painted background or map page (1290×2796 art on a 19.5:9 mockup) meets screens from 16:9 to 4:3.
+Decide per surface, explicitly:
+
+| Surface | Fit | Why |
+|---|---|---|
+| Decorative background | **cover** (`AspectRatioFitter` Envelope Parent) | edges may crop, nothing important lives there |
+| Map / progress page with markers on the art | **fit to height** (page as tall as the view); on wider screens the page background shows beside it | every marker stays visible; nothing can be dragged vertically |
+| Long scrolling list | scroll on one axis only | the other axis is locked in the `ScrollRect` |
+
+- **An unintended scroll axis is a bug.** Cover-fitting a map on a 16:9 phone makes the page taller
+  than the view, and the player can drag it up and down — reported by the owner as a defect. Turn
+  the axis off in the `ScrollRect` *and* make the layout never overflow on it (drive the content's
+  anchored position on that axis to 0).
+- Horizontal pages that are separate paintings (districts, chapters) are pages, not one continuous
+  strip: snap by swipe share or flick, with side arrows; show a collectible hint (coin) on the arrow
+  only when the neighbouring page actually has one.
+- Markers on painted art are anchored by **fractions of the painting** (`anchorMin = anchorMax =
+  (x / 1290, 1 - y / 2796)`), so they stay glued to it at any scale.
+
+### Design frame inside the safe area
+
+For HUDs authored on a fixed mockup frame, fit a `1290×2796` design frame into the safe area and
+scale it uniformly (a `DesignFrameFitter`-style component), instead of re-anchoring every element.
+Record which screens use the frame and which use free anchoring.
+
+### Resolution matrix for every UI QA round
+
+| Size | Represents |
+|---|---|
+| 1290×2796 | reference / mockup (19.5:9, iPhone Pro Max class) |
+| 1080×2400 | common Android (20:9) |
+| 1080×1920 | 16:9 — the tallest-art / widest-screen stress case |
+| 1536×2048 | 4:3 tablet |
+
+Set it from automation with `UnityEditor.PlayModeWindow.SetCustomRenderingResolution(w, h, name)`
+and restore the owner's resolution afterwards.
+
 ### Priority
 
 Adaptivity outranks pixel-perfect mockup matching. A few pixels of difference and varying text-line

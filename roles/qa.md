@@ -94,6 +94,27 @@ Three ways a control ends up unpressable, all of which pass a component walk:
 Record the result per element. "All buttons wired" is not a QA result; "all buttons pressed, and
 here is what each one changed" is.
 
+## Player Pass Checklist (mobile casual)
+
+Beyond the feature checklist, a release-bound round covers what players and owners actually hit:
+
+- **Motion:** every page enters with motion; items are not tappable before they are visible; every
+  button presses and springs back to exactly its rest scale, also after a page switch mid-press.
+- **Reveal order on result screens:** headline → earned → progress → rewarded/paid offer → free exit
+  after its delay. Capture at held times ([../tools/ui-motion-and-monetization.md](../tools/ui-motion-and-monetization.md)).
+- **Economy:** balance before/after each reward; x2 and claim pay once; replays pay nothing and say so;
+  collected pins/gifts stay collected after reopening and after an app restart; prices make larger
+  packs cheaper per unit (flag a pack that costs the same as a smaller one).
+- **Hints and progress** persist per board/level as designed across Back, Restart and returning.
+- **Adaptivity:** the resolution matrix, including 16:9 and a tablet; nothing under the HUD or the
+  notch; no scroll on an unintended axis.
+- **Back button:** every page, the root menu (minimises), popups (close), result screens (ignored).
+- **Audio:** pauses when the app is backgrounded and during ads; resumes mid-track.
+- **Console:** no errors or warnings from the game during the whole pass.
+
+Owner questions go into their own section of the report; do not decide product questions (prices,
+titles, which progress a card shows) as QA — ask, citing the TZ line or the mockup.
+
 ## Done Gate
 
 - `Docs/QA_AGENT/FEAT-*-qa.md` is fully filled.

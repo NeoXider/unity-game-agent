@@ -19,7 +19,34 @@ Classify each candidate as `direct reuse`, `adapt`, or `reference-only`. Directl
 
 **As needed (per task / GAME_DESIGN / DEV_CONFIG):**
 - **Unity Localization** — only if multiple languages are required.
-- Rest (VContainer, Cinemachine, Input System) — only when explicitly required.
+- **Input System** — the default for new mobile projects (Active Input Handling = Input System only);
+  switching an existing project: [input-system.md](input-system.md).
+- Rest (VContainer, Cinemachine) — only when explicitly required.
+
+### Proven mobile casual stack
+
+What a shipped casual puzzle used, and why each piece earned its place. Install only what the game
+needs; check `manifest.json` and `Assets/Plugins` first.
+
+| Need | Package | Source |
+|---|---|---|
+| Pages, audio, save, economy, fly animations, haptics wrapper | NeoxiderTools `com.neoxider.tools` (+ NeoxiderPages sample) | `https://github.com/NeoXider/NeoxiderTools.git?path=Assets/Neoxider#<commit>` — pin a commit |
+| Tweens (entrances, presses, flights) | DOTween | Asset Store / site (see below) |
+| Async flows | UniTask `com.cysharp.unitask` | git URL below |
+| UI filters, transitions | UIEffect `com.coffee.ui-effect` | `https://github.com/mob-sakai/UIEffect.git?path=Packages/src` |
+| Particles in Canvas, coin attractors | ParticleEffectForUGUI `com.coffee.ui-particle` | `https://github.com/mob-sakai/ParticleEffectForUGUI.git#4.13.1` |
+| Shine / glow on monetisation buttons | Sprite Shaders Ultimate (paid) | only if already owned; see [shaders-and-vfx.md](shaders-and-vfx.md) |
+| Vibration iOS + Android | MobileHapticFeedback `com.tsyk5.mobilehapticfeedback` | `https://github.com/tsyk5/MobileHapticFeedback.git?path=package/com.tsyk5.mobilehapticfeedback` |
+| JSON saves/configs | Newtonsoft `com.unity.nuget.newtonsoft-json` | Unity registry |
+| New input | Input System `com.unity.inputsystem` | Unity registry |
+| Editor automation | Unity MCP (`com.coplaydev.unity-mcp` or the project's bridge) | [../mcp-commands.md](../mcp-commands.md) |
+
+Audio is generated or sourced, not a package: [audio.md](audio.md). Motion and reveal order:
+[ui-motion-and-monetization.md](ui-motion-and-monetization.md). Build size: [mobile-build-and-size.md](mobile-build-and-size.md).
+
+A plugin that throws on editor start (e.g. a debug console incompatible with the installed TMP) and
+is not used by any scene should be removed, with the owner's agreement — it pollutes every console
+baseline.
 
 Check **Packages/manifest.json** and **Assets**: if a package is already present — do not add again. After install record in `Docs/DEV_LOG/` or `Docs/AGENT_MEMORY.md`.
 
@@ -166,7 +193,7 @@ Play Mode.
 
 - **VContainer / Zenject** — DI for large projects (Pro mode). Install only when architecture clearly needs IoC. VContainer: UPM/Git; Zenject (Extenject): Asset Store or [GitHub](https://github.com/Mathijs-Bakker/Extenject).
 - **Cinemachine** — camera (follow, virtual cameras). Built-in: `com.unity.cinemachine`. Add when advanced camera is needed.
-- **Input System** — new input. Built-in: `com.unity.inputsystem`. Required if new Input System is selected in settings.
+- **Input System** — new input. Built-in: `com.unity.inputsystem`. Default for mobile; switching and Android Back: [input-system.md](input-system.md).
 
 ---
 

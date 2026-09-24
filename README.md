@@ -111,6 +111,13 @@ These are implemented in the skill today.
 | EditMode/PlayMode test expectations | Done | Feature/task verification fields |
 | Screenshot evidence policy | Done | QA templates and Play Mode QA reference |
 | Trustworthy UI capture (Device Simulator) | Done | `tools/ui-screenshot-truth.md` |
+| Tester-agent QA rounds, editor hygiene | Done | `tools/playmode-qa-automation.md`, `roles/qa.md` |
+| Input System, Android Back, real-input QA driving | Done | `tools/input-system.md` |
+| UI motion, reveal order, monetisation priority, reward flights | Done | `tools/ui-motion-and-monetization.md` |
+| Shaders and VFX (libraries, UI shader checklist) | Done | `tools/shaders-and-vfx.md` |
+| Audio generation, import, background/ad pause | Done | `tools/audio.md` |
+| Mobile build size (ASTC, sprite atlases, APK) | Done | `tools/mobile-build-and-size.md` |
+| Meta progress map over painted art | Done | `tools/meta-progress-map.md` |
 | Two-attempt QA failure recovery | Done | `qa_max_attempts_before_degraded_report: 2` |
 | Skill memory | Done | `SKILL_MEMORY.md`, `tools/append-skill-memory.ps1` |
 | Project bootstrap | Done | `setup_project.bat` |
