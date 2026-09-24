@@ -4,6 +4,18 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.5.2] — 2026-09-24
+
+### 🔧 Changed — slice sprite sheets in Unity
+- `project-profiles/plain-ugui.md`: designer kits and sprite sheets are imported as `Multiple` and
+  sliced **inside Unity** through the Sprite Editor data provider (automatic slicing, names, pivots and
+  9-slice borders stored in the `.meta`), with a tested Unity 6 recipe. Cutting a kit into separate
+  PNG files is reserved for inefficient sheets and must be justified. Renaming keeps `spriteID` (safe);
+  re-slicing must reuse the old IDs or every reference breaks.
+- `SKILL.md`: the matching anti-pattern.
+
+---
+
 ## [3.5.1] — 2026-09-24
 
 ### 🧹 Changed — memory compaction and machine-neutral wording

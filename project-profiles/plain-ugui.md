@@ -247,10 +247,11 @@ Cheap to verify by measurement, and all of them were shipped-and-missed at least
   disabled tint actually reaches the visible graphic — a gated button that still looks enabled reads
   as a broken button.
 
-## Sprite import mode: Single, always
+## Sprite import mode: Single for one image, Multiple for a sheet
 
-Import every standalone sprite as **Sprite Mode = Single**. Reserve `Multiple` for genuine sprite
-sheets and atlases — a texture that really does contain several frames.
+Import every standalone sprite as **Sprite Mode = Single**. Use `Multiple` for genuine sprite
+sheets — a designer UI kit, an icon sheet, animation frames — and slice them **inside Unity** (next
+section), not into separate files.
 
 A single-image texture imported as `Multiple` gets a sliced sub-rect trimmed to its opaque content.
 Two icons drawn on the same canvas size then arrive with *different* sprite rects and different
@@ -274,6 +275,53 @@ normalising `maxTextureSize` and `Sprite Mode` on the customer's art was a regre
 Report the suspicious asset and the concrete visual defect it causes, and change it only when the task
 is that defect or the user agrees.
 
+### Designer kits and sheets: slice in Unity, do not cut files
+
+Unity already slices a sheet into named sub-sprites and stores the names, rects, pivots and 9-slice
+borders in the texture's `.meta`. **Do not cut a kit into separate PNG files** with an external script:
+it duplicates the art, loses the link to the source sheet, and a re-export of the kit then needs the
+whole cut repeated. Cutting into files is right only when the sheet itself is inefficient — mostly
+empty space, far larger than the pieces the game uses, or pieces that must sit in different atlases or
+need different import settings (compression, max size) — and then say why.
+
+No project tool is needed; drive the Sprite Editor's own API from an editor eval (package
+`com.unity.2d.sprite`; in Unity 6 the types are `UnityEditor.SpriteRect`,
+`UnityEditor.SpriteNameFileIdPair`, `UnityEngine.GUID`):
+
+```csharp
+var imp = (TextureImporter)AssetImporter.GetAtPath(path);
+imp.textureType = TextureImporterType.Sprite;
+imp.spriteImportMode = SpriteImportMode.Multiple;
+imp.SaveAndReimport();
+
+var factory = new UnityEditor.U2D.Sprites.SpriteDataProviderFactories(); factory.Init();
+var dp = factory.GetSpriteEditorDataProviderFromObject(imp);
+dp.InitSpriteEditorDataProvider();
+Texture2D readable = dp.GetDataProvider<UnityEditor.U2D.Sprites.ITextureDataProvider>().GetReadableTexture2D();
+Rect[] rects = UnityEditorInternal.InternalSpriteUtility.GenerateAutomaticSpriteRectangles(readable, 12, 0); // = Slice > Automatic
+
+SpriteRect[] sprites = rects.Select((r, i) => new SpriteRect {
+    name = NameFor(i, r),                 // meaningful names: btn_next, card_progress, bar_fill...
+    rect = r, alignment = SpriteAlignment.Center, pivot = new Vector2(0.5f, 0.5f),
+    border = BorderFor(i, r),             // 9-slice per sub-sprite (L, B, R, T)
+    spriteID = GUID.Generate() }).ToArray();
+dp.SetSpriteRects(sprites);
+dp.GetDataProvider<UnityEditor.U2D.Sprites.ISpriteNameFileIdDataProvider>()
+  .SetNameFileIdPairs(sprites.Select(s => new SpriteNameFileIdPair(s.name, s.spriteID)));
+dp.Apply();
+imp.SaveAndReimport();
+```
+
+- **Naming:** slice first with placeholder names, render a numbered contact sheet of the rects, then
+  write the real names (and borders) in a second pass. Keep the index → name list in the task notes
+  only while working; the `.meta` is the record afterwards.
+- **Renaming later is safe** when the existing `spriteID` is kept (`GetSpriteRects()`, change `name`,
+  `SetSpriteRects`, update the name/ID pairs, `Apply`) — scene and prefab references follow the ID.
+- **Re-slicing is not:** fresh `GUID.Generate()` IDs break every reference to the old sub-sprites. When
+  a kit is re-exported, match new rects to old ones (by name or overlap) and reuse their `spriteID`.
+- Sub-sprites go into sprite atlases like any other sprite; a kit that is itself dense can also be
+  used as-is without an atlas.
+
 ### Renaming sprite files
 
 Sliced sprite names live inside the `.png.meta` (`internalIDToNameTable` `second:` entries and
@@ -283,7 +331,7 @@ Non-ASCII sprite names are stored as quoted `\uXXXX` escape strings — match th
 
 ### 9-slice borders measured from the art
 
-When borders must come from the files (bulk import, editor closed), measure the corner radius from the
+When borders must come from the art itself (bulk import, many sub-sprites), measure the corner radius from the
 **alpha silhouette thresholded at alpha ≥ 250**, not by scanning for uniform rows/columns: modern UI art
 has gradients and glow, so no two adjacent lines are equal, and a looser tolerance produces garbage. The
 high threshold also ignores soft drop shadows, which otherwise inflate the border to half the sprite.

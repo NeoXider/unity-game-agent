@@ -2,7 +2,7 @@
 name: unity-game-agent
 description: "Unity Game Agent: autonomous Unity game development pipeline for quick fixes, direct feature work, full game builds, verification, Play Mode checks, and MCP-driven Unity Editor automation. Use when working on Unity games, gameplay systems, scenes, UI, ScriptableObjects, builds, tests, or project continuation with Docs/ state files."
 metadata:
-  version: 3.5.1
+  version: 3.5.2
   author: Neoxider
   homepage: https://github.com/NeoXider/unity-game-agent
 ---
@@ -582,3 +582,7 @@ Docs rules:
 - Put sprites drawn with UV-dependent shader effects into a sprite atlas without passing the sprite's
   UV rect to the shader.
 - Place map markers from colour masks instead of a hand-traced route verified by crops.
+- Cut a designer sprite sheet / UI kit into separate PNG files with an external script instead of
+  slicing it in Unity (`Multiple` + the Sprite Editor data provider, names and borders in the `.meta`)
+  — unless the sheet itself is inefficient, and then say why
+  ([project-profiles/plain-ugui.md](project-profiles/plain-ugui.md)).
