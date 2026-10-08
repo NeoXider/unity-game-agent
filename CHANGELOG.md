@@ -4,6 +4,28 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.6.0] — 2026-10-08
+
+### 🎯 Added — field lessons from two shipped mobile games (rounds 9-12)
+- `project-profiles/plain-ugui.md`: **pin to the edges** on tall, narrow and near-square screens (top rows
+  top-anchored, bottom groups bottom-anchored, fixed-size banners, fill-height frame, full-screen art that
+  ignores the safe area, marker clamp), foldable sizes in the resolution matrix, Android edge-to-edge
+  checklist, and the pixels-per-unit multiplier for sliced images over low-PPU sprites.
+- `tools/input-system.md`: Predictive Back on targetSdk 35/36 (`OnBackInvokedCallback` bridge) — without it
+  Back closes the game.
+- `tools/playmode-qa-automation.md`: one-frame flashes of authoring state (synchronous check, paint before
+  show), headless screenshots and settling, before/fix/after evidence, exporting and restoring the editor's
+  PlayerPrefs around QA, batch mode vs an open editor, eval quirks, and a casual-economy tuning method.
+- `tools/ui-motion-and-monetization.md`: the free exit follows the offer by a heartbeat on a plain win,
+  fades pin their final state, first-visit explainer cards, curved titles without a library.
+- `tools/mobile-build-and-size.md`: building through the open editor, version bumps, answering "was it
+  built", and publishing a history-free snapshot to a second remote with plumbing and hash checks.
+- `tools/meta-progress-map.md`, `tools/project-structure.md`, `SKILL.md`: marker clamp under the HUD,
+  legacy-name hygiene after repurposing a project, answer-by-point and shell-aware commands, reference games
+  that cannot be installed.
+
+---
+
 ## [3.5.3] — 2026-09-24
 
 ### 🔧 Changed — sprite sheet workflow, end to end

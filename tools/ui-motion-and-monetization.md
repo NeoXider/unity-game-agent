@@ -78,6 +78,10 @@ and the order itself is the monetisation design:
   showing**: a duplicate tap or a late second callback must not pay twice.
 - A replay with no reward still needs content: show one clear line ("ALREADY CLEARED") where the
   reward was, and collapse the empty space instead of leaving a hole.
+- **On a plain win the free exit follows the offer by a heartbeat (about 0.12 s), not a pause.** A one
+  second gap before "Next Level" read as lag on every level; the offer still pops first, heavier, and the
+  exit pops right behind it. Keep multi-second delays for popups where declining loses an offer (Time's Up,
+  out of hints).
 - Everything happens at once outside Play Mode, so authoring in the editor shows the final layout.
 
 ## 5. Reward flights ("coins fly into the counter")
@@ -106,6 +110,9 @@ The flight is the reward. Rules:
   auto-growth mid-animation logs a warning and hitches on the frame of the first big entrance.
 - `SetLink` every infinite tween (`SetLoops(-1)`), or it outlives its page.
 - `SetUpdate(true)` for anything that must move while the game is paused.
+- Every fade ends with an `OnComplete` that pins the final state (`alpha = 1`, `blocksRaycasts = true`,
+  rest scale). A fade interrupted by a page switch, or run on a slow frame, otherwise strands an element
+  half-transparent ("the coin pill is sometimes see-through").
 
 ## 7. What to verify (and how)
 
@@ -116,3 +123,25 @@ The flight is the reward. Rules:
   item must not be hit.
 - Press a button, switch pages while holding, come back: its scale must be exactly the rest scale.
 - Collect a reward, reopen the screen, restart the app: the balance matches and nothing respawns.
+
+## 8. First-visit explainer card
+
+A system the player may not understand (a city to light, a collection, a streak) gets one short card the
+first time its screen opens: a title, two lines of plain benefit ("light up the buildings, collect coins
+every day"), the number the player gets (read from the economy config, never typed into the text), and one
+button.
+
+- The card sits inside the screen's page, above a dim, popping in with the page's own motion.
+- **Paint the screen's true state first, then show the card**, and start any reveal animation (buildings
+  lighting up) only when the card closes. Never let the authored scene state show behind it.
+- Back closes the card like its button. The "seen" flag lives in the profile and is saved on dismissal;
+  an older save has no flag, so existing players see the card once on the next visit.
+- Build it from the project's own popup so it shares the kit art, and give it a contract test (wired,
+  closed by default, child of the screen) and a profile test (shown once, remembered).
+
+## 9. Curved or styled titles
+
+A title along an arc or tilt does not need a text-effects package: a small TextMeshPro vertex modifier that
+lifts each glyph by an `AnimationCurve` and turns it to the slope keeps one mesh, no extra draw calls, and
+keeps rich text and glow materials. Reach for a maintained effects library (an MIT TMP animation package)
+only when the project needs per-character animation, not for a static curve.

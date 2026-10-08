@@ -108,3 +108,11 @@ Use these alternatives:
 
 Before handoff, scan the project-owned Editor root for builder filenames/classes and scan tests for
 scene/prefab/asset writes. Any hit is a blocker until removed or explicitly approved by the user.
+
+## Repurposed Project: Legacy Names
+
+When a project is turned into another game, the old name survives in places the owner still sees: the
+folder and repository name, `AddComponentMenu` paths in the Inspector, class prefixes, the package id, log
+tags. List them for the owner and fix the cheap, visible ones first (component menu strings, window and
+product names). Renaming classes touches scenes, tests and every reference, so do it only on request. Keep
+the package id and company unless the owner asks: changing them breaks installs and signing.

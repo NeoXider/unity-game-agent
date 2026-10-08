@@ -93,6 +93,48 @@ private void OnBack()
 - **Verify on a device.** Editor tests prove the navigation logic, not the delivery channel. Record
   "Back verified on device: yes/no" in the QA report.
 
+### Predictive Back on Android 13+ with targetSdk 35/36
+
+On a high target API neither the key event nor the quit request reaches Unity: with no callback
+registered, the system simply finishes the activity, which the player sees as "Back closes the game".
+Register an `OnBackInvokedCallback` once at startup (API 33 and up) and read a flag from the game thread:
+
+```csharp
+static class AndroidBackBridge
+{
+    static volatile bool _pressed;
+    public static bool ConsumePressed() { bool p = _pressed; _pressed = false; return p; }
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+    static BackCallback _callback;                               // keep a static reference
+
+    public static void Register()
+    {
+        using var v = new AndroidJavaClass("android.os.Build$VERSION");
+        if (v.GetStatic<int>("SDK_INT") < 33) return;
+        var activity = new AndroidJavaClass("com.unity3d.player.UnityPlayer")
+            .GetStatic<AndroidJavaObject>("currentActivity");
+        _callback = new BackCallback();
+        activity.Call("runOnUiThread", new AndroidJavaRunnable(() =>
+            activity.Call<AndroidJavaObject>("getOnBackInvokedDispatcher")
+                    .Call("registerOnBackInvokedCallback", 0, _callback)));
+    }
+
+    [UnityEngine.Scripting.Preserve]
+    sealed class BackCallback : AndroidJavaProxy
+    {
+        public BackCallback() : base("android.window.OnBackInvokedCallback") { }
+        [UnityEngine.Scripting.Preserve] public void onBackInvoked() => _pressed = true;
+    }
+#else
+    public static void Register() { }
+#endif
+}
+```
+
+Read `ConsumePressed()` in the same `OnBack` path as the Escape key and `wantsToQuit` (the per-frame guard
+above keeps the three channels from double-handling). Only a phone proves it: say so in the QA report.
+
 ## Driving the Input System from QA (Play Mode, via MCP eval)
 
 Two traps make naive injection silently do nothing:

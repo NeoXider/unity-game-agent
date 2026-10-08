@@ -48,6 +48,10 @@ Work in painting pixels (e.g. 1290×2796, y down) with a small script next to th
 - Check in-game at the resolution matrix (see
   [../project-profiles/plain-ugui.md](../project-profiles/plain-ugui.md)): stops under HUD at 16:9,
   arrows over pins on tablets.
+- Collectible pins that are placed by hand on the painting still get a runtime clamp below the header and
+  the currency pill (a top margin in design units): on narrow, tall screens the HUD grows relative to the
+  art and covers pins that were clear on the reference frame. Capture every page of the map with all
+  pins waiting, at the narrowest and the widest size.
 
 ## Applying to the scene
 

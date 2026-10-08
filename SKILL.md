@@ -2,7 +2,7 @@
 name: unity-game-agent
 description: "Unity Game Agent: autonomous Unity game development pipeline for quick fixes, direct feature work, full game builds, verification, Play Mode checks, and MCP-driven Unity Editor automation. Use when working on Unity games, gameplay systems, scenes, UI, ScriptableObjects, builds, tests, or project continuation with Docs/ state files."
 metadata:
-  version: 3.5.3
+  version: 3.6.0
   author: Neoxider
   homepage: https://github.com/NeoXider/unity-game-agent
 ---
@@ -37,6 +37,12 @@ Act as a senior Unity C# game development agent that makes working, verified cha
   use read-only validators for repeatable enforcement.
 - Development mode controls verification depth and planning cadence, not architecture complexity.
   `pro` does not imply Clean Architecture, DI, ServiceLocator, interfaces, services, or extra layers.
+- Owner feedback often arrives as numbered points. Answer by point (done / not done / not verified), and
+  do not mark a visual or device-dependent point done from code alone: capture it, or say it was not seen.
+- Questions such as "was it built / pushed?" are answered from the file system and `git ls-remote` hashes,
+  not from memory; if code changed after the last build, the answer is "no".
+- Commands handed to the owner name their shell (PowerShell and `cmd` differ) and never hide an exit code
+  behind a pipe. Details: [tools/mobile-build-and-size.md](tools/mobile-build-and-size.md) §7.
 
 ## Reference And Reuse Discovery
 
@@ -66,6 +72,11 @@ Selection rules:
 - Do not reject useful references just because they cannot be copied verbatim. Restrictive or unclear sources can still guide mechanics, tuning, UX, algorithms, test cases, and architecture.
 - Do not use leaked code, decompiled sources, private repositories, or ripped assets. Do not clone copyrighted expression; reproduce the underlying behavior or logic in original code/assets.
 - If no suitable reuse option exists, implement the smallest custom solution and record why reuse was rejected.
+
+Reference games that cannot be installed (store sign-in, region): study the store screenshots and any
+review video, keep a reference-diff document that separates what was measured from what was guessed, mark
+invented placeholder text as such, and ask for a screen recording before claiming a motion or timing
+match.
 
 ## Runtime Policy
 

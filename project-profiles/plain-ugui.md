@@ -187,6 +187,12 @@ at every target resolution, not just the one you authored in.
 top HUD row at `y = 34`, straight under the cutout. Record this once as an accepted deviation and stop
 re-reporting it in every QA round.
 
+**Android edge-to-edge.** From API 35 the system bars draw over the app. A black bar at the top or bottom
+of one phone usually means "render outside safe area" is off in Player Settings (the built APK's manifest
+carries `unity.render-outside-safearea` when it is on), or a vendor overlay (a game booster) paints its
+own bar. Check the setting and the manifest first, then ask for the device model and the APK build number
+before changing layout code: the same APK on another phone is the control.
+
 ### Full-bleed art, painted maps, and scrolling
 
 A painted background or map page (1290×2796 art on a 19.5:9 mockup) meets screens from 16:9 to 4:3.
@@ -214,6 +220,28 @@ For HUDs authored on a fixed mockup frame, fit a `1290×2796` design frame into 
 scale it uniformly (a `DesignFrameFitter`-style component), instead of re-anchoring every element.
 Record which screens use the frame and which use free anchoring.
 
+### Tall, narrow and near-square screens: pin to the edges, never stretch
+
+A column authored for 19.5:9 gains slack on a taller or wider screen. Decide where the slack goes, per
+element, instead of letting the layout stretch:
+
+- **Top rows** (back / settings / currency pills / headers) anchor to the **top** edge and **bottom
+  groups** (menu banners, action rows) to the **bottom** edge; the middle takes the slack. Menu banners
+  keep their design size, bottom-anchored. No `AspectRatioFitter` on them: it stretches them with the
+  page height and leaves the rows floating mid-screen.
+- A design frame that must fill a tall screen takes `height = max(referenceHeight, parentHeight / scale)`
+  (a "fill height" option on the frame fitter) and its children anchor top/bottom inside it. A frame that
+  only scales leaves empty bands above and below.
+- **Art that ignores the safe area.** A safe-area component pulls the whole page inside the cut-outs, so
+  a full-bleed map or backdrop under it leaves bands at the top and bottom. Give such rects their own
+  small component that sizes them from the *root canvas rect* (stretch, or cover at a fixed aspect),
+  registered as driven (`DrivenRectTransformTracker`) so edit mode never dirties the scene. Buttons stay
+  inside the safe area; the art does not.
+- **Marker layers on art** (coin pins, stops) are clamped to the band below the header and the currency
+  pill, with a top margin in design units, or on a narrow screen a pin ends up under the HUD.
+- Guard tests: top rows are anchored to the top, banners are fixed-size and bottom-anchored, art rects carry
+  the full-screen component, and nothing that should be fixed-size has an `AspectRatioFitter`.
+
 ### Resolution matrix for every UI QA round
 
 | Size | Represents |
@@ -222,6 +250,8 @@ Record which screens use the frame and which use free anchoring.
 | 1080×2400 | common Android (20:9) |
 | 1080×1920 | 16:9 — the tallest-art / widest-screen stress case |
 | 1536×2048 | 4:3 tablet |
+| 960×2658 | foldable, folded (very tall and narrow: top and bottom rows must still hug the edges) |
+| 2076×2152 | foldable, unfolded (near square: no overlap, no huge empty band) |
 
 Set it from automation with `UnityEditor.PlayModeWindow.SetCustomRenderingResolution(w, h, name)`
 and restore the owner's resolution afterwards.
@@ -366,6 +396,15 @@ has gradients and glow, so no two adjacent lines are equal, and a looser toleran
 high threshold also ignores soft drop shadows, which otherwise inflate the border to half the sprite.
 Force opposing borders symmetric when one exceeds ~2× the other (a shadow lip skews one edge), and zero
 a border per axis — a pill-shaped button keeps its horizontal border.
+
+### Sliced images over low-PPU sprites
+
+A sliced `Image` draws its borders at `border / spritePixelsPerUnit * canvasReferencePixelsPerUnit`. A kit
+imported at 1 pixel per unit under a canvas at 100 reference pixels per unit draws every border 100 times
+too big: progress bars turn into lenses and pill ends into blobs. Set
+`image.pixelsPerUnitMultiplier = canvas.referencePixelsPerUnit / spritePixelsPerUnit` on such images (or
+import the kit at the canvas PPU), and keep a guard test that every sliced `Image` draws its border at the
+sprite's own border size.
 
 ## Mockup fidelity
 

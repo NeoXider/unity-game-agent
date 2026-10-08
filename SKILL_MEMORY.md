@@ -55,6 +55,14 @@ Each line: when it was learned → where the rule lives now. Read the document, 
 | 2026-09 | Dirty scene → modal dialog → MCP timeouts; no QA during the owner's play session | `tools/playmode-qa-automation.md` |
 | 2026-09 | Map markers along a hand-traced road, verified by crops | `tools/meta-progress-map.md` |
 | 2026-09 | Slice designer kits in Unity (decide → slice → name → stable IDs → verify → atlas); atlases make sparse kits cheap, so cutting files is an exception | `project-profiles/plain-ugui.md`, `tools/mobile-build-and-size.md` |
+| 2026-10 | Pin top rows to the top and bottom groups to the bottom; full-screen art ignores the safe area; marker clamp; foldable sizes | `project-profiles/plain-ugui.md`, `tools/meta-progress-map.md` |
+| 2026-10 | Sliced images over a 1-PPU kit need `pixelsPerUnitMultiplier` | `project-profiles/plain-ugui.md` |
+| 2026-10 | Predictive Back (API 33+) needs a registered `OnBackInvokedCallback` | `tools/input-system.md` |
+| 2026-10 | One-frame flashes of authoring state; headless capture settling; before/fix/after; PlayerPrefs export around QA | `tools/playmode-qa-automation.md` |
+| 2026-10 | Fades pin their final state; first-visit explainer cards; free exit a heartbeat behind the offer | `tools/ui-motion-and-monetization.md` |
+| 2026-10 | Casual economy: target as a felt rate, derive prices, test the band | `tools/playmode-qa-automation.md` |
+| 2026-10 | History-free snapshot with plumbing; verify remotes by hash; shell-specific commands; pipes hide exit codes | `tools/mobile-build-and-size.md` |
+| 2026-10 | Legacy names after repurposing; answer owner feedback by point; reference games that cannot be installed | `tools/project-structure.md`, `SKILL.md` |
 
 ## Active Learnings
 

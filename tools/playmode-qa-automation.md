@@ -107,6 +107,16 @@ Do one of these instead:
 
 A capture whose timing is not controlled must be reported as "not verified", not as evidence.
 
+### One-frame flashes of authoring state
+
+A scene is saved the way it was authored: every building lit, every badge and pin on, every popup's sample
+text. Code that "refreshes on open" runs after the page is already active, and a path that skips the
+refresh (a first-visit card, an early return) leaves the authored state visible, sometimes only for a frame
+or two, which is exactly what an owner reports as "I saw it flash". Check by reading the state
+**synchronously in the same call that opens the page** (count the lit buildings, the active pins and
+badges through the same eval), not by looking at a later screenshot, and paint the true state before the
+page appears, not after.
+
 ## QA Re-Runs After Every Fix Batch
 
 One QA pass at the start of a session is worthless: in a real session it was followed by dozens of
@@ -151,6 +161,14 @@ separately. Items the owner already decided are not re-reported.
   the last. Space captures across frames.
 - Restore what you changed for the session: Game view resolution, input settings, time scale, test
   devices, opened scenes.
+- A game with a single save slot has no separate QA profile: **export the editor's PlayerPrefs store
+  before QA that mutates the profile and import it back afterwards** (on Windows the key under
+  `HKCU\Software\Unity\UnityEditor\<company>\<product>`; `reg export` / `reg delete` / `reg import`).
+  QA that "lights the whole city" or completes 35 levels is otherwise left in the owner's save.
+- **A project open in an editor cannot be opened by a batch-mode editor** (lock file). Drive the open
+  editor through MCP, or ask the owner to close it; never kill their editor.
+- Eval snippets: some evaluators reject a leading `using` line; fully qualify types and reach private
+  fields with reflection. Evaluate in Play Mode and read results in the same call.
 
 ### Boot and smoke harnesses
 
@@ -158,6 +176,23 @@ A boot test that reports "0 errors" can be lying: startup code may mute logging,
 after the XML result is written. Restore the logging channel in the harness, run only the intended test
 assembly, assert that at least one interaction was actually driven, and scan the full editor log for
 exceptions after the run.
+
+### Headless screenshots at any resolution
+
+When no editor window is available (or the owner's is busy), a batch-mode `-executeMethod` can enter
+Play Mode, switch the overlay canvas to `ScreenSpaceCamera` with the UI camera, render into a
+`RenderTexture` of each requested size, call the controller's navigation methods by name, and write PNGs.
+Learned the hard way: a headless editor renders only a few frames a second, so entrance tweens look
+half-faded in the capture. Raise `Time.maximumDeltaTime`, wait long after navigating (10 s or more), and
+navigate through another page first when the first capture of a page comes out dark. Keep the tool out of
+the commit: it is scaffolding, delete it before pushing (the owner asked for exactly that).
+
+### Fixing a visual defect: before, fix, after
+
+When the owner points at a visual defect, capture the **before** state first (same sizes, same state,
+all the cases they listed), fix, then capture **after** with the identical setup and show both. A fix
+without a before capture cannot be told from a lucky frame, and the owner cannot see what changed. Name the
+files by case and keep only the sheets (a contact sheet per size), not every frame.
 
 ### UI acceptance document for a human reviewer
 
@@ -230,3 +265,14 @@ never as absolute currency. Absolute values invert the intended relationship at 
 ladder — a seed tuned at the top of the ladder consumed over 7 % of turnover at the bottom. Also
 confirm what the displayed unit actually is before tuning: a config in "coins" that an adapter treats
 as display dollars turns a documented ladder into a wrong one.
+
+## Tuning a Casual Economy
+
+State the target as a rate a player feels ("a hint every 18 levels", "coins from 15-20 levels buy 1-3
+hints"), then derive the prices from it: `levels per hint = hint price / coins per win`. Put every number in
+one config asset, mirror the defaults in code, and keep a test that asserts the asset equals the defaults and
+that the derived rate sits inside the stated band. Record old and new values in an economy document as a
+table with the reason, and check every side income (daily reward, map pins, gift boxes, doubled rewards)
+against the same price: a doubled coin gift should stay below one hint, one rewarded video should pay about
+one hint. When the owner says "still too generous", change prices and the scarce rewards (hint boxes), not
+only the headline income.

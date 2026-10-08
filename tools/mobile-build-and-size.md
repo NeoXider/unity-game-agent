@@ -83,6 +83,13 @@ Shop, Win …) so a page loads one texture and batches its draw calls.
   report into context (it can be a megabyte) — extract result, size, errors, warnings.
 - A build can re-dirty generated assets (TMP fallback font atlases). Revert those before committing.
 - Report the APK path, size, result, and what was not tested on a device.
+- A project that is open in an editor cannot be built by a batch-mode editor (lock file). Build through
+  the open editor's MCP build tool (dry run first) and warn the owner it freezes the editor for minutes, or
+  ask them to close it.
+- Bump `bundleVersion` / the Android version code for each shipped APK and keep the output name carrying
+  both, so "which build is on my phone" has an answer.
+- "Was a new APK built?" is answered from the file system and the commit it was built from (path, time,
+  version), never from memory. If the code changed after the last build, the honest answer is "no".
 
 ## 6. Pushing a repository with heavy QA evidence
 
@@ -90,3 +97,20 @@ Dozens of commits carrying full-resolution screenshots can exceed what the git h
 push (`HTTP 500`, `RPC failed`, "remote end hung up") even with a large `http.postBuffer`. Push in
 batches of ~10 commits: `git push origin <sha>:refs/heads/<branch>` for successive SHAs, then the
 branch. Keep QA screenshots compressed (JPEG crops) where possible.
+
+## 7. Publishing a snapshot to another remote
+
+For a second remote that should hold the sources only (no history, no evidence folders):
+
+- Build the single commit with plumbing, not by copying the working tree: with a temporary index
+  (`GIT_INDEX_FILE`) run `git read-tree HEAD`, `git rm --cached -r -q <evidence folders>`, `git write-tree`,
+  `git commit-tree <tree> -m "..."`, then `git push <url> <commit>:refs/heads/<branch> --force`. It takes
+  seconds; `git add -A` over tens of thousands of files in a fresh export folder takes many minutes.
+- Check the result by hash with `git ls-remote --heads <url>`, not by exit code: a push piped through
+  `| tail` returns `tail`'s status, so a failed push looks like success. Check `$?` / `PIPESTATUS` or do not pipe.
+- Two repositories for one game means two remotes with the same tree. State per remote what it holds
+  (full history vs one commit) and compare heads after the push.
+- Commands for the owner to run must name the shell: PowerShell (`;`, `$env:X`, `2>$null`) and `cmd`
+  (`&&`, `2>nul`) are not interchangeable, and pasting one into the other silently does nothing. When
+  automation is not allowed to touch an unfamiliar host, give the exact command and stop; do not route
+  around the block.
