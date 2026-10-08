@@ -179,7 +179,10 @@ exceptions after the run.
 
 ### Headless screenshots at any resolution
 
-When no editor window is available (or the owner's is busy), a batch-mode `-executeMethod` can enter
+First look for an existing capture path (the editor MCP's game-view capture, Unity Recorder, the
+Test Framework's screenshot helpers, a Device Simulator capture). Only when none can render the page at the
+requested size without an editor window (or the owner's editor is busy), write a batch-mode tool: an
+`-executeMethod` can enter
 Play Mode, switch the overlay canvas to `ScreenSpaceCamera` with the UI camera, render into a
 `RenderTexture` of each requested size, call the controller's navigation methods by name, and write PNGs.
 Learned the hard way: a headless editor renders only a few frames a second, so entrance tweens look
@@ -266,7 +269,7 @@ ladder — a seed tuned at the top of the ladder consumed over 7 % of turnover a
 confirm what the displayed unit actually is before tuning: a config in "coins" that an adapter treats
 as display dollars turns a documented ladder into a wrong one.
 
-## Tuning a Casual Economy
+## Tuning a Progression Economy
 
 State the target as a rate a player feels ("a hint every 18 levels", "coins from 15-20 levels buy 1-3
 hints"), then derive the prices from it: `levels per hint = hint price / coins per win`. Put every number in

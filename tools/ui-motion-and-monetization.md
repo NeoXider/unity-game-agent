@@ -141,7 +141,11 @@ button.
 
 ## 9. Curved or styled titles
 
-A title along an arc or tilt does not need a text-effects package: a small TextMeshPro vertex modifier that
-lifts each glyph by an `AnimationCurve` and turns it to the slope keeps one mesh, no extra draw calls, and
-keeps rich text and glow materials. Reach for a maintained effects library (an MIT TMP animation package)
-only when the project needs per-character animation, not for a static curve.
+Search first (Prime Rule): a maintained TextMeshPro effects package already does arcs, waves, tilts and
+per-character animation, and one that is installed or free beats code you maintain. Evaluate it for
+compatibility with the project's Unity and TMP versions, license, and whether it can drive a single static
+title cheaply. Write a small vertex modifier only when that evaluation fails or the need is one static
+curve and integrating the package costs more than the modifier (a TextMeshPro component that lifts each
+glyph by an `AnimationCurve` and turns it to the slope is about a hundred lines, one mesh, no extra draw
+calls). Record which way it went and why: a custom modifier with no recorded search is the failure the
+Prime Rule exists to prevent.

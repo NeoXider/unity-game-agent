@@ -233,8 +233,9 @@ element, instead of letting the layout stretch:
   (a "fill height" option on the frame fitter) and its children anchor top/bottom inside it. A frame that
   only scales leaves empty bands above and below.
 - **Art that ignores the safe area.** A safe-area component pulls the whole page inside the cut-outs, so
-  a full-bleed map or backdrop under it leaves bands at the top and bottom. Give such rects their own
-  small component that sizes them from the *root canvas rect* (stretch, or cover at a fixed aspect),
+  a full-bleed map or backdrop under it leaves bands at the top and bottom. Check the project's and the
+  installed packages' safe-area and fitter components first (many already have an "ignore" or "full
+  screen" mode); if none does, give such rects their own small component that sizes them from the *root canvas rect* (stretch, or cover at a fixed aspect),
   registered as driven (`DrivenRectTransformTracker`) so edit mode never dirties the scene. Buttons stay
   inside the safe area; the art does not.
 - **Marker layers on art** (coin pins, stops) are clamped to the band below the header and the currency

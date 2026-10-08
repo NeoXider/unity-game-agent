@@ -97,7 +97,9 @@ private void OnBack()
 
 On a high target API neither the key event nor the quit request reaches Unity: with no callback
 registered, the system simply finishes the activity, which the player sees as "Back closes the game".
-Register an `OnBackInvokedCallback` once at startup (API 33 and up) and read a flag from the game thread:
+Check first whether the installed packages (NeoxiderTools, a back-button or Android-utility package, the
+Input System itself on newer versions) already handle Predictive Back. If none does, register an
+`OnBackInvokedCallback` once at startup (API 33 and up) and read a flag from the game thread:
 
 ```csharp
 static class AndroidBackBridge

@@ -1,5 +1,9 @@
 # External Solution Reuse Gate
 
+This gate is the detailed procedure for the **Prime Rule** in `SKILL.md`: find a ready-made solution first
+(models, shaders, VFX, audio, UI, mechanics, systems, tools, everything), and build your own only when
+nothing fits or when it is demonstrably cheaper and faster. Record the decision either way.
+
 Use this gate after project-local, Unity built-in/package, and NeoxiderTools discovery fails to
 provide a suitable solution.
 

@@ -4,6 +4,20 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.6.1] — 2026-10-08
+
+### 🎯 Changed — the Prime Rule is now the first rule of the skill
+- `SKILL.md`: new **Prime Rule: Find Ready-Made First** before the guardrails and in the description:
+  for every model, shader, material, VFX, animation, sound, UI element, mechanic, system and tool, search
+  for something that exists first; build your own only when nothing fits or when it is demonstrably cheaper
+  and faster (a number, stated), and record the decision. It applies to small things as much as big ones.
+  Matching top entry in the anti-patterns.
+- The 3.6.0 additions now follow it: curved titles (search the TMP effects packages first), the headless
+  screenshot tool (existing capture paths first), the full-screen art rect and the Predictive Back bridge
+  (installed components first). "Casual economy" became "Progression economy": the skill is for any genre.
+
+---
+
 ## [3.6.0] — 2026-10-08
 
 ### 🎯 Added — field lessons from two shipped mobile games (rounds 9-12)

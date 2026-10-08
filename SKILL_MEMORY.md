@@ -63,6 +63,7 @@ Each line: when it was learned → where the rule lives now. Read the document, 
 | 2026-10 | Casual economy: target as a felt rate, derive prices, test the band | `tools/playmode-qa-automation.md` |
 | 2026-10 | History-free snapshot with plumbing; verify remotes by hash; shell-specific commands; pipes hide exit codes | `tools/mobile-build-and-size.md` |
 | 2026-10 | Legacy names after repurposing; answer owner feedback by point; reference games that cannot be installed | `tools/project-structure.md`, `SKILL.md` |
+| 2026-10 | Prime Rule: search for a ready-made solution first, own only if nothing fits or it is demonstrably cheaper; record the decision | `SKILL.md` (Prime Rule), `tools/external-solution-reuse.md` |
 
 ## Active Learnings
 

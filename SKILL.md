@@ -1,8 +1,8 @@
 ---
 name: unity-game-agent
-description: "Unity Game Agent: autonomous Unity game development pipeline for quick fixes, direct feature work, full game builds, verification, Play Mode checks, and MCP-driven Unity Editor automation. Use when working on Unity games, gameplay systems, scenes, UI, ScriptableObjects, builds, tests, or project continuation with Docs/ state files."
+description: "Unity Game Agent: autonomous Unity game development pipeline for quick fixes, direct feature work, full game builds, verification, Play Mode checks, and MCP-driven Unity Editor automation. Use when working on Unity games, gameplay systems, scenes, UI, ScriptableObjects, builds, tests, or project continuation with Docs/ state files. Reuse-first: always search for a ready-made solution before building custom."
 metadata:
-  version: 3.6.0
+  version: 3.6.1
   author: Neoxider
   homepage: https://github.com/NeoXider/unity-game-agent
 ---
@@ -14,6 +14,34 @@ Build Unity games end to end, or make targeted fixes, while keeping the project 
 Core loop: `INTAKE -> PLAN -> BUILD -> VERIFY -> SHIP` (standard/pro expand it with role passes: `INTAKE -> DESIGN -> PLAN -> BUILD -> VERIFY -> QA -> SHIP`).
 
 Use the shortest path that still verifies the change. For small fixes, skip the full pipeline and use Quick Fix.
+
+## Prime Rule: Find Ready-Made First
+
+This is the most important rule of the skill, above every other one: **do not invent a wheel.** The skill
+serves any Unity game of any genre and size, and for every model, mesh, texture, material, shader, VFX,
+animation, sound, UI element, mechanic, system, editor tool, script, utility and library the first step is
+to look for something that already exists. Build your own only when
+
+1. nothing found after a real search fits (say what was tried and why it does not), **or**
+2. building your own is demonstrably cheaper and faster than adopting and adapting what exists
+   ("cheaper and faster" is a number: minutes to integrate and maintain vs minutes to build; state both).
+
+Search order, stopping at the first fit: this project and its packages → Unity built-ins and official
+samples → installed helper packages and skills (NeoxiderTools, generation skills) → maintained
+open-source packages, open games and free libraries → Asset Store and free asset sites (models, shaders,
+VFX, audio, UI kits) → AI generation of assets (3D, textures, audio) → only then custom work.
+
+- It applies to small things exactly as to big ones: a curved title, a safe-area fitter, a back-button
+  bridge, a screenshot tool, a tween helper, a shader, a placeholder model. "It is only twenty lines" is
+  not a reason to skip the search; checking takes a minute.
+- Record the outcome in one line per item: `found X and used it` / `found X, rejected because Y` /
+  `built own because Z (cost A vs B)`. A custom solution with no recorded search is a defect, in review
+  and in QA.
+- A found solution is adapted, not worshipped: wrap it in a small project adapter, keep its license, and
+  drop it if it costs more to bend than to write.
+- The detailed procedure is in "Reference And Reuse Discovery" below and in
+  [tools/external-solution-reuse.md](tools/external-solution-reuse.md); the plan templates carry a
+  reuse table for exactly this.
 
 ## Operating Guardrails
 
@@ -557,6 +585,9 @@ Docs rules:
 
 ## Anti-Patterns
 
+- **Build a model, shader, material, effect, mechanic, system, tool or helper from scratch without a
+  recorded search for a ready-made one, or build it when adopting the existing one was cheaper and
+  faster (the Prime Rule).**
 - Start full-cycle work without a plan.
 - Skip preflight before Unity mutations in strict mode.
 - Skip final console check.

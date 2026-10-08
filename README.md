@@ -6,6 +6,8 @@ Autonomous Unity game development skill for Claude Code, Codex, Cursor, and othe
 
 This is not just a prompt pack. It is a role-based production pipeline with planning docs, task ownership, Unity preflight, reuse discovery, Play Mode QA, screenshots, tests, defect loops, and bounded failure recovery.
 
+**Prime rule: find ready-made first.** For every model, shader, VFX, mechanic, system or tool the agent searches for an existing solution before building its own, and builds its own only when nothing fits or when it is demonstrably cheaper and faster. The decision is recorded either way.
+
 ```text
 INTAKE -> DESIGN -> PLAN -> BUILD -> VERIFY -> QA -> SHIP
 ```
