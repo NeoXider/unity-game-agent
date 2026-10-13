@@ -1,35 +1,26 @@
 # External Solution Reuse Gate
 
-This gate is the detailed procedure for the **Prime Rule** in `SKILL.md`: find a ready-made solution first
-(models, shaders, VFX, audio, UI, mechanics, systems, tools, everything), and build your own only when
-nothing fits or when it is demonstrably cheaper and faster. Record the decision either way.
-
-Use this gate after project-local, Unity built-in/package, and NeoxiderTools discovery fails to
-provide a suitable solution.
+This is the implementation and independent-QA gate for the **Prime Rule** in `SKILL.md`, covering
+nontrivial mechanics, models/maps/animations, shaders/VFX/UI and common tools. The work brief holds
+the decision; no separate receipt file, manifest or reporting framework is required.
 
 ## When Internet Search Is Required
 
-Search the internet before implementing a custom solution when the task is both:
+After a relevant project/built-in/installed-Neo miss, external search is mandatory for nontrivial
+reusable work. Search only the current capability gap, stopping at a suitable fit. A game-specific
+label is not an exception for a common controller, inventory, shader or save subsystem.
 
-- a common/reusable Unity problem rather than unique game rules or project-specific glue; and
-- nontrivial enough that a maintained package, GitHub repository, official sample, or proven
-  implementation could materially reduce code, defects, or maintenance.
-
-Typical examples include save systems, pooling, pathfinding, dialogue, inventory, localization,
-input helpers, procedural generation, tweening, serialization, networking, navigation, behavior
-trees, editor tooling, shaders, complex UI controls, and platform integrations.
-
-Internet search may be skipped for an obviously tiny implementation, a narrow adapter around an
-existing project API, simple data mapping/formatting, or behavior genuinely specific to this game's
-rules. State the exception briefly when it is not self-evident.
+Tiny glue/data mapping or a narrow adapter to an already selected system needs local discovery only.
+Explicit from-scratch requests can exit reuse after recording that instruction. Existing discovery
+can be cited rather than repeated when task scope, candidate version and permissions are unchanged;
+refresh affected entries after changes. No whole-internet research for each tiny edit.
 
 ## Search Order
 
-1. Official Unity documentation, package documentation, and official samples.
-2. Maintained GitHub/UPM repositories and their releases, issues, examples, and licenses.
-3. Unity Asset Store or other reputable package sources when free/open options do not fit.
-4. Credible technical articles, talks, and shipped/open game implementations as reference-only
-   evidence.
+1. Project/vendor folders, built-ins, installed packages and official samples/docs.
+2. Installed NeoxiderTools source/docs/samples, respecting project stack choices.
+3. Compatible licensed libraries/assets: maintained UPM/GitHub, official sources, reputable stores.
+4. Allowed ready-project/game slices; public talks/articles/game examples may be reference-only.
 
 Use primary sources for technical decisions whenever possible. Do not rely on a search-result
 snippet when the repository, documentation, release notes, or license can be inspected directly.
@@ -63,35 +54,38 @@ Check, in this order:
 3. the pattern's reuse table and the shortlists above;
 4. only then an external search, and only then custom code.
 
-WHY this is a numbered step and not advice: on a real project the agent correctly worked out that
-`SpriteRenderer.color` multiplies the texture and therefore cannot whiten a sprite — and then wrote
-its own flash shader, while a shader package sitting in `Assets/` had exactly that feature behind a
-toggle. The analysis was right; the inventory never happened.
+An installed shader/controller that already meets the behavior must not be replaced by parallel
+homemade code because writing it feels easier.
 
 ## Candidate Gate
 
 Before importing, copying, or depending on a candidate, check:
 
 - Unity version, render pipeline, input stack, scripting backend, build target, and platform fit;
-- maintenance state, recent releases/commits, unresolved critical issues, and community adoption;
-- license and attribution obligations; reject missing, unclear, or incompatible licenses for direct
-  reuse;
-- dependency footprint, editor/build hooks, security/supply-chain risk, mobile performance, and
-  removal/rollback cost;
+- relevant maintenance/compatibility risks, dependency footprint and removal cost;
+- license, provenance and attribution for both code and each imported asset; unknown/incompatible
+  permission blocks import/copy. MIT package code does not grant rights to bundled models;
+- task-relevant editor/build hooks, performance, deterministic/network behavior and platform fit;
 - whether a smaller adapter or reference-only implementation is safer than importing the package.
 
-Classify each serious candidate as `direct reuse`, `adapt`, `reference-only`, or `reject`, and record
-the reason in the task/reference table or final report. Do not add a package merely because one
-exists.
+Record a compact row in the brief: candidate/source + version, license/asset permission, `direct
+reuse` / `adapt` / `reference-only` / `reject`, decision and exact missing capability. Existing project
+assets can cite their recorded provenance. A licensed reference is useful even when importing it is
+inappropriate, but reference-only study is not proof of integrated reuse.
 
 ## Custom-Code Exit
 
-Write the smallest custom solution only after:
+Nontrivial custom work is allowed only after demonstrated misses/poor fit **and** a narrower/faster
+cost rationale, or an explicit user from-scratch instruction. Name the rejected capability and
+integration/adaptation cost versus custom scope; estimates state assumptions, not invented precision.
+"Easier to code", a small line count, cloning a repository or moving the candidate beside the homemade
+implementation is not an exit. A genuine unique-rule gap still records the local miss.
 
-- no suitable ready option was found;
-- candidates were rejected for concrete compatibility, license, quality, dependency, performance,
-  or scope reasons; or
-- the task qualifies for the tiny/project-specific exception.
+## Integration And QA Gate
 
-Keep useful external implementations as design and edge-case references even when their code cannot
-be imported.
+Before implementation, Developer checks the receipt and stops on missing discovery/permission/fit
+evidence. Handoff names the reused API/module or asset and the changed integration/wiring path.
+Independent QA inspects the actual diff/import/wiring: cloning/downloading is discovery, and a
+parallel homemade motor beside a suitable ready controller fails this gate. Missing receipts, false
+integration or unlicensed imports return to Developer before acceptance. A valid adapter/custom exit
+then still needs the changed-player outcome checks; reuse does not prove gameplay works.

@@ -165,6 +165,16 @@ foreach ($field in $requiredProfileFields) {
     Assert-True -Condition $hasField -Message "DEV_PROFILE.json missing required field: $field"
 }
 
+# Canonical defaults drive compact tracking and real acceptance gates. Legacy project profiles
+# are not validated/migrated here; this validator checks the shipped template only.
+foreach ($field in @("reuse_first", "no_reinventing_without_reason", "interactive_qa_requires_runtime_driver")) {
+    Assert-True -Condition ($profile.$field -is [bool] -and $profile.$field) -Message "Canonical gate must remain enabled: $field"
+}
+Assert-True -Condition ($profile.task_pages_standard_pro -eq "one_brief_per_work_item") -Message "Canonical tracking must use one work brief"
+Assert-True -Condition ($profile.qa_agent_duplicate_checklist -eq "explicit_opt_in") -Message "QA duplication must require explicit opt-in"
+Assert-True -Condition ($profile.mandatory_subagents_standard_pro -eq "developer_then_independent_qa") -Message "Canonical delegation must separate Developer and independent QA"
+Assert-True -Condition ($profile.qa_max_attempts_before_degraded_report -eq 2) -Message "QA failure budget must remain two attempts"
+
 $batchPath = Join-Path $SkillRoot "setup_project.bat"
 $batchBytes = [System.IO.File]::ReadAllBytes($batchPath)
 $lineFeedCount = 0

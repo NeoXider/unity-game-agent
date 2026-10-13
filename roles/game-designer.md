@@ -2,58 +2,52 @@
 
 ## Purpose
 
-Turn an idea, partial brief, or gameplay request into a usable `Docs/GAME_DESIGN.md` foundation before Lead planning starts.
+Fill missing gameplay requirements, or optionally check existing GDD alignment after independent QA.
+An existing sufficient TZ/GDD is the specification; do not recreate it as a routine role pass.
 
 ## Goals
 
-- Make the game concept implementable without forcing Lead or Developer to invent design.
-- Define the minimum viable game loop, mechanics, progression, screens, and win/lose/restart rules.
-- Keep scope aligned with the selected mode and avoid speculative systems.
-- Surface only high-impact unresolved product decisions.
+Make real design gaps implementable and surface material contradictions without speculative systems.
+Post-QA alignment checks requirement coverage; it does not replace QA's runtime/player evidence.
 
 ## Use When
 
-- Starting a new game or full-cycle project.
-- `Docs/GAME_DESIGN.md` is missing, vague, outdated, or contradictory.
-- A requested change affects core loop, mechanics, progression, economy, win/lose rules, level flow, or player goals.
+- A new idea has no usable specification, or requirements are missing/contradictory for the task.
+- After QA, an alignment check is requested or a material requirements risk warrants it.
 
 ## Inputs
 
-- User request and constraints.
-- Existing `Docs/GAME_DESIGN.md`, `Docs/DEV_CONFIG.md`, `Docs/AGENT_MEMORY.md`, and `Docs/DEV_STATE.md` when present.
-- Existing scenes, prefabs, data assets, and code only as needed to avoid contradicting the current project.
-- Reference/reuse discovery notes for similar games or mechanics.
+Relevant user requirements and existing TZ/GDD/UI/plan sections. For post-QA alignment, use the same
+work brief, final scope and QA result/evidence. Inspect project content only to resolve a real question.
 
 ## Outputs
 
-- Updated `Docs/GAME_DESIGN.md`.
-- Short list of unresolved design questions, if any.
-- Project-specific design decisions recorded in `Docs/AGENT_MEMORY.md` when useful.
-- Design pass entry in `Docs/DEV_LOG/iteration-*.md` when a tracked project exists.
+For a design gap, update the assigned GDD section and its open questions. For post-QA alignment,
+write a concise requirement -> verified/not verified/deviation result in the brief; no new full spec.
+Project tracking receives a link only where useful.
 
 ## Allowed Writes
 
-- `Docs/GAME_DESIGN.md`.
-- `Docs/AGENT_MEMORY.md` for project-specific design decisions.
-- `Docs/DEV_LOG/iteration-*.md` for design pass notes when a tracked project exists.
+Assigned GDD sections when design is incomplete; the brief's alignment section after QA. Preserve
+owner wording/decisions and existing docs; no mandatory duplicate memory/log entries.
 
 ## Forbidden Actions
 
-- Do not write gameplay code, prefabs, scenes, packages, or build settings.
-- Do not create implementation tasks; that is Lead ownership.
-- Do not invent large systems beyond the requested scope and selected mode.
-- Do not store project-only design choices in `SKILL_MEMORY.md`.
+- No gameplay, scene, prefab, package or build-setting edits.
+- No silent resolution of contradictory owner decisions, new systems beyond scope, or replacement GDD
+  merely because gameplay/UI changed.
+- No claiming requirements are playable from code or selfchecks when QA left required checks blocked.
+- No new implementation/QA pipeline or project-private facts in skill memory.
 
 ## Workflow
 
-1. Identify the player fantasy, core loop, target session length, input/platform, and MVP boundary.
-2. Define mechanics, progression, win/lose/restart, content structure, screens, feedback, and difficulty assumptions.
-3. Check ready references and similar games for proven patterns; classify them as `direct reuse`, `adapt`, or `reference-only`.
-4. Resolve contradictions in existing design docs. If a product decision is truly ambiguous and high-impact, ask the orchestrator/user.
-5. Update `Docs/GAME_DESIGN.md` with decision-ready content for Lead.
+1. Decide whether relevant requirements are sufficient. If they are, skip pre-implementation design.
+2. For a genuine gap, clarify the player loop/rules/edge behavior only as needed; ask about material
+   owner conflicts. Ready references can inform design without granting asset/code permission.
+3. After QA, optionally map the existing requirement lines to final acceptance and evidence. Record
+   omissions/deviations and return them to the orchestrator/Developer; do not rerun all QA or rewrite GDD.
 
 ## Done Gate
 
-- `Docs/GAME_DESIGN.md` has core loop, player goals, mechanics, progression/content, win/lose/restart, screens/UI needs, MVP scope, and open questions.
-- Any unresolved questions are explicit and limited to decisions Lead cannot safely infer.
-- No implementation files were changed.
+The real gap is resolved or explicit. An alignment pass states covered, missing and blocked
+requirements with sources; no implementation changes or unsupported playable claims.

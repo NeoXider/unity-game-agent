@@ -4,12 +4,17 @@
 
 Autonomous Unity game development skill for Claude Code, Codex, Cursor, and other AI coding agents: from an idea or existing project task to implemented, documented, and verified Unity work.
 
-This is not just a prompt pack. It is a role-based production pipeline with planning docs, task ownership, Unity preflight, reuse discovery, Play Mode QA, screenshots, tests, defect loops, and bounded failure recovery.
+The pipeline uses scoped task ownership, Unity preflight, reuse gates, independent player QA and bounded correction loops.
 
-**Prime rule: find ready-made first.** For every model, shader, VFX, mechanic, system or tool the agent searches for an existing solution before building its own, and builds its own only when nothing fits or when it is demonstrably cheaper and faster. The decision is recorded either way.
+**Prime rule: prove reuse before implementation.** Nontrivial work searches the project, installed
+NeoTools, compatible licensed assets/libraries and allowed ready-project slices. The brief records
+source/license/version/fit; QA checks actual integration. Custom requires demonstrated misses/poor fit
+and a narrower/faster rationale, or explicit from-scratch intent. A clone beside homemade code is not reuse.
 
 ```text
-INTAKE -> DESIGN -> PLAN -> BUILD -> VERIFY -> QA -> SHIP
+Existing sufficient TZ/GDD -> one brief -> Developer -> independent QA -> SHIP
+                                            ^              |
+                                            +-- correction-+
 ```
 
 ## Why It Exists
@@ -26,16 +31,16 @@ Unity Game Agent is built for that gap.
 |---|---:|---:|---:|
 | Reads existing architecture before changing it | Sometimes | Sometimes | Required |
 | Reuse-first search before custom code | Rare | Partial | Required |
-| Explicit game design pass | No | No | Game Designer role |
-| UI/UX and visual design pass | No | Partial | Designer role |
-| Lead creates feature/task/QA docs | No | Rare | Required in standard/pro |
+| Game design pass | No | No | Only for gaps; optional alignment after QA |
+| UI/UX and visual design pass | No | Partial | Only for unresolved visual design |
+| Planning record | No | Rare | One acceptance/reuse brief; Lead only for gaps |
 | One task per developer pass | No | Rare | Required |
-| Independent QA pass | No | Partial | QA role + QA_AGENT checklist |
+| Independent QA pass | No | Partial | Second QA subagent, same brief's QA section |
 | Play Mode verification policy | Weak | Partial | Required by mode |
 | EditMode/PlayMode test expectations | Optional | Optional | Declared per task/feature |
 | Screenshot evidence and visual review | Optional | Partial | Required for visual/runtime-visible work |
 | Interactive checks cannot pass from screenshots alone | Rare | Rare | Required |
-| Failure recovery without infinite retry loops | Rare | Rare | 2 attempts -> degraded report -> continue |
+| Failure recovery without infinite retry loops | Rare | Rare | At most 2 failures -> concise owner/action blocker |
 | Persistent project state | Manual | Partial | Docs/DEV_STATE, DEV_LOG, DEV_PLAN |
 | Skill self-improvement memory | No | No | SKILL_MEMORY.md |
 
@@ -46,21 +51,18 @@ flowchart TD
   A["User request"] --> O["Orchestrator"]
   O --> M{"Mode"}
   M -->|"quick / fast"| D["Developer direct path"]
-  M -->|"standard / pro"| GD["Game Designer"]
-  GD --> V{"Visual or UI work?"}
-  V -->|"yes"| UX["Designer"]
-  V -->|"no"| L["Lead"]
-  UX --> L
-  L --> P["Feature pages, task pages, QA docs"]
-  P --> DEV["Developer: one TASK at a time"]
-  DEV --> SELF["Self verification and evidence"]
-  SELF --> QA["Independent QA"]
+  M -->|"standard / pro"| GAP{"Requirements/planning gap?"}
+  GAP -->|"yes"| FILL["Only needed design/Lead pass"]
+  GAP -->|"no; existing spec sufficient"| P["One acceptance/reuse brief"]
+  FILL --> P
+  P --> DEV["Developer: scoped implementation + relevant selfcheck"]
+  DEV --> QA["Second independent QA: reuse + changed outcome"]
   QA --> R{"Result"}
-  R -->|"pass"| NEXT["Mark done and auto-advance"]
-  R -->|"implementation defect"| BUG["Create/reopen defect task"]
+  R -->|"pass"| GD["Optional existing-GDD alignment"]
+  GD --> NEXT["Mark done and auto-advance"]
+  R -->|"implementation defect"| BUG["One reproduction + evidence + owner/action"]
   BUG --> DEV
-  R -->|"cannot test after 2 attempts"| DEG["Degraded report + skipped checks + follow-up task"]
-  DEG --> NEXT
+  R -->|"cannot test after 2 attempts"| DEG["Blocked: return owner/action; required scope unverified"]
   R -->|"real blocker or product decision"| ASK["Ask user"]
 ```
 
@@ -72,11 +74,15 @@ The orchestrator stays accountable, but work is split into small role files so t
 |---|---|---|
 | Game Designer | Turn idea or vague gameplay into implementable design | `Docs/GAME_DESIGN.md` |
 | Designer | Define UI/UX, visual direction, states, assets, and visual QA | `Docs/UI_BRIEF.md` |
-| Lead | Convert design into feature pages, task pages, QA plans, risks | `Docs/DEV_PLAN.md`, `Docs/Features/`, `Docs/Tasks/`, `Docs/QA/`, `Docs/QA_AGENT/` |
-| Developer | Implement exactly one task page with the smallest safe change | Code/assets/scenes plus task evidence |
-| QA | Verify independently, create defects, avoid deadlocks | Filled `Docs/QA_AGENT/`, defect tasks, degraded reports |
+| Lead | Resolve real scope/ownership/acceptance gaps | One brief and necessary plan links |
+| Developer | Implement the scoped brief with suitable ready systems | Source-final files plus Developer handoff section |
+| QA | Independently verify actual reuse and player outcome | Same brief's QA result/defects/evidence |
 
-In `standard` and `pro`, real subagents are mandatory when the tool environment supports them. If subagents are unavailable, the orchestrator records degraded mode and follows the same role files locally.
+In `standard` and `pro`, use one Developer and a second independent QA when available and allowed;
+reuse them through corrections. Design/Lead passes are conditional. If delegation is unavailable,
+disclose local role switching and missing independent QA. One operator serializes Unity; source-final
+handoff precedes import/compile/player checks. After fixes, rerun failed/affected checks and cite valid
+unaffected evidence with source revision/scope/environment.
 
 ## Development Patterns
 
@@ -108,7 +114,7 @@ These are implemented in the skill today.
 | Reuse-first discovery policy | Done | `SKILL.md`, `tools/libraries-setup.md` |
 | Role subskills | Done | `roles/game-designer.md`, `roles/designer.md`, `roles/lead.md`, `roles/developer.md`, `roles/qa.md` |
 | Standard/pro feature docs | Done | `templates/FEATURE.md`, `templates/TASK.md` |
-| Agent QA and independent QA docs | Done | `templates/QA_CHECKLIST.md`, `templates/QA_AGENT_CHECKLIST.md` |
+| Compact independent QA; legacy expanded docs | Done | `templates/FEATURE.md`, legacy QA templates |
 | Play Mode QA automation policy | Done | `tools/playmode-qa-automation.md` |
 | EditMode/PlayMode test expectations | Done | Feature/task verification fields |
 | Screenshot evidence policy | Done | QA templates and Play Mode QA reference |
@@ -144,7 +150,9 @@ For Unity work, the close gate can include:
 - task evidence in docs;
 - independent QA result.
 
-Interactive gameplay, UI flows, input, collision, spawning, scene transitions, pause, restart, and runtime state changes cannot pass from screenshots alone. They need a driver, test, scenario runner, input injection, or an explicit degraded report.
+Interactive gameplay, UI flows, input, collision, spawning, scene transitions, pause, restart and
+runtime state changes need an actual driven outcome. A screenshot or degraded report cannot pass them;
+unexecuted required scope stays blocked.
 
 ## Bounded QA Recovery
 
@@ -154,7 +162,7 @@ Rule:
 
 ```text
 2 serious attempts per required QA check.
-If still blocked: write degraded report, create follow-up task, continue.
+If still blocked: return a concise blocker to Developer/operator; required scope stays unverified.
 ```
 
 The degraded report must include:
@@ -164,19 +172,25 @@ The degraded report must include:
 - skipped checks;
 - available evidence;
 - player/user risk;
-- follow-up defect or automation-gap task.
+- next owner/action (a follow-up task only when existing tracking needs it).
 
-This keeps automation honest without turning one flaky tool path into a dead stop.
+Unrelated safe work may continue. Missing/empty/unsupported required checks cannot pass; do not start
+another harness or metadata-audit loop to avoid the limit.
 
 ## Modes
 
 | Mode | Use for | Cadence |
 |---|---|---|
 | fast | Prototype, small playable slice, quick validation | Larger feature batches, lighter docs |
-| standard | Small complete game or meaningful feature work | Feature/task docs, Play Mode per feature, QA docs |
-| pro | Larger systems, maintainability, tests, architecture | Task-level checks, stricter docs, relevant tests |
+| standard | Complete small game or meaningful feature work | One brief, changed-outcome independent QA |
+| pro | Long-lived/high-risk work | Same compact loop, justified contract/platform evidence |
 
-## Project Docs Created By The Pipeline
+## Project Records
+
+For a direct tracked item, reuse sufficient requirements and one task/feature brief. The generator
+creates `Docs/Features/FEAT-*.md` by default, with inline tasks, Developer handoff and QA-owned result.
+Independent QA does not require new QA/QA_AGENT/log trees. Full-pipeline resources below are created
+only as needed; existing project docs remain readable without migration.
 
 ```text
 Docs/
@@ -196,7 +210,9 @@ Docs/
   QA_AGENT/
 ```
 
-The docs are not ceremony. They are the agent's working memory, task ownership system, QA evidence trail, and resume point.
+Use `-DetailedTracking` for explicit separate Task/QA output. Legacy `-CreateIndependentQa` still
+requests expanded output plus a QA_AGENT duplicate; existing files are never overwritten. This flag
+controls document output, not whether a QA agent runs.
 
 ## Quick Start
 

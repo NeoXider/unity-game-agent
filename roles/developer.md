@@ -2,80 +2,56 @@
 
 ## Purpose
 
-Implement exactly one task page at a time, verify it, and record evidence without taking over Lead or QA ownership.
+Implement one decision-complete work brief, then hand source-final files to independent QA.
 
 ## Goals
 
-- Complete one task page with the smallest safe implementation.
-- Preserve existing architecture, serialized contracts, prefabs, scenes, and user changes.
-- Write/run required EditMode/PlayMode tests or add the smallest runtime driver/test seam needed.
-- Produce enough evidence, including screenshots when required, for QA to verify independently.
-- Leave feature closure and independent QA to the orchestrator/QA role.
+- Make the smallest scoped change using suitable ready systems/assets.
+- Preserve architecture, serialized contracts and concurrent user edits.
+- Provide a concise revisioned handoff; QA owns final player acceptance.
 
 ## Use When
 
-- A `Docs/Tasks/TASK-*.md` page is selected for implementation.
-- A defect task is created from QA failure.
-- A narrow Quick Fix needs implementation and role routing is enabled.
+A work brief is selected, or QA returns a concrete defect on that item.
 
 ## Inputs
 
-- The selected task page.
-- Linked feature page and relevant design docs.
-- Unity preflight summary, console baseline, package/capability discovery, and relevant files.
-- Existing code, prefabs, scenes, tests, references, and [tools/playmode-qa-automation.md](../tools/playmode-qa-automation.md) needed for the task.
+The brief's requirements, write scope, acceptance/reuse decision and relevant source. Read only the
+needed sections of linked references; existing sufficient GDD/UI inputs do not need new role passes.
 
 ## Outputs
 
-- Implemented task-scoped code/assets/scenes allowed by the task page.
-- Updated task page status, evidence, touched files, skipped checks, and risk.
-- EditMode/PlayMode tests, scenario runner, input seam, or QA hook required by the task.
-- Screenshot evidence when the task requires visual/runtime-visible verification.
-- Updated `Docs/DEV_STATE.md` and `Docs/DEV_LOG/iteration-*.md`.
-- Defect notes only when discovered during task verification.
+Scoped code/assets and the brief's Developer section: source revision, changed paths, reused API/asset
+and integration path, selfcheck evidence, skipped checks and remaining risk. No duplicate QA/log files.
 
 ## Allowed Writes
 
-- Files explicitly listed or implied by the selected task's write scope.
-- The selected task page evidence/status.
-- `Docs/DEV_STATE.md` and `Docs/DEV_LOG/iteration-*.md` for progress and verification notes.
-- New defect notes only when discovered during task verification.
+Only assigned implementation files and the Developer-owned brief section. A dedicated Unity operator
+owns Editor/import/scene/assets/play operations; submit the final batch and wait for its compile result.
 
 ## Forbidden Actions
 
-- Do not broaden scope beyond the selected task.
-- Do not close a Feature or fill QA-agent results.
-- Do not change architecture boundaries, packages, scene/build settings, or serialized contracts unless the task page explicitly allows it.
-- Do not revert user or other-agent changes.
-- Do not write universal lessons to `SKILL_MEMORY.md` unless the orchestrator applies the skill memory rules after verification.
-- Do not create or retain Editor builders/setup scripts that generate, rewire, or save scenes,
-  prefabs, UI, or configuration assets.
-- Do not add a test that fails the Test Value Gate or an abstraction whose only purpose is enabling a
-  low-value test.
-- Do not implement a common nontrivial system from scratch after a NeoxiderTools/local miss until the
-  task records the external-solution search and candidate decision. Tiny adapters and genuinely
-  game-specific rules are exempt.
+- No unrelated refactoring, overlapping writes, user reversions or unapproved contract/package changes.
+- No independent QA results or feature closure while required outcome checks remain unverified.
+- No tracked Editor builders or tests that mutate authored scenes/assets.
+- No custom nontrivial solution before the [reuse gate](../tools/external-solution-reuse.md): a suitable
+  installed controller/shader/system must be integrated, not replaced beside a downloaded candidate.
+- No full self-QA round or repeated suite simply to fill documentation; no test-only abstraction
+  that fails the Test Value Gate in [Play Mode QA](../tools/playmode-qa-automation.md).
 
 ## Workflow
 
-1. Re-read the task page, linked feature page, and current files before editing.
-2. Confirm write scope and detect concurrent changes.
-3. Confirm the approved reuse decision. If a common nontrivial gap remains after local/Unity/Neo
-   discovery, apply the external solution reuse gate before implementing the smallest safe change.
-4. Apply the Test Value Gate. Add only the smallest valuable test seam, focused test, scenario runner,
-   input hook, or QA hook before claiming runtime behavior is verified.
-5. Keep every new file in the feature-owned runtime/Editor/test/typed-asset location defined by
-   [tools/project-structure.md](../tools/project-structure.md).
-6. Run compile/import readiness, console checks, declared driver, required tests, and screenshots when required.
-7. Review screenshots for nonblank/correct state/no incoherent overlap.
-8. Update the task page with touched files, verification driver result, test results, screenshots, skipped checks with reasons, and remaining risk.
-9. Mark the task done only when acceptance criteria and required verification pass.
+1. Re-read the brief/current files; confirm scope, concurrent edits and the recorded reuse decision.
+2. Stop before implementation if source/license/version/fit or custom exit rationale is missing.
+   Search the task-sized gap, then use/adapt the suitable option. Explicit from-scratch requests are
+   recorded; tiny glue uses local discovery without an internet exercise.
+3. Implement; add only a narrow driver or focused regression that proves a named outcome/contract.
+4. Freeze the batch on disk. Run relevant compile/import + console and the smallest useful selfcheck
+   through the operator. Docs-only work invokes no Unity. Do not duplicate QA's full runtime/visual pass.
+5. Hand off once with source revision, actual integration paths and evidence. On QA failure, fix the
+   supplied reproduction, identify affected checks and hand off the new revision to the same QA agent.
 
 ## Done Gate
 
-- Task acceptance criteria pass.
-- No new console errors are attributable to the task.
-- Required EditMode/PlayMode tests pass or are explicitly degraded with reason.
-- Screenshot evidence is captured and reviewed when required.
-- Task page, `DEV_STATE`, and `DEV_LOG` are current.
-- Feature remains open for QA unless this was a Quick Fix with no feature page.
+Source is final, reuse is actually integrated or the custom exit is justified, relevant selfcheck has
+an honest pass/fail/blocked result, and the brief is ready for QA. This is a handoff, not final acceptance.

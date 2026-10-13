@@ -11,37 +11,27 @@ metadata:
 
 Build Unity games end to end, or make targeted fixes, while keeping the project verifiable. This file is the orchestrator. Load detailed references only when needed.
 
-Core loop: `INTAKE -> PLAN -> BUILD -> VERIFY -> SHIP` (standard/pro expand it with role passes: `INTAKE -> DESIGN -> PLAN -> BUILD -> VERIFY -> QA -> SHIP`).
+Core loop: `INTAKE -> TASK BRIEF -> DEVELOPER -> INDEPENDENT QA -> SHIP`. On a defect, return to the same Developer, then QA rechecks the affected behavior. Design/planning passes fill real gaps; an existing sufficient TZ/GDD is not regenerated.
 
 Use the shortest path that still verifies the change. For small fixes, skip the full pipeline and use Quick Fix.
 
 ## Prime Rule: Find Ready-Made First
 
-This is the most important rule of the skill, above every other one: **do not invent a wheel.** The skill
-serves any Unity game of any genre and size, and for every model, mesh, texture, material, shader, VFX,
-animation, sound, UI element, mechanic, system, editor tool, script, utility and library the first step is
-to look for something that already exists. Build your own only when
+**Before implementation, prove the reuse decision.** For nontrivial mechanics, models, maps,
+animations, shaders, UI, VFX and common tools, search the project (including built-ins/samples), then
+installed NeoxiderTools, compatible licensed libraries/assets, and allowed ready-project slices.
+Stop at a suitable fit; use a small adapter instead of a parallel replacement.
 
-1. nothing found after a real search fits (say what was tried and why it does not), **or**
-2. building your own is demonstrably cheaper and faster than adopting and adapting what exists
-   ("cheaper and faster" is a number: minutes to integrate and maintain vs minutes to build; state both).
+The task brief holds a compact receipt: candidate/source, license/asset permission, version,
+`direct reuse` / `adapt` / `reference-only` / `reject`, decision and exact gap. Custom work requires
+demonstrated misses/poor fit **and** a narrower/faster cost rationale, or an explicit user from-scratch
+request. Name assumptions in estimates; "easier to code" is no bypass. Tiny glue needs only local
+discovery, not a web research exercise.
 
-Search order, stopping at the first fit: this project and its packages → Unity built-ins and official
-samples → installed helper packages and skills (NeoxiderTools, generation skills) → maintained
-open-source packages, open games and free libraries → Asset Store and free asset sites (models, shaders,
-VFX, audio, UI kits) → AI generation of assets (3D, textures, audio) → only then custom work.
-
-- It applies to small things exactly as to big ones: a curved title, a safe-area fitter, a back-button
-  bridge, a screenshot tool, a tween helper, a shader, a placeholder model. "It is only twenty lines" is
-  not a reason to skip the search; checking takes a minute.
-- Record the outcome in one line per item: `found X and used it` / `found X, rejected because Y` /
-  `built own because Z (cost A vs B)`. A custom solution with no recorded search is a defect, in review
-  and in QA.
-- A found solution is adapted, not worshipped: wrap it in a small project adapter, keep its license, and
-  drop it if it costs more to bend than to write.
-- The detailed procedure is in "Reference And Reuse Discovery" below and in
-  [tools/external-solution-reuse.md](tools/external-solution-reuse.md); the plan templates carry a
-  reuse table for exactly this.
+Developer must identify actual reused APIs/assets and their integration paths in the handoff.
+QA rejects absent receipts, unknown import permissions, or claimed reuse that is only a clone/download
+beside homemade code. This is a stop gate, not optional advice. Apply
+[tools/external-solution-reuse.md](tools/external-solution-reuse.md) for the detailed decision.
 
 ## Operating Guardrails
 
@@ -74,32 +64,16 @@ Act as a senior Unity C# game development agent that makes working, verified cha
 
 ## Reference And Reuse Discovery
 
-Before choosing an implementation for any task, perform a reference/reuse pass proportional to the task size. Do not build from zero by default. If the user explicitly asks for a from-scratch implementation, respect that request and still use references only to validate behavior, APIs, and edge cases.
+Apply the Prime Rule to the selected task, not an inventory of the whole game. Search relevant code,
+prefabs, scenes, data, packages (including vendor folders), samples and existing discovery notes.
+Reuse cached discovery only when scope, candidate version and permissions are unchanged; refresh
+affected entries after a dependency or scope change. A genuine game-specific gap still needs a
+recorded local miss; being game-specific does not exempt a common subsystem from external discovery.
 
-Search in this order:
-
-1. Existing project code, prefabs, scenes, ScriptableObjects, tests, packages, samples, and Docs/.
-2. Unity built-in APIs, installed packages, official Unity samples, and package documentation.
-3. NeoxiderTools package source/docs/samples when the project uses the package or the selected pattern
-   makes it the default.
-4. If no suitable Neo/local/Unity solution exists and the problem is common and nontrivial, search
-   maintained GitHub/UPM repositories, official package sources, open-source Unity games, reusable
-   feature slices, and reputable Asset Store options before writing custom code.
-5. Use shipped-game examples, technical articles, talks, and breakdowns as reference-only evidence
-   when direct reuse is inappropriate.
-
-The external search in step 4 is mandatory unless the change is obviously tiny, a narrow adapter, or
-genuinely specific to this game's rules. Apply [tools/external-solution-reuse.md](tools/external-solution-reuse.md),
-including compatibility, maintenance, license, dependency, performance, and rollback checks.
-
-Selection rules:
-
-- Prefer adapting a proven library, open-source implementation, sample, asset pack, or part of an existing open game over writing custom framework/mechanic code from scratch.
-- Use a whole package/asset only when it is narrower and safer than custom code. Otherwise use it as a reference and write a small project-local adapter.
-- Classify each candidate as `direct reuse`, `adapt`, or `reference-only`. Directly import/copy when the source is usable for the project; otherwise study the behavior, API shape, architecture, data model, and edge cases, then reimplement the logic independently in project code.
-- Do not reject useful references just because they cannot be copied verbatim. Restrictive or unclear sources can still guide mechanics, tuning, UX, algorithms, test cases, and architecture.
-- Do not use leaked code, decompiled sources, private repositories, or ripped assets. Do not clone copyrighted expression; reproduce the underlying behavior or logic in original code/assets.
-- If no suitable reuse option exists, implement the smallest custom solution and record why reuse was rejected.
+After a local/Unity/Neo miss for nontrivial reusable work, external discovery is mandatory. Inspect
+primary documentation/source and permissions, then evaluate the actual integration gap. References
+can inform behavior and edge cases without permitting copying. Do not use leaks, decompiled code,
+ripped assets or unauthorized private sources. Code and included art may have different licenses.
 
 Reference games that cannot be installed (store sign-in, region): study the store screenshots and any
 review video, keep a reference-diff document that separates what was measured from what was guessed, mark
@@ -118,33 +92,37 @@ Important policy meanings:
 - `strict_preflight: false`: allowed only for narrow file-only edits or explicit user quick fixes. Still avoid destructive scene, package, and build changes without context.
 - `visual_verification: true`: visual scene, UI, camera, material, animation, lighting, prefab, and VFX changes need a screenshot or equivalent visual capture.
 - `final_playmode_tests_standard_pro: "when_runtime_or_visual_behavior_changes"`: run Play Mode for changed runtime/player behavior; record a concrete skip reason for code/docs/editor-only work.
-- `qa_verification_driver_required: true`: every standard/pro Feature and Task declares how runtime behavior will be driven and verified.
+- `qa_verification_driver_required: true`: the work brief declares how changed behavior will be verified; runtime interaction needs an appropriate driver.
 - `qa_tests_required_standard_pro: "risk_based_value_gate"`: add/run tests only when they protect a named behavior or contract and pass the Test Value Gate; `Not Needed` is valid with a reason.
-- `qa_screenshot_evidence_required: true`: visual/runtime-visible checks need screenshot evidence linked from task/feature/QA docs.
+- `qa_screenshot_evidence_required: true`: visual/runtime-visible checks need reviewed capture evidence linked once from the work brief.
 - `interactive_qa_requires_runtime_driver: true`: screenshot-only checks cannot pass interactive gameplay, input, UI flow, collision, spawn, scene transition, pause, or restart behavior.
-- `qa_max_attempts_before_degraded_report` / `qa_continue_after_degraded_report` / `qa_degraded_report_required`: bounded QA — 2 serious attempts per required check, then a degraded report + follow-up task and continue. Canonical rules and report fields: [tools/playmode-qa-automation.md](tools/playmode-qa-automation.md) ("Bounded QA Attempts").
+- `qa_max_attempts_before_degraded_report` / `qa_continue_after_degraded_report` / `qa_degraded_report_required`: at most 2 genuine failed attempts per path, then a concise blocked/degraded QA report with owner/action; continue only unrelated safe work. Never mark an unexecuted required check done. See [tools/playmode-qa-automation.md](tools/playmode-qa-automation.md), "Bounded QA Attempts".
 - `auto_install_mcp_in_manifest: true`: if MCP is missing in a Unity project, add the adapter package to `Packages/manifest.json` before falling back to file-only mode.
 - `neoxider_tools: "ask"`: ask before using NeoxiderTools systems when the project/task could benefit from them.
 - `external_reference_discovery: true`: search local and credible external ready solutions before planning nontrivial implementation work.
 - `external_solution_search_after_neoxider_miss: "required_for_common_nontrivial_tasks"`: after a
   NeoxiderTools/local/Unity miss, search credible internet sources before custom implementation;
-  tiny or genuinely project-specific work is exempt.
+  tiny glue needs local discovery only. Unique rules still record the actual gap/custom exit.
 - `namespace_policy: "fast_standard_global_pro_project_driven"`: new `fast` and `standard` project
   scripts use the global namespace; `pro` follows project architecture and may use product/feature
   namespaces. Preserve existing namespaces instead of performing collateral migrations.
-- `no_reinventing_without_reason: true`: prefer libraries, open-source feature slices, samples, reusable assets, and reference implementations unless custom code is smaller, safer, or explicitly requested.
-- `lead_dev_qa_workflow_standard_pro: true`: standard/pro work uses Lead planning pages, Developer task execution, then Agent QA before advancing.
-- `task_pages_standard_pro: true`: standard/pro features must have one file per task under `Docs/Tasks/`.
-- `qa_agent_duplicate_checklist: "when_independent_qa_runs"`: create `QA_AGENT` only for an actual independent QA pass.
-- `auto_advance_after_self_qa: true`: after Agent QA passes, or after degraded QA is reported with a follow-up task, continue to the next task/feature without waiting for human approval unless blocked or ambiguous.
+- `no_reinventing_without_reason: true`: enforce the reuse receipt and actual integration gate; a smaller custom solution alone is insufficient while a suitable ready solution fits.
+- `lead_dev_qa_workflow_standard_pro: true`: Developer -> independent QA -> affected correction/recheck; Lead is conditional on a planning gap.
+- `task_pages_standard_pro: "one_brief_per_work_item"`: one existing task/feature page can hold the acceptance/reuse brief and both owners' results.
+- `qa_agent_duplicate_checklist: "explicit_opt_in"`: independent QA writes its own section in that brief by default; separate legacy records require an explicit tracking request.
+- `auto_advance_after_self_qa: true`: legacy key; closure requires independent QA pass. A blocked/degraded result permits unrelated safe work, not claiming the blocked feature passed.
 - `skill_memory_enabled: true`: use `SKILL_MEMORY.md` for universal improvements to this skill, separate from project memory.
 - `skill_memory_write_policy: "auto_after_verified_task"`: append a memory entry after a verified task when a reusable skill-level lesson was found.
 - `skill_memory_scope: "universal_only"`: store only lessons that apply across Unity projects, not project-local decisions.
 - `role_subskills_enabled: true`: load compact role files from `roles/` instead of expanding the main orchestrator.
-- `mandatory_subagents_standard_pro: "when_useful_and_available"`: use subagents for genuinely independent role work, not as a quota.
+- `mandatory_subagents_standard_pro: "developer_then_independent_qa"`: one implementation subagent, then a second independent QA subagent when delegation is available and allowed.
 - `subagent_fallback_policy: "only_when_tools_unavailable"`: local role switching is allowed only when subagent tools are unavailable or blocked.
-- `gd_before_lead: true`: Game Designer role prepares/updates `GAME_DESIGN.md` before Lead planning when design is incomplete or gameplay changes are broad.
-- `designer_before_lead_when_visual: true`: Designer role prepares/updates `UI_BRIEF.md` before Lead planning when UI/UX/visual work is involved.
+- `gd_before_lead: true`: fill real design gaps before implementation; reuse sufficient existing requirements. Optional GDD alignment review runs after QA.
+- `designer_before_lead_when_visual: true`: use Designer only for a visual design gap; an existing approved UI brief is sufficient.
+
+Legacy profiles/docs remain readable; do not rewrite them to adopt these defaults. Explicit project/user
+tracking overrides remain valid. Older generated duplicate settings are not themselves a request for
+extra files; choose one canonical result and link existing records without migrating their contents.
 
 ## Development Patterns
 
@@ -232,22 +210,25 @@ paths, drive letters, local tool or skill names, or one-project facts — descri
 
 Use the role files in `roles/` to keep responsibilities narrow and context clean. The orchestrator remains accountable for sequencing, conflict resolution, final verification, and user communication.
 
-For `standard` and `pro`, use real subagents for role passes whenever subagent tools are available: `Game Designer -> Designer when visual/UI -> Lead -> Developer task pass(es) -> QA -> Auto-advance`.
+For `standard` and `pro`, use one Developer subagent and a second independent QA subagent when tools
+and authorization permit. Reuse them through the correction loop; do not spawn a role fleet for a
+decision-complete task.
 
 Role routing:
 
-- Game Designer: use `roles/game-designer.md` before Lead for new games, missing/weak `GAME_DESIGN.md`, or broad gameplay/core-loop changes.
-- Designer: use `roles/designer.md` before Lead when UI, UX, visual style, screens, feedback, animation, camera presentation, or assets are involved.
-- Lead: use `roles/lead.md` to create/update `DEV_PLAN`, Feature pages, Task pages, QA checklists, QA-agent duplicates, acceptance criteria, and rollback risk.
-- Developer: use `roles/developer.md` for one selected task page at a time with narrow write ownership.
-- QA: use `roles/qa.md` after all feature tasks are done; QA verifies independently against `Docs/QA_AGENT/`, creates/reopens defect tasks on failure, and follows the two-attempt degraded-report policy when tooling cannot complete a check.
+- Game Designer: [roles/game-designer.md](roles/game-designer.md) for missing/contradictory requirements; optional post-QA alignment with the existing GDD.
+- Designer: `roles/designer.md` only for unresolved UI/visual design; skip when approved inputs suffice.
+- Lead: [roles/lead.md](roles/lead.md) only for unresolved decomposition, ownership or risk decisions.
+- Developer: [roles/developer.md](roles/developer.md), one brief and narrow write scope.
+- QA: [roles/qa.md](roles/qa.md), independent outcome/reuse checks after source-final handoff, then only failed/affected rechecks.
 
 Subagent rules:
 
-- If subagent tools are available, standard/pro role passes must be delegated to subagents. Use `worker` for roles that write docs/code and `explorer` only for read-only review/research.
-- Give each subagent exactly one role file, concrete inputs, expected outputs, and disjoint primary write ownership. Shared coordination docs (`DEV_STATE`, `DEV_LOG`, `AGENT_MEMORY`) may be updated by multiple roles only within their own role-specific sections/entries.
+- Give each agent its role, relevant requirement lines, brief, exact write scope and expected result. Load only references needed for its checks; do not forward full historical context.
+- One Unity operator serializes imports, scene/assets, Play Mode and tests. Code writers may work on explicitly disjoint source scopes, but no other agent drives the same Editor. Compile once after the source-final batch, not while writers are editing.
+- Developer and QA own separate sections of the same brief and update them sequentially. Orchestrator owns shared state/index links; no duplicate task logs by default.
 - Do not delegate the orchestrator's accountability: read role outputs, check contradictions, and choose the next step.
-- If subagents are unavailable or blocked, record degraded mode in `DEV_STATE`/`DEV_LOG`, then execute the role locally by following the role file.
+- If delegation is unavailable or prohibited, disclose local role switching and the lack of independent QA in the brief. Follow the same outcome gates; do not call a selfcheck independent.
 - For `fast`, Quick Fix, narrow file-only edits, or explicitly free-form/direct tasks, role subagents are optional and usually skipped.
 - Role outputs go to the resolved docs root. Reuse the existing project-root `Docs/` or authoring-root
   `Assets/_source/Docs/`; never create a competing second tree. Universal role improvements may go
@@ -259,7 +240,8 @@ Start by classifying the user request.
 
 ```text
 1. Quick Fix?
-   Specific bug, compile error, small edit, 1-3 files, or direct "fix/change/add X".
+   Narrow bug/compile fix or small reversible edit; file count alone is not the criterion.
+   A nontrivial mechanic or interactive feature uses the tracked Developer/QA loop.
    -> Use Quick Fix. Do not create Docs/ or ask mode questions.
 
 2. Existing tracked agent project?
@@ -290,7 +272,7 @@ Defaults:
 
 ## Mandatory Preflight
 
-Before changing Unity scenes, assets, scripts, prefabs, packages, tests, rendering, UI, play mode, or build settings, perform the provider-neutral preflight from [tools/mcp-provider-neutral.md](tools/mcp-provider-neutral.md).
+Before changing Unity scenes, assets, scripts, prefabs, packages, tests, rendering, UI, play mode, or build settings, perform the provider-neutral preflight from [tools/mcp-provider-neutral.md](tools/mcp-provider-neutral.md). Documentation-only work does not invoke Unity.
 
 Required facts:
 
@@ -357,7 +339,7 @@ Use the same flow with any Unity MCP or file tool stack:
 2. Apply the smallest structured edit available.
 3. Use text patches only when semantic/script edits are unavailable.
 4. Validate syntax or script structure when the tool exposes validation.
-5. Trigger or wait for Unity import/compilation according to the active tool behavior.
+5. After the source-final batch, the single operator triggers/waits for one Unity import/compile.
 6. Poll editor readiness until import/compile/domain reload completes.
 7. Read console and attribute only new errors/warnings to the change.
 8. Attach/use the script only after compilation succeeds.
@@ -408,11 +390,11 @@ When a canonical docs root exists, resolve it once as `DOCS_ROOT`:
 
 ```text
 1. Read `DOCS_ROOT/DEV_PROFILE.json`.
-2. Read `DEV_CONFIG.md`, `GAME_DESIGN.md`, `DEV_STATE.md`, `AGENT_MEMORY.md`, and `DEV_PLAN.md` from `DOCS_ROOT`.
-3. Read ARCHITECTURE.md only for standard/pro or architecture work.
-4. For standard/pro, read referenced active feature/task/QA records and `QA_AGENT/` only when it exists for a scheduled independent pass.
-5. Create the next iteration log/screenshot folder if continuing a feature.
-6. Run preflight.
+2. Read current state/plan pointers and the active brief; load only relevant GDD/config/memory sections.
+3. Read ARCHITECTURE.md only for affected boundaries or architecture work.
+4. Reuse existing linked QA evidence; do not load completed task histories or every checklist.
+5. Create evidence folders only when the selected checks need them.
+6. Run preflight for Unity-changing work; docs-only work does not invoke Unity.
 7. Continue the next unchecked or in-progress task.
 ```
 
@@ -443,7 +425,8 @@ Then create GAME_DESIGN, DEV_PLAN, DEV_PROFILE, and required Docs/ state files f
 
 ### Feature Decomposition
 
-For work larger than a narrow fix, break the plan into Epics, SubEpics, and Features:
+Reuse existing decomposition. For a full game or broad multi-feature work, organize the plan as useful
+Epics, SubEpics and Features; a single scoped item needs only its brief:
 
 - Epic: a major product/gameplay area.
 - SubEpic: a coherent slice inside an Epic.
@@ -455,42 +438,33 @@ Each Feature must define purpose, affected systems/files, expected player/user b
 
 Use this workflow for `standard` and `pro` full-cycle or direct feature work. Do not force it onto Quick Fix, `fast`, narrow file-only edits, or explicitly free-form/direct tasks unless the user asks for stronger tracking.
 
-Lead phase:
+1. **Brief:** reuse sufficient TZ/GDD and an existing task/feature record. Fill only missing scope,
+   acceptance, reuse decision, risk and verification driver/tests/capture needs. For a new tracked item,
+   `tools/new-feature-docs.ps1` creates one compact Feature brief. Expanded Feature/Task/QA files are
+   opt-in with `-DetailedTracking`; `-CreateIndependentQa` preserves explicit legacy duplicate output.
+   Independent QA itself does not require either flag. Do not recreate GDD/Lead passes when inputs suffice.
+2. **Reuse gate:** the candidate receipt must satisfy the Prime Rule before Developer implements.
+   Discovery/clone alone is not reuse. Missing evidence or a suitable ready solution ignored for a
+   homemade substitute returns the brief for correction.
+3. **Developer:** make the scoped change, apply the Test Value Gate, run relevant compile/import and
+   the smallest useful selfcheck, then hand off source-final files/revision and actual integration paths.
+   Do not repeat a full runtime/visual QA round before handing off to QA. Add a narrow missing driver
+   only when needed to exercise the outcome; no new harness just to satisfy a report format.
+4. **Independent QA:** verify actual player behavior and affected risk contracts using the appropriate
+   driver, inspect reuse in the diff/import/wiring, and write `pass`, `fail` or `blocked` in the same
+   brief's QA-owned section. Developer evidence is context; valid compile/test receipts can be cited,
+   but Developer's player-success claim cannot replace QA's independent scenario.
+5. **Correction loop:** one failing reproduction includes expected/actual, evidence/revision and next
+   owner/action. Developer fixes it; QA reruns failed/affected checks and links unchanged valid evidence
+   with its source revision/scope. After two genuine failed attempts on a path, return a concise blocked
+   (legacy degraded QA report) item to Developer/operator; do not spin another harness or metadata audit.
+6. **Close:** only passed required checks permit done/auto-advance. A blocked check stays unverified;
+   unrelated safe work may proceed with the owner/action recorded. Optionally ask Game Designer to
+   compare the existing GDD requirements with the completed QA evidence after QA, without rewriting
+   the spec. Keep state/plan links current at meaningful checkpoints; do not copy evidence into every log.
 
-1. Run project discovery, reference/reuse discovery, and Unity preflight before planning implementation.
-2. Run Game Designer and Designer role passes first when their routing conditions apply.
-3. Confirm `Docs/GAME_DESIGN.md` and `Docs/UI_BRIEF.md` are current from those role passes; Lead writes or updates `Docs/ARCHITECTURE.md` when relevant and `Docs/DEV_PLAN.md`.
-4. Prefer `tools/new-feature-docs.ps1` to create feature/task/QA files from templates when running on Windows.
-5. Create one feature page per Feature in `Docs/Features/FEAT-NNN-slug.md` from `templates/FEATURE.md`.
-6. Create one task page per implementation task in `Docs/Tasks/TASK-NNN-slug.md` from `templates/TASK.md`.
-7. For each Feature and Task, declare `Verification Driver`, `Tests Required`, `Screenshot Required`, and any `Automation Gap` using [tools/playmode-qa-automation.md](tools/playmode-qa-automation.md).
-8. Link every task page from its feature page and from `DEV_PLAN.md`.
-9. For tracked/risky work, create `DOCS_ROOT/QA/FEAT-NNN-slug-qa.md` from `templates/QA_CHECKLIST.md`.
-10. Create `DOCS_ROOT/QA_AGENT/FEAT-NNN-slug-qa.md` only when an independent QA pass is scheduled; pass `-CreateIndependentQa` to the generator.
-11. Ask the user only for decisions that materially change product behavior, require paid/large external assets, alter architecture boundaries, or cannot be inferred safely. Otherwise proceed autonomously.
-
-Developer phase:
-
-1. Pick the next unchecked task from `DEV_PLAN.md` and its task page.
-2. Mark it in progress in `Docs/DEV_STATE.md`, the task page, and the current iteration log.
-3. Implement the smallest change that satisfies the task acceptance criteria.
-4. Apply the Test Value Gate, then add only the smallest valuable EditMode/PlayMode test, scenario
-   runner, input seam, or QA hook required by the task. Do not create an abstraction solely for a
-   low-value test. If a required runtime driver is missing, create/fix the narrow seam before claiming
-   the task is verified.
-5. After each task, run compile/import readiness, console checks, declared tests, and screenshot capture/review when required.
-6. Record touched files, verification driver, test results, screenshots/logs, skipped checks with reasons, and remaining risk in the task page and `DEV_LOG`.
-7. Mark the task done only when its acceptance criteria and verification steps pass.
-
-Feature QA and auto-advance:
-
-1. When all task pages for a feature are done, Developer/orchestrator runs feature self-check: declared verification driver, Play Mode, console during Play Mode, changed behavior check, required tests, and screenshot capture/review when required.
-2. Developer/orchestrator fills the Agent result column in `Docs/QA/FEAT-NNN-slug-qa.md`.
-3. For tracked/risky work that warrants independent QA, create `Docs/QA_AGENT/FEAT-NNN-slug-qa.md` and run the QA role pass. Use a QA subagent when useful and available; otherwise perform a clearly separated player-facing pass. Do not create a duplicate checklist when no independent pass will run.
-4. If QA passes, mark the feature done in the feature page, `DEV_PLAN.md`, `DEV_STATE.md`, and `DEV_LOG`, then continue to the next task/feature automatically.
-5. If QA finds an implementation defect, create or reopen a task page for the defect, fix it, and rerun the affected QA check.
-6. If QA cannot execute a required check, apply the bounded-QA policy from [tools/playmode-qa-automation.md](tools/playmode-qa-automation.md): two serious attempts, then fill a degraded QA report with a follow-up defect/automation-gap task and continue to the next task/feature.
-7. Stop for human input only on blockers that cannot be bypassed with degraded reporting, missing required assets/credentials, destructive changes, or unresolved product decisions. Do not ask solely because QA reached the retry limit.
+Ask only for unresolved product choices, missing assets/credentials, destructive decisions or scope
+changes requiring authorization. A retry limit alone is not a reason to wait for the user.
 
 ## Verification Gate
 
@@ -505,14 +479,14 @@ Before closing any Unity-changing task:
 - For required tests, run the smallest focused set that proves the changed contract. Run broader
   suites at integration/release milestones or when the blast radius justifies them. If tests cannot
   run, mark verification `degraded` and explain why.
-- For QA verification failures caused by unavailable/failing tooling, make at most two serious attempts, then record a degraded report with skipped checks and continue with a follow-up task.
+- For unavailable/failing tooling, make at most two serious attempts, then record the blocked check, evidence and owner/action. Continue only unrelated safe work; missing/empty/unsupported tests are not a pass.
 - For screenshot evidence, capture, review, and link the image. Screenshots must be nonblank, correctly framed, and show the expected state. A screenshot taken after an animation/effect finished is not evidence that it played — hold the state or read the value.
-- Re-run the affected checks after every significant batch of fixes; a result is only valid for the change set it was taken in. State in the final report which checks were not re-verified afterwards and why.
+- Rerun failed/affected checks after fixes. Cite unaffected evidence with its source revision, checked scope/environment and why the changed diff cannot invalidate it; rerun when uncertain. State any required checks still unverified.
 - For mechanics, verify runtime state, inputs/outputs, reset/restart, pause/time scale when relevant, scene reload behavior, and object lifecycle.
 - For physics/cameras, verify layers, colliders, Rigidbody/Rigidbody2D settings, time scale, and camera framing when relevant.
 - For pro mode, use risk-based focused tests plus integration/build/performance checks where the
   change warrants them; do not require a full suite or new test for every task by default.
-- For build settings, platform, scene-in-build, serialization, package, or player-impacting changes, run build validation when practical.
+- For build settings, platform, scene-in-build, serialization/package changes or a demonstrated build risk, run applicable build validation; a small gameplay edit alone does not require a build.
 - If a check is skipped because tooling is unavailable, project lacks tests, or policy/user disabled it, report the reason.
 
 Final verification report format:
@@ -537,7 +511,7 @@ Use [POLICY_MATRIX.md](POLICY_MATRIX.md) as the source of truth for cadence. Loa
 Docs rules:
 
 - Project agent memory files live under `Docs/`, never project root. Skill-level memory lives only in this skill's `SKILL_MEMORY.md`.
-- For tracked/risky standard/pro work, create and maintain feature/task/QA records under the resolved docs root. Create `QA_AGENT/` only when an independent QA pass actually runs.
+- For tracked standard/pro work, use one concise brief with Developer and QA owner sections under the resolved docs root. Separate Feature/Task/QA/QA_AGENT records are explicit expanded tracking, not a prerequisite for independent QA.
 - `DEV_STATE.md` stays small and current.
 - `DEV_LOG/iteration-NN-YYYYMMDD-HHMM.md` uses datetime in the filename.
 - Screenshots go under `Docs/Screenshots/iter-NN/`.
@@ -568,9 +542,8 @@ Docs rules:
 - Reuse existing audio, save, settings, inventory, quest, economy, UI navigation, and progression systems before adding new ones.
 - Discover packages before adding libraries. Install only for a concrete need or explicit user request.
 - Prefer reuse: Unity built-ins, installed packages, project systems, NeoxiderTools if opted in, then new code.
-- When NeoxiderTools/local/Unity discovery has no fit, search credible internet sources before custom
-  code for every common nontrivial problem; skip only tiny or genuinely game-specific work. Apply
-  the external solution reuse gate and record why candidates were reused or rejected.
+- After a NeoxiderTools/local/Unity miss, apply the external solution reuse gate for nontrivial reusable
+  work; tiny glue needs local discovery only. A game-specific gap still needs a recorded decision.
 - Keep every mode as simple as the problem allows. Add interfaces/services only when there are real
   multiple implementations, a dependency boundary, or a proven testing/integration need; `pro`
   alone is never justification.
@@ -612,7 +585,7 @@ Docs rules:
 - Trust sub-agent or tool output without verification.
 - Rename serialized fields casually and break scene/prefab data.
 - Build systems, mechanics, UI frameworks, controllers, asset pipelines, or tools from scratch before checking existing packages, open-source examples, samples, reusable assets, and reference implementations.
-- Reject useful external references just because direct import/copy is not appropriate; use them as reference-only and reimplement the behavior independently.
+- Treat reference-only study or cloning as proof of integrated reuse, or use it to bypass the custom-code exit gate.
 - Close with "done" without stating changed files, verification run, skipped checks, and remaining risk.
 - Leave a scene dirty before tests, Play Mode, a scene switch, or the end of a step (the modal save
   dialog blocks the editor and every MCP call times out); run QA automation while the owner plays in

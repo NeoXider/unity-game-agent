@@ -19,14 +19,38 @@ function Assert-Path {
     Assert-True -Condition (Test-Path -LiteralPath $Path) -Message "Missing expected path: $Path"
 }
 
+function Invoke-CheckedPowerShell {
+    param([string]$ScriptPath, [string[]]$ScriptArgs = @())
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $ScriptPath @ScriptArgs
+    $childExit = $LASTEXITCODE
+    if ($childExit -ne 0) { throw "$ScriptPath failed with exit code $childExit" }
+    Write-Output "SCRIPT_CHECK_EXIT=$childExit $ScriptPath"
+}
+
+function Assert-LocalLinks {
+    param([string]$DocsPath)
+    $generatedFiles = Get-ChildItem -LiteralPath $DocsPath -Recurse -File -Filter "*.md" |
+        Where-Object { $_.Directory.Name -in @("Features", "Tasks", "QA", "QA_AGENT") }
+    foreach ($file in $generatedFiles) {
+        $content = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8
+        foreach ($link in [regex]::Matches($content, '\]\(([^)#\s]+)\)')) {
+            $target = $link.Groups[1].Value
+            if ($target -match '^(https?:|mailto:)') { continue }
+            Assert-Path -Path (Join-Path $file.DirectoryName $target)
+        }
+    }
+}
+
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("unity-game-script-test-" + [guid]::NewGuid().ToString("N"))
 $projectRoot = Join-Path $tempRoot "UnityProject"
 $existingProjectRoot = Join-Path $tempRoot "ExistingUnityProject"
+$compactProjectRoot = Join-Path $tempRoot "CompactUnityProject"
+$nestedProjectRoot = Join-Path $tempRoot "NestedDocsUnityProject"
 $memoryRoot = Join-Path $tempRoot "SkillMemoryRoot"
 $cleanupDone = $false
 
 try {
-    foreach ($root in @($projectRoot, $existingProjectRoot)) {
+    foreach ($root in @($projectRoot, $existingProjectRoot, $compactProjectRoot, $nestedProjectRoot)) {
         New-Item -ItemType Directory -Path (Join-Path $root "Assets") -Force | Out-Null
         New-Item -ItemType Directory -Path (Join-Path $root "ProjectSettings") -Force | Out-Null
         New-Item -ItemType Directory -Path (Join-Path $root "Packages") -Force | Out-Null
@@ -42,20 +66,61 @@ try {
     Assert-True -Condition ($LASTEXITCODE -eq 0) -Message "setup_project.bat existing project run failed with exit code $LASTEXITCODE"
     Assert-True -Condition (-not (Test-Path -LiteralPath (Join-Path $existingProjectRoot "Assets/_source"))) -Message "Assets/_source should not be created for non-empty Assets"
 
-    powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $SkillRoot "tools/new-feature-docs.ps1") -ProjectRoot $projectRoot -FeatureId "001" -FeatureName "Player Movement" -Tasks "Input Adapter, Move Controller" -CreateIndependentQa
-    powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $SkillRoot "tools/new-feature-docs.ps1") -ProjectRoot $projectRoot -FeatureId "001" -FeatureName "Player Movement" -Tasks "Input Adapter, Move Controller" -CreateIndependentQa
-    & (Join-Path $SkillRoot "tools/new-feature-docs.ps1") -ProjectRoot $projectRoot -FeatureId "002" -FeatureName "Combat Loop" -Tasks @("Aim", "Shoot", "Reload")
+    $generatorPath = Join-Path $SkillRoot "tools/new-feature-docs.ps1"
+    $legacyArgs = @("-ProjectRoot", $projectRoot, "-FeatureId", "001", "-FeatureName", "Player Movement", "-Tasks", "Input Adapter, Move Controller", "-CreateIndependentQa")
+    Invoke-CheckedPowerShell -ScriptPath $generatorPath -ScriptArgs $legacyArgs
+    $legacyFeature = Join-Path $projectRoot "Docs/Features/FEAT-001-player-movement.md"
+    Add-Content -LiteralPath $legacyFeature -Value "Owner note must survive regeneration." -Encoding UTF8
+    $legacyHash = (Get-FileHash -LiteralPath $legacyFeature -Algorithm SHA256).Hash
+    Invoke-CheckedPowerShell -ScriptPath $generatorPath -ScriptArgs $legacyArgs
+    Assert-True -Condition ((Get-FileHash -LiteralPath $legacyFeature -Algorithm SHA256).Hash -eq $legacyHash) -Message "Legacy regeneration overwrote owner content"
+    & $generatorPath -ProjectRoot $projectRoot -FeatureId "002" -FeatureName "Combat Loop" -Tasks @("Aim", "Shoot", "Reload") -DetailedTracking
+    Assert-True -Condition (-not (Test-Path -LiteralPath (Join-Path $projectRoot "Docs/QA_AGENT/FEAT-002-combat-loop-qa.md"))) -Message "Detailed tracking alone must not create a QA duplicate"
 
-    powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $SkillRoot "tools/append-skill-memory.ps1") `
-        -SkillRoot $memoryRoot `
-        -Category "qa" `
-        -Trigger "Temp script test" `
-        -Learning "Bounded QA test entry" `
-        -ApplyWhen "Testing append script" `
-        -Evidence "Script created and appended markdown" `
-        -SkillImpact "tools"
+    $legacyProfilePath = Join-Path $compactProjectRoot "Docs/DEV_PROFILE.json"
+    New-Item -ItemType Directory -Path (Split-Path -Parent $legacyProfilePath) -Force | Out-Null
+    Set-Content -LiteralPath $legacyProfilePath -Value '{"task_pages_standard_pro":true,"qa_agent_duplicate_checklist":"when_independent_qa_runs"}' -Encoding ASCII
+    $legacyProfileHash = (Get-FileHash -LiteralPath $legacyProfilePath -Algorithm SHA256).Hash
+    Invoke-CheckedPowerShell -ScriptPath $generatorPath -ScriptArgs @("-ProjectRoot", $compactProjectRoot, "-FeatureId", "003", "-FeatureName", "Existing GDD Task", "-Tasks", "Adapt Ready Controller, Verify Outcome")
+    Assert-True -Condition ((Get-FileHash -LiteralPath $legacyProfilePath -Algorithm SHA256).Hash -eq $legacyProfileHash) -Message "Generator migrated a legacy profile"
+    $compactDocs = Join-Path $compactProjectRoot "Docs"
+    $compactFiles = @(Get-ChildItem -LiteralPath $compactDocs -Recurse -File -Filter "*.md")
+    Assert-True -Condition ($compactFiles.Count -eq 1) -Message "Default workflow must create one brief, not duplicate task/QA records"
+    foreach ($extraDir in @("Tasks", "QA", "QA_AGENT", "DEV_LOG")) {
+        Assert-True -Condition (-not (Test-Path -LiteralPath (Join-Path $compactDocs $extraDir))) -Message "Default workflow created duplicate tracking directory: $extraDir"
+    }
+    $compactText = Get-Content -LiteralPath $compactFiles[0].FullName -Raw -Encoding UTF8
+    foreach ($taskName in @("Adapt Ready Controller", "Verify Outcome")) {
+        Assert-True -Condition $compactText.Contains($taskName) -Message "Compact brief lost requested task: $taskName"
+    }
+    Add-Content -LiteralPath $compactFiles[0].FullName -Value "Existing QA evidence and owner wording." -Encoding UTF8
+    $compactHash = (Get-FileHash -LiteralPath $compactFiles[0].FullName -Algorithm SHA256).Hash
+    & $generatorPath -ProjectRoot $compactProjectRoot -FeatureId "003" -FeatureName "Existing GDD Task" -Tasks "Adapt Ready Controller, Verify Outcome"
+    Assert-True -Condition ((Get-FileHash -LiteralPath $compactFiles[0].FullName -Algorithm SHA256).Hash -eq $compactHash) -Message "Compact regeneration overwrote existing evidence"
 
-    powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $SkillRoot "tools/validate-skill.ps1") $SkillRoot
+    New-Item -ItemType Directory -Path (Join-Path $nestedProjectRoot "Assets/_source/Docs") -Force | Out-Null
+    & $generatorPath -ProjectRoot $nestedProjectRoot -FeatureId "004" -FeatureName "No Tasks Supplied" -DetailedTracking
+    Assert-True -Condition (-not (Test-Path -LiteralPath (Join-Path $nestedProjectRoot "Docs"))) -Message "Generator created a competing docs root"
+    Assert-Path -Path (Join-Path $nestedProjectRoot "Assets/_source/Docs/Tasks/TASK-004-01-no-tasks-supplied.md")
+    foreach ($docsPath in @((Join-Path $projectRoot "Docs"), $compactDocs, (Join-Path $nestedProjectRoot "Assets/_source/Docs"))) {
+        Assert-LocalLinks -DocsPath $docsPath
+    }
+
+    # A failing child check must fail the suite, even if it prints success-looking text.
+    $failureScript = Join-Path $tempRoot "failing-check.ps1"
+    Set-Content -LiteralPath $failureScript -Value 'Write-Output "success-looking text"; exit 7' -Encoding ASCII
+    $failureCaught = $false
+    try { Invoke-CheckedPowerShell -ScriptPath $failureScript }
+    catch { $failureCaught = $_.Exception.Message -like "*exit code 7*" }
+    Assert-True -Condition $failureCaught -Message "Child process failure was silently accepted"
+
+    Invoke-CheckedPowerShell -ScriptPath (Join-Path $SkillRoot "tools/append-skill-memory.ps1") -ScriptArgs @(
+        "-SkillRoot", $memoryRoot, "-Category", "qa", "-Trigger", "Temp script test",
+        "-Learning", "Bounded QA test entry", "-ApplyWhen", "Testing append script",
+        "-Evidence", "Script created and appended markdown", "-SkillImpact", "tools"
+    )
+
+    Invoke-CheckedPowerShell -ScriptPath (Join-Path $SkillRoot "tools/validate-skill.ps1") -ScriptArgs @($SkillRoot)
     $fixtureDir = Join-Path $projectRoot "Assets/_source/Scripts/Sample/EditModeSafe"
     New-Item -ItemType Directory -Path $fixtureDir -Force | Out-Null
     Set-Content -LiteralPath (Join-Path $fixtureDir "SampleRuntime.cs") -Value "internal sealed class SampleRuntime {}" -Encoding UTF8

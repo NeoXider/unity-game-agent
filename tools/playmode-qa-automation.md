@@ -1,31 +1,34 @@
 # Play Mode QA Automation
 
-Use this reference whenever a feature needs runtime verification. A Play Mode launch plus screenshot is not enough for interactive gameplay unless the player action was driven by a test, scenario runner, input injection, UI automation, or an explicit manual/degraded exception.
+Read the sections needed for the task's driver, evidence and retry decision. A Play Mode launch plus
+screenshot cannot pass interaction: drive the action through a test/scenario/input/UI path and observe
+the result, or record actual human verification. Unexecuted required checks stay blocked.
 
 ## Verification Ladder
 
-Use the strongest practical level:
+Select the smallest practical driver that proves the contract; these are capabilities, not a ladder
+to climb for every task. Reuse existing drivers before adding a narrow missing seam.
 
 | Level | Driver | Use for | Pass requires |
 |---|---|---|---|
 | 0 | `CompileConsole` | file-only/script sanity | compile/import complete and no new console errors |
 | 1 | `PassivePlayMode` | lifecycle, startup, passive scene checks | Play Mode enters, console checked during/after |
 | 2 | `ScreenshotOnly` | static visual/layout checks | screenshot reviewed by vision/agent; not enough for interactive mechanics |
-| 3 | `EditModeTest` | pure logic | EditMode tests written and run |
-| 4 | `PlayModeTest` | runtime behavior | PlayMode tests written and run |
+| 3 | `EditModeTest` | pure logic | nonempty expected test selection runs and assertions prove the contract |
+| 4 | `PlayModeTest` | runtime behavior | nonempty expected selection drives the changed runtime contract |
 | 5 | `ScenarioRunner` | multi-step gameplay/UI flows | runner drives steps, asserts state, captures evidence |
 | 6 | `InputInjection` | player controls/clicks | input/UI events are simulated and asserted |
 | 7 | `BuildOrBrowserE2E` | WebGL/build/platform flows | built target or browser flow is exercised |
-| 8 | `ManualOnly` | truly unautomatable checks | marked degraded unless user manually verifies |
+| 8 | `ManualOnly` | truly unautomatable checks | actual human verification recorded; otherwise blocked/degraded |
 
-## Required Lead Decisions
+## Required Task Decisions
 
-Every standard/pro Feature and Task must declare:
+The canonical work brief declares only relevant checks once:
 
 - `Verification Driver`: one or more ladder drivers.
 - `Tests Required`: `EditMode`, `PlayMode`, `Both`, or `Not Needed`.
 - `Screenshot Required`: `yes`, `no`, or `on-failure`.
-- `Automation Gap`: `none` or the missing hook/test/driver task.
+- `Automation Gap`: `none` or the missing hook/test/driver and owner/action.
 
 If a feature requires player input, UI clicks, collision, spawning, scene transitions, pause, restart, or runtime state changes, `ScreenshotOnly` is not sufficient.
 
@@ -92,7 +95,11 @@ Before any tap, prove the target is hit: `EventSystem.RaycastAll` at the control
 return the control (or a child) first. During an entrance animation an invisible control must *not*
 be hit.
 
-Developer must run the required tests through MCP (`run_tests` + `get_test_job`) when available. If MCP is unavailable, use Unity CLI batchmode when practical. If neither works, mark verification `degraded`, not `pass`.
+Developer runs relevant compile/check before source-final handoff, not a mandatory full runtime
+self-QA round. Independent QA drives changed player outcomes. One assigned operator serializes MCP
+import/play/test/assets; batchmode is a fallback only when the project is not open in another Editor.
+Current scoped compile/test receipts may be cited rather than run twice. Unavailable/empty/unsupported
+required selections mean blocked/degraded, not pass.
 
 ## Transient State Cannot Be Screenshotted Afterwards
 
@@ -117,34 +124,32 @@ or two, which is exactly what an owner reports as "I saw it flash". Check by rea
 badges through the same eval), not by looking at a later screenshot, and paint the true state before the
 page appears, not after.
 
-## QA Re-Runs After Every Fix Batch
+## Evidence Validity And Affected Rechecks
 
-One QA pass at the start of a session is worthless: in a real session it was followed by dozens of
-edits, none of them covered by it.
+Each result links source revision (commit plus dirty-file hashes when needed), checked scope, relevant
+environment/driver and evidence. No new manifest/report framework is required; brief rows suffice.
 
-- Re-run the affected QA checks after **each significant batch of fixes**, not once per session.
-- A check's result is only valid for the build state it was taken in; record which change set it
-  covers.
-- The final report must state explicitly **what was not re-verified after the last change and why**.
-  "Everything works" without that list is a false claim.
+- QA independently drives changed player outcomes; Developer's success claim is not independent proof.
+- After a fix, rerun failed/affected checks and their dependencies. A changed input module invalidates
+  the affected click/Back checks; an unrelated text correction need not rerun save/reward regression.
+- Cite unchanged valid evidence with its original revision/scope/environment and why the current diff
+  cannot invalidate it. Package/scene/data/environment changes or uncertainty require affected reruns.
+- Broad suites/builds/full-game passes need architecture/protocol/package/scene/data/platform blast
+  radius, release/integration context or an explicit request. Docs-only changes invoke no Unity.
+- State any required checks still unverified. Existing/empty test infrastructure is not a pass.
 
 ## The QA Loop With a Tester Agent
 
-For a game heading to the owner, run numbered rounds until nothing Critical or Major remains:
+Default: one Developer -> second independent QA -> same Developer correction -> affected QA recheck.
+Use the same brief's owner sections, not duplicate QA/QA_AGENT/checklist/log trees. On failure give
+one reproduction, expected/actual, revision/evidence and next owner/action. Optional Game Designer
+alignment follows QA and maps the existing requirements to results; it does not rewrite the GDD.
 
-1. **Tester pass** (a QA subagent acting as a player, not a code reviewer): every screen and every
-   button through real taps, every mode start to finish, replays, persistence across an app restart,
-   economy consistency (balance before/after each reward, no double pay, collected items stay
-   collected), the resolution matrix from
-   [../project-profiles/plain-ugui.md](../project-profiles/plain-ugui.md), and targeted crops for
-   anything drawn over art. Output: `Docs/QA/qaN/report.md` with Critical / Major / Minor / Cosmetic,
-   each item with numbers and a screenshot or crop, a status table for the previous round's items,
-   what was *not* checked, and open owner questions.
-2. **Fix pass** by the orchestrator, one commit per round.
-3. **Next round** re-checks the previous items first, then looks for regressions.
-
-The owner receives the final round's report, with accepted items and owner questions listed
-separately. Items the owner already decided are not re-reported.
+When a release-wide pass is requested or release risk warrants it, QA covers relevant screens and
+controls through real taps, complete modes, replay/persistence, reward idempotency and the applicable
+[resolution matrix](../project-profiles/plain-ugui.md). Keep outstanding severity/owner questions and
+evidence in the canonical record or the project's already established report. Corrections still rerun
+failed/affected checks; required Critical/Major defects cannot be reported as a finished release.
 
 ### Editor hygiene during QA (all learned the hard way)
 
@@ -181,7 +186,9 @@ exceptions after the run.
 
 First look for an existing capture path (the editor MCP's game-view capture, Unity Recorder, the
 Test Framework's screenshot helpers, a Device Simulator capture). Only when none can render the page at the
-requested size without an editor window (or the owner's editor is busy), write a batch-mode tool: an
+requested size without an editor window, consider a narrow temporary batch capture through the
+assigned operator on an isolated/closed project; do not launch a competing Editor when the owner is
+playing or after the retry budget is spent. An
 `-executeMethod` can enter
 Play Mode, switch the overlay canvas to `ScreenSpaceCamera` with the UI camera, render into a
 `RenderTexture` of each requested size, call the controller's navigation methods by name, and write PNGs.
@@ -208,11 +215,16 @@ old file, carry the reviewer's comments over verbatim with their resolution befo
 
 QA must not get stuck repeating the same failed verification path.
 
-- Max QA Attempts: 2 serious attempts per required verification item, driver, test run, or screenshot capture.
+- Max QA Attempts: 2 genuine failed attempts on the same required verification path.
 - Attempt 1: run the declared driver/test/screenshot path and record evidence or the exact failure.
 - Attempt 2: retry only after one practical corrective action inside QA scope, such as waiting for compile/import, reloading the scene, clearing stale Play Mode state, rerunning the test job, or using the approved CLI fallback.
-- After attempt 2 fails or remains unavailable, mark the item `degraded`, not `pass`, and continue with the rest of QA.
-- Degraded Report must include: attempted commands/tools, failure reason, skipped checks, available evidence, player risk, and the follow-up defect/automation-gap task.
+- After attempt 2 fails/remains unavailable, return a concise fail/blocked item to Developer/operator.
+  Continue only unrelated safe checks; do not invent another harness or loop metadata audits.
+- Degraded Report is the legacy name for blocked verification. In the brief record attempted path,
+  failure/reproduction, expected/actual, revision/evidence, unverified scope and next owner/action.
+  Link a follow-up task only when existing tracking needs it; no mandatory new defect document.
+- A missing/empty/unsupported required check is blocked, never pass or done. A nonapplicable check
+  may be skipped with a concrete reason; it is not a failure attempt.
 - Do not ask the user only because the retry limit was reached. Ask only for missing assets/credentials, destructive decisions, or product choices that cannot be inferred.
 
 ## Screenshot Evidence
@@ -222,7 +234,7 @@ For visual/UI/camera/gameplay-visible features:
 1. Capture screenshot during or after the driven scenario.
 2. Store it under `Docs/Screenshots/iter-NN/`.
 3. Review it for nonblank output, correct scene/camera, readable UI, expected state, and no incoherent overlap.
-4. Link the screenshot in Task, Feature, QA, QA_AGENT, and DEV_STATE when relevant.
+4. Link evidence once from the work brief; existing state/index records can link that brief.
 
 Tests that exercise visible runtime behavior should capture or trigger screenshot evidence when tooling supports it. If the test cannot capture screenshots, pair it with MCP screenshot after the same scenario or record why screenshot evidence is unavailable.
 
@@ -231,9 +243,9 @@ Tests that exercise visible runtime behavior should capture or trigger screensho
 - QA must not mark interactive behavior `pass` from `ScreenshotOnly`.
 - QA must run or verify the declared driver and required tests.
 - QA must check console before, during, and after Play Mode.
-- QA must create/reopen a defect task when a feature lacks the required automation hook.
+- QA records a defect/automation gap with owner/action when the required driver is missing.
 - QA may use vision to judge screenshots, but vision does not replace runtime input/test execution.
-- QA must stop after two failed/unavailable attempts for the same check, write the degraded report, and continue.
+- QA returns a concise blocker after two failed/unavailable attempts; the required check stays unverified.
 
 ## Delegated Work: Verify Before You Believe
 
@@ -273,8 +285,8 @@ as display dollars turns a documented ladder into a wrong one.
 
 State the target as a rate a player feels ("a hint every 18 levels", "coins from 15-20 levels buy 1-3
 hints"), then derive the prices from it: `levels per hint = hint price / coins per win`. Put every number in
-one config asset, mirror the defaults in code, and keep a test that asserts the asset equals the defaults and
-that the derived rate sits inside the stated band. Record old and new values in an economy document as a
+one config asset. A focused test can protect the intended derived rate/idempotency when it passes the
+Test Value Gate; mirroring defaults alone is not a meaningful assertion. Record old and new values as a
 table with the reason, and check every side income (daily reward, map pins, gift boxes, doubled rewards)
 against the same price: a doubled coin gift should stay below one hint, one rewarded video should pay about
 one hint. When the owner says "still too generous", change prices and the scarce rewards (hint boxes), not

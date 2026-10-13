@@ -1,85 +1,53 @@
 # Feature: [FEAT-NNN Name]
 
-**Status:** planned | in_progress | qa | done | blocked  
-**Mode:** standard | pro  
-**Epic:** [Epic name]  
-**SubEpic:** [SubEpic name or none]  
-**Created:** YYYY-MM-DD HH:MM  
-**Updated:** YYYY-MM-DD HH:MM
+**Status:** planned | in_progress | qa | done | blocked
+**Requirements:** [existing TZ/GDD lines/link; no replacement spec]
+**Write scope:** [exact files/systems; exclusions and serialized contracts]
+**Risk / rollback:** [affected contract and rollback surface]
 
----
+## Acceptance And Tasks
 
-## Purpose
-
-[Why this feature exists and what player/user behavior it enables.]
-
-## Player/User Behavior
-
-- [Expected visible behavior]
-- [Important interaction path]
-- [Failure/edge behavior]
-
-## Scope
-
-**Included**
-- [Behavior/system]
-
-**Excluded**
-- [Out of scope behavior/system]
-
-## Reuse And References
-
-| Candidate | Source | Reuse mode | Decision | Notes |
-|-----------|--------|------------|----------|-------|
-| [Built-in/package/sample/game reference] | [path/link] | direct reuse/adapt/reference-only | use/skip | [reason] |
-
-## Affected Systems/Files
-
-- [Assets/...]
-- [Packages/...]
-- [ProjectSettings/...]
-
-## Tasks
-
+- [ ] [Observable player/user outcome and relevant edge/lifecycle behavior]
 - [ ] [TASK-NNN-name](../Tasks/TASK-NNN-name.md) - [short purpose]
 
-## Acceptance Criteria
+## Reuse Decision (before implementation)
 
-- [ ] [Concrete behavior is true]
-- [ ] [Reset/restart/lifecycle behavior is handled]
-- [ ] [Pause/time scale handled if relevant]
-- [ ] [No new console errors]
+| Candidate/source + version | License / asset permission | Mode | Decision / exact gap + cost rationale |
+|---|---|---|---|
+| [project/Neo/package/allowed slice; cached evidence if valid] | [source/permission] | direct reuse / adapt / reference-only / reject | [fit; custom only after demonstrated miss/poor fit and narrower/faster rationale, or explicit from-scratch request] |
+
+Stop if this receipt is missing or a suitable ready solution would be replaced. Tiny glue needs local
+discovery only. A clone is not integration; package-code permission does not license included models.
 
 ## Verification Plan
 
-- Verification Driver: CompileConsole | PassivePlayMode | ScreenshotOnly | EditModeTest | PlayModeTest | ScenarioRunner | InputInjection | BuildOrBrowserE2E | ManualOnly
-- Tests Required: EditMode | PlayMode | Both | Not Needed
-- Regression/contract protected by tests: [named behavior and realistic failure] | Not Needed
-- Test Value Gate: pass | rejected; reason: [why each test is worth maintaining]
-- Screenshot Required: yes | no | on-failure
-- Automation Gap: none | [missing hook/test/driver task]
-- Max QA Attempts: 2 before degraded report and continue
-- [ ] Compile/import check
-- [ ] Console baseline/current comparison
-- [ ] Play Mode scenario: [scenario]
-- [ ] Screenshot/visual check: [required or skipped reason]
-- [ ] Tests/build validation: [required or skipped reason]
-- [ ] Project structure audit and Editor Builder ban
+- Verification Driver: [smallest driver proving the changed outcome; runtime interaction must be driven]
+- Tests Required: EditMode | PlayMode | Both | Not Needed; [named contract / reason]
+- Screenshot Required: yes | no | on-failure; [state/timing when relevant]
+- Automation Gap: none | [missing driver; next owner/action]
+- Max QA Attempts: 2 genuine failed attempts per path; then concise fail/blocked handoff
+- Broad suite/build/platform checks: [actual risk/request or not needed]; docs-only invokes no Unity
 
-## QA
+## Developer Handoff (Developer owns)
 
-- Agent checklist: [Docs/QA/FEAT-NNN-name-qa.md](../QA/FEAT-NNN-name-qa.md)
-- Independent QA: not planned | [QA_AGENT checklist link, only when an independent pass is scheduled]
+- Source-final revision / changed paths: [commit + dirty hashes or task-scoped source identity]
+- Actual reused API/asset + integration path: [call/import/wiring; or justified custom exit]
+- Relevant compile/selfcheck: [result + evidence/revision/scope/environment]
+- Remaining risk / skipped checks: [reason]; ready for independent QA, not final acceptance
 
-## Rollback Risk
+## Independent QA Result (QA owns)
 
-[Low/medium/high and what would need reverting.]
+- Result: pending | pass | fail | blocked
+- Checked revision / scope / environment: [source + driver/target]
+- Actual reuse verified: [diff/API/import/wiring evidence or defect]
+- Changed outcome / affected contract checks: [observed state/action + evidence]
+- Unchanged evidence retained: [original source/scope/environment and why diff cannot invalidate it]
+- Unverified required scope: [reason + next owner/action; never pass/done]
+- Defect: [one repro; expected/actual; revision/evidence; next owner/action]
 
-## Done Evidence
+After correction, rerun failed/affected checks only; uncertainty/changed dependencies invalidate the
+relevant old evidence. Optional post-QA GDD alignment cites existing requirements, not a rewritten spec.
 
-- Tasks complete: 0 / N
-- Last Play Mode result: pending
-- Last console result: pending
-- Verification driver result: pending
-- Screenshot(s): pending
-- Tests/build: pending
+## Tracking
+
+[TRACKING_LINKS]

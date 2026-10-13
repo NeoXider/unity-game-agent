@@ -15,6 +15,10 @@ param(
 
     [string]$DocsRoot = "",
 
+    # Explicit expanded records; independent QA normally writes in the compact brief.
+    [switch]$DetailedTracking,
+
+    # Backward compatible explicit request for separate QA_AGENT output.
     [switch]$CreateIndependentQa
 )
 
@@ -86,7 +90,9 @@ $tasksDir = Join-Path $docs "Tasks"
 $qaDir = Join-Path $docs "QA"
 $qaAgentDir = Join-Path $docs "QA_AGENT"
 
-$requiredDirs = @($docs, $featuresDir, $tasksDir, $qaDir)
+$expandedTracking = $DetailedTracking -or $CreateIndependentQa
+$requiredDirs = @($docs, $featuresDir)
+if ($expandedTracking) { $requiredDirs += @($tasksDir, $qaDir) }
 if ($CreateIndependentQa) { $requiredDirs += $qaAgentDir }
 foreach ($dir in $requiredDirs) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
@@ -103,6 +109,7 @@ $featureFile = Join-Path $featuresDir "$featureStem.md"
 $qaFile = Join-Path $qaDir "$featureStem-qa.md"
 $qaAgentFile = Join-Path $qaAgentDir "$featureStem-qa.md"
 $Tasks = Normalize-TaskList $Tasks
+if ($Tasks.Count -eq 0) { $Tasks = @($FeatureName) }
 
 $taskLinks = New-Object System.Collections.Generic.List[string]
 $taskIndex = 1
@@ -111,22 +118,29 @@ foreach ($taskName in $Tasks) {
     $taskId = "TASK-$FeatureId-{0:D2}" -f $taskIndex
     $taskStem = "$taskId-$taskSlug"
     $taskFile = Join-Path $tasksDir "$taskStem.md"
-    $taskLinks.Add("- [ ] [$taskStem](../Tasks/$taskStem.md) - $taskName")
-
-    Copy-TemplateIfMissing `
-        -TemplatePath (Join-Path $templates "TASK.md") `
-        -DestinationPath $taskFile `
-        -Replacements @{
-            "[TASK-NNN Name]" = "$taskId $taskName"
-            "TASK-NNN-name.md" = "$taskStem.md"
-            "FEAT-NNN-name.md" = "$featureStem.md"
-        }
+    if ($expandedTracking) {
+        $taskLinks.Add("- [ ] [$taskStem](../Tasks/$taskStem.md) - $taskName")
+        Copy-TemplateIfMissing `
+            -TemplatePath (Join-Path $templates "TASK.md") `
+            -DestinationPath $taskFile `
+            -Replacements @{
+                "[TASK-NNN Name]" = "$taskId $taskName"
+                "TASK-NNN-name.md" = "$taskStem.md"
+                "FEAT-NNN-name.md" = "$featureStem.md"
+            }
+    } else {
+        $taskLinks.Add("- [ ] $taskName")
+    }
 
     $taskIndex++
 }
 
-if ($taskLinks.Count -eq 0) {
-    $taskLinks.Add("- [ ] [TASK-$FeatureId-01-task](../Tasks/TASK-$FeatureId-01-task.md) - [short purpose]")
+$trackingLinks = "Compact brief: Developer and independent QA own the sections above."
+if ($expandedTracking) {
+    $trackingLinks = "- Expanded QA: [checklist](../QA/$featureStem-qa.md)"
+    if ($CreateIndependentQa) {
+        $trackingLinks += [Environment]::NewLine + "- Explicit legacy independent QA: [checklist](../QA_AGENT/$featureStem-qa.md)"
+    }
 }
 
 Copy-TemplateIfMissing `
@@ -137,16 +151,19 @@ Copy-TemplateIfMissing `
         "FEAT-NNN-name-qa.md" = "$featureStem-qa.md"
         "FEAT-NNN-name.md" = "$featureStem.md"
         "- [ ] [TASK-NNN-name](../Tasks/TASK-NNN-name.md) - [short purpose]" = ($taskLinks -join [Environment]::NewLine)
+        "[TRACKING_LINKS]" = $trackingLinks
     }
 
-Copy-TemplateIfMissing `
-    -TemplatePath (Join-Path $templates "QA_CHECKLIST.md") `
-    -DestinationPath $qaFile `
-    -Replacements @{
-        "[FEAT-NNN Name]" = "$FeatureId $FeatureName"
-        "FEAT-NNN-name-qa.md" = "$featureStem-qa.md"
-        "FEAT-NNN-name.md" = "$featureStem.md"
-    }
+if ($expandedTracking) {
+    Copy-TemplateIfMissing `
+        -TemplatePath (Join-Path $templates "QA_CHECKLIST.md") `
+        -DestinationPath $qaFile `
+        -Replacements @{
+            "[FEAT-NNN Name]" = "$FeatureId $FeatureName"
+            "FEAT-NNN-name-qa.md" = "$featureStem-qa.md"
+            "FEAT-NNN-name.md" = "$featureStem.md"
+        }
+}
 
 if ($CreateIndependentQa) {
     Copy-TemplateIfMissing `

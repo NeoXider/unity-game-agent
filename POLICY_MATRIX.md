@@ -11,22 +11,22 @@ Single source of truth for mode-specific cadences. No ambiguity.
 | **Compile check** | After changed C# batch | After changed C# feature | After meaningful changed C# checkpoint |
 | **read_console** | After changed C# batch | After changed C# feature | After meaningful changed C# checkpoint |
 | **Play Mode test** | After runtime/player-visible batch | After runtime/player-visible feature | After runtime/player-visible or high-risk checkpoint |
-| **Before closing task** | Compile + console; Play Mode when cadence/visual change requires it | Play Mode + console during play + changed behavior checked | Play Mode + console during play + changed behavior checked + relevant tests |
-| **Screenshot** | After batch | After every feature | After every feature |
-| **Review screenshot** | After batch | After every feature | After every feature |
+| **Before closing task** | Relevant compile/console; actual runtime/visual behavior when changed | Independent QA of changed behavior/contracts; runtime drive when changed | Same plus justified platform/integration checks |
+| **Screenshot** | Visual/runtime-visible changes | Visual/runtime-visible changes | Visual/runtime-visible changes |
+| **Review screenshot** | Each required capture | Each required capture | Each required capture |
 | **DEV_STATE update** | After meaningful batch | After meaningful feature checkpoint | After meaningful verified checkpoint |
 | **DEV_LOG entry** | After meaningful batch | After meaningful feature checkpoint | After meaningful verified checkpoint |
 | **Scene save** | When scene state changed | When scene state changed | When scene state changed and was verified |
-| **Lead planning pass** | Optional brief | Required | Required |
-| **Role subskills** | Optional | Required | Required |
-| **Real subagents when available** | Optional | Required | Required |
+| **Lead planning pass** | Only for a planning gap | Only for a planning gap | Only for a planning gap |
+| **Role subskills** | Only selected roles | Developer + QA; design/Lead only for gaps | Same |
+| **Real subagents when available/allowed** | Optional | One Developer, second independent QA | Same; reuse agents through correction loop |
 | **User approval (plan)** | Auto (skip if auto_mode) | Only if ambiguous/high-impact | Only if ambiguous/high-impact |
 | **User approval (feature)** | Never | Only if unclear/blocker | Only if unclear/blocker |
-| **Auto-advance after Agent QA** | Yes | Yes, after QA + QA_AGENT pass or degraded report with follow-up task | Yes, after QA + QA_AGENT pass or degraded report with follow-up task |
-| **QA retry limit** | Best effort | 2 attempts, then degraded report and continue | 2 attempts, then degraded report and continue |
+| **Auto-advance after Agent QA** | After relevant checks pass | After required independent QA checks pass; blocked work stays unverified | Same |
+| **QA retry limit** | At most 2 genuine failures per path | At most 2; concise blocker to Developer/operator | Same; unrelated safe work may continue |
 | **Autotests** | Only for a named high-risk regression | Per task Test Value Gate | Risk-based focused tests; broader suite at milestones |
-| **Profiler check** | Never (unless visible lag) | VERIFY phase (quick FPS) | After major systems + VERIFY |
-| **Performance gate** | No | No | Yes (Mobile/WebGL: mandatory) |
+| **Profiler check** | Visible lag/performance task | Performance risk/claim | Performance risk/claim or release requirement |
+| **Performance gate** | When required | When required | Actual affected target/release requirement |
 
 ---
 
@@ -54,21 +54,30 @@ Single source of truth for mode-specific cadences. No ambiguity.
 
 ## Docs Requirements
 
+These are full-pipeline resources, not a bootstrap checklist for every edit. A direct tracked item
+uses one existing/new work brief; no new GDD, log tree or duplicate QA records when sufficient inputs
+exist. Quick Fix creates none. Preserve explicit project tracking and link existing records.
+
 | Doc file | fast | standard | pro |
 |----------|------|----------|-----|
 | DEV_CONFIG.md | REQUIRED | REQUIRED | REQUIRED |
-| DEV_STATE.md | REQUIRED (brief) | REQUIRED (full) | REQUIRED (full) |
+| DEV_STATE.md | Brief pipeline state | Brief pipeline state | Brief pipeline state |
 | DEV_PLAN.md | OPTIONAL | REQUIRED | REQUIRED |
 | DEV_LOG/ | REQUIRED (brief) | REQUIRED | REQUIRED |
 | AGENT_MEMORY.md | REQUIRED | REQUIRED | REQUIRED |
 | GAME_DESIGN.md | OPTIONAL | REQUIRED | REQUIRED |
-| ARCHITECTURE.md | No | OPTIONAL | REQUIRED |
+| ARCHITECTURE.md | Affected boundary decision only | Same | Same |
 | DEV_PROFILE.json | REQUIRED | REQUIRED | REQUIRED |
-| Screenshots/ | REQUIRED | REQUIRED | REQUIRED |
-| Features/FEAT-*.md | OPTIONAL | Required for tracked nontrivial features | Required for tracked nontrivial features |
-| Tasks/TASK-*.md | OPTIONAL | One per meaningful implementation slice | One per meaningful implementation slice |
-| QA/FEAT-*-qa.md | OPTIONAL | Required for tracked/risky features | Required for tracked/risky features |
-| QA_AGENT/FEAT-*-qa.md | OPTIONAL | Only when an independent QA pass is used | Only when an independent QA pass is used |
+| Screenshots/ | Required captures only | Required captures only | Required captures only |
+| Feature or Task brief | Optional | One canonical brief per work item | Same |
+| Separate Tasks/TASK-*.md | Explicit expanded tracking | Explicit expanded tracking | Explicit expanded tracking |
+| Separate QA/FEAT-*-qa.md | Explicit expanded tracking | Explicit expanded tracking | Explicit expanded tracking |
+| QA_AGENT/FEAT-*-qa.md | Explicit duplicate request only | Independent QA normally owns a brief section | Same |
+
+Developer performs relevant compile/check once before handoff. QA drives changed outcomes. Fixes
+rerun failed/affected checks only; cite valid unchanged evidence with source revision/scope/environment.
+Docs-only work does not call Unity. Full suite/build/large manifests need demonstrated blast radius,
+release/integration context or explicit request; none is a per-edit default.
 
 ---
 
@@ -76,8 +85,8 @@ Single source of truth for mode-specific cadences. No ambiguity.
 
 | Mode | Features | Granularity | Example |
 |------|----------|-------------|---------|
-| fast | 2-4 | Big (1 feature = multiple mechanics) | "Player + movement", "Level + enemies" |
-| standard | 4-8 | Medium (1 feature = 1 mechanic) | "Player movement", "Shooting", "Enemy AI" |
+| fast | As needed | Useful playable slices | "Player + movement", "Level + enemies" |
+| standard | As needed | Shippable behaviors, no document quota | "Player movement", "Shooting", "Enemy AI" |
 | pro | As needed | Small shippable behaviors, not artificial document count | "Combat → TurnSystem, Abilities, Effects" |
 
 ---

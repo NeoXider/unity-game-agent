@@ -26,7 +26,9 @@ ServiceLocator, mandatory interfaces/services, more managers, or deeper folders.
   edit merely to satisfy a count.
 - Record acceptance criteria, affected ownership boundaries, runtime driver, focused tests (if any),
   screenshot needs, build/platform checks, and rollback risk.
-- Perform reuse discovery before adding packages or framework code.
+- Reuse sufficient existing TZ/GDD and one work brief; run design/Lead only for real gaps.
+- Before nontrivial implementation, pass the [reuse gate](../tools/external-solution-reuse.md) with
+  a candidate/license/version/fit decision; handoff must prove actual integration.
 - Treat architecture escalation as an explicit decision with evidence, not a mode default.
 
 ## BUILD
@@ -37,8 +39,10 @@ ServiceLocator, mandatory interfaces/services, more managers, or deeper folders.
   read-only validators for repeatable checks.
 - Make the smallest change that satisfies the behavior. Preserve serialized names and package code.
 - After each meaningful code task: compile/import readiness and console comparison.
-- After each runtime/visual feature: drive the changed behavior in Play Mode, inspect the console,
-  and capture/review visual evidence when relevant.
+- Hand source-final work to a second independent QA subagent after relevant compile/selfcheck;
+  QA drives changed runtime behavior, checks console and captures/reviews relevant visual evidence.
+- One operator serializes all Editor/import/assets/play operations. No repeated full Developer
+  runtime self-QA before independent QA; no doc-only Unity calls.
 - Update state/log documents at meaningful verified checkpoints, not after every tool call.
 
 ## Architecture
@@ -82,11 +86,13 @@ ServiceLocator, mandatory interfaces/services, more managers, or deeper folders.
 
 ## VERIFY
 
-- Re-run preflight after compilation/domain reload.
+- Confirm readiness after compilation/domain reload through the single operator.
 - Exercise the changed path and relevant recovery/reset/reload behavior.
 - Compare console baseline with current state.
 - Review screenshots for visual work and use measurements for layout claims.
 - Run focused tests and any justified broader regression suite.
+- After corrections, rerun only failed/affected checks. Cite unchanged evidence with source
+  revision/scope/environment and why the diff cannot invalidate it; uncertainty requires rechecking.
 - Run platform/build validation when settings, serialization, packages, scenes-in-build, native input,
   or release behavior changed.
 - Use profiler evidence for performance claims or systems with a plausible performance risk; do not
@@ -95,13 +101,16 @@ ServiceLocator, mandatory interfaces/services, more managers, or deeper folders.
 ## Docs And QA
 
 - Keep `DEV_STATE`, `DEV_PLAN`, `DEV_LOG`, `AGENT_MEMORY`, and `ARCHITECTURE` proportionate and current.
-- Use Feature/Task/QA pages for tracked nontrivial work. One task page represents one meaningful
-  implementation slice.
-- Create a separate `QA_AGENT` checklist only when an independent QA pass is actually performed.
+- One existing task/feature brief holds acceptance/reuse decisions, Developer handoff and QA-owned
+  result/defects. Independent QA does not require separate QA/QA_AGENT/checklist/log files.
+- Expanded tracking is explicit opt-in; old profiles/docs remain readable without migration churn.
 - Record evidence, skipped checks, and remaining risk. Do not duplicate the same evidence into every
   document when links are sufficient.
-- After two serious failures of the same verification path, write a degraded report and create a
-  focused follow-up task rather than looping indefinitely.
+- After two genuine failures of the same path, return a concise fail/blocked reproduction with
+  evidence/revision and owner/action. Required unavailable/empty checks remain unverified; only
+  unrelated safe work may continue. No competing harness or metadata audit loop.
+- Optional GDD alignment follows QA and compares existing requirements with evidence, without
+  recreating the specification or rerunning unrelated checks.
 
 ## Final Gate
 

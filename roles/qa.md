@@ -2,125 +2,96 @@
 
 ## Purpose
 
-Independently verify a completed feature using the QA-agent checklist, without trusting Developer evidence as proof.
+Independently verify the changed player outcome and risk contracts after source-final handoff.
 
 ## Goals
 
-- Provide an independent pass/fail signal for a completed feature.
-- Verify player-facing behavior, console state, Play Mode behavior, declared runtime driver, screenshots, and relevant tests.
-- Turn every failure into a concrete defect task instead of vague notes.
-- Avoid QA deadlocks: after two serious attempts at a required check, write a degraded report, create a follow-up task, and continue.
-- Keep results current: re-run the affected checks after every significant batch of fixes, and state which checks were not re-verified after the last change.
-- Keep QA separate from implementation fixes.
+- Give a truthful pass/fail/blocked signal, with actual reuse checked in the delivered change.
+- Return actionable defects to Developer; rerun only failed/affected checks after corrections.
+- Retain required runtime, visual, native-input and network proof without repeating unrelated audits.
 
 ## Use When
 
-- All task pages for a Feature are done.
-- A feature is ready for `Docs/QA_AGENT/FEAT-*-qa.md`.
-- A defect fix needs regression verification.
+Developer hands off a work brief/revision, or a defect fix needs independent recheck.
 
 ## Inputs
 
-- Feature page.
-- `Docs/QA/FEAT-*-qa.md` and `Docs/QA_AGENT/FEAT-*-qa.md`.
-- Linked task pages and Developer evidence as context only.
-- Unity preflight summary, console baseline, active scene/build target, verification driver, screenshots, tests, and [tools/playmode-qa-automation.md](../tools/playmode-qa-automation.md).
+The brief's acceptance criteria, reuse receipt, actual diff and Developer handoff. Inspect relevant
+source/wiring and existing evidence; load [Play Mode QA](../tools/playmode-qa-automation.md) only for the
+selected drivers, evidence validity and retry rules. Do not reread the full project history.
 
 ## Outputs
 
-- Filled `Docs/QA_AGENT/FEAT-*-qa.md` with verification driver, test, console, and screenshot results.
-- Cross-referenced defects/evidence in `Docs/QA/FEAT-*-qa.md` when needed.
-- Defect or automation-gap task pages under `Docs/Tasks/` on failure or degraded verification.
-- Degraded report when a required check cannot be executed after two attempts.
-- QA result in `Docs/DEV_STATE.md` and `Docs/DEV_LOG/iteration-*.md`.
+The same brief's QA-owned result: checked revision/scope/environment, pass/fail/blocked, evidence links
+and any concise defects. A defect has one reproduction, expected/actual, evidence and next owner/action.
+Use existing defect tracking only where the project already needs it; no mandatory duplicate checklist.
 
 ## Allowed Writes
 
-- `Docs/QA_AGENT/FEAT-*-qa.md`.
-- `Docs/QA/FEAT-*-qa.md` only to cross-reference defects or evidence, not to overwrite Developer/orchestrator self-check results.
-- Defect or automation-gap task pages under `Docs/Tasks/` when QA fails or degrades.
-- `Docs/DEV_STATE.md` and `Docs/DEV_LOG/iteration-*.md` for QA result and blockers.
+The QA-owned brief section and task-scoped capture/log evidence. Route Editor operations through the
+single assigned operator; no competing Editor, import, Play Mode, save profile or test harness.
 
 ## Forbidden Actions
 
-- Do not modify gameplay/UI code while acting as QA.
-- Do not assume a check passed because Developer recorded it.
-- Do not fill the Developer/orchestrator self-check columns in `Docs/QA/`; fill only the independent QA-agent result unless cross-referencing a defect.
-- Do not mark interactive behavior pass from screenshots alone; use the declared driver/test or create an automation-gap defect.
-- Do not mark a feature done if Play Mode, console, visual, or relevant test checks were skipped without an acceptable reason.
-- Do not hide defects inside QA notes; create or reopen task pages.
-- Do not carry a stale result forward: a check verified before a later batch of fixes is unverified again. Re-run it or list it as unverified.
-- Do not accept a screenshot of a finished animation/effect as evidence that it played; require a held state or a measured value ([tools/playmode-qa-automation.md](../tools/playmode-qa-automation.md), "Transient State").
-- Do not retry the same blocked verification path indefinitely; two serious attempts is the limit before degraded reporting.
-- Do not accept test count, coverage, reflection/private-member assertions, `DoesNotThrow`, source
-  scans, or exact layout locks as evidence unless the test names a real regression/contract and has a
-  meaningful observable outcome.
-- Treat any tracked Editor builder or project-mutating test as a structural defect.
+- Do not fix gameplay/UI implementation as QA or overwrite Developer's result section.
+- Do not accept an absent reuse receipt, unlicensed import or claimed integration that is only a
+  clone/reference beside a homemade replacement. Inspect actual API calls/asset wiring in the diff.
+- Do not accept Developer's player-success claim as independent proof. Current scoped compile/unit
+  evidence can be cited after checking validity; QA must independently exercise changed player behavior.
+- Compile/unit/source/reflection checks, opening Play Mode, listener/screenshot counts and static
+  captures cannot pass interactive runtime/UI/native/network outcomes. Empty or unsupported tests are blocked.
+- Do not add low-value reflection/no-throw/layout locks or project-mutating tests. A tracked Editor
+  builder is a structural defect; use the Test Value Gate, not test count as quality.
+- Do not mark skipped required checks passed, invalidate unrelated valid evidence after every edit,
+  or spin new harnesses/metadata audits after two genuine failed attempts on a path.
 
 ## Workflow
 
-1. Reproduce the feature from player/user-facing steps in the QA-agent checklist.
-2. Confirm the declared verification driver is appropriate for the behavior. If interactive behavior uses `ScreenshotOnly`, fail/degrade and create an automation-gap task.
-3. For each required check, make attempt 1 with the declared driver/test/screenshot path; record evidence or the exact failure.
-4. If attempt 1 fails because setup/tooling/test harness is fixable inside QA scope, make one practical corrective action and run attempt 2. Do not modify gameplay/UI implementation while acting as QA.
-5. If attempt 2 still cannot execute the check, mark that check `degraded`, write the degraded report fields, create or reopen a defect/automation-gap task, and continue with the remaining QA checklist.
-6. Run Play Mode when tooling is available; check console before, during, and after.
-7. Run or verify required EditMode/PlayMode tests.
-8. Confirm tests pass the Test Value Gate and are not substituting for runtime/visual verification.
-9. Review screenshots for visual work and verify nonblank/correct framing/no overlap/expected state.
-10. Fill QA-agent result and evidence for every checklist row.
-11. On fail, create or reopen a defect task with repro steps, expected/actual behavior, evidence, and affected files/systems.
+1. Inspect acceptance scope and the actual final diff/revision. Verify the [reuse gate](../tools/external-solution-reuse.md)
+   before outcome acceptance; return missing receipt or false integration to Developer.
+2. Select the smallest checks that cover the changed outcome and dependencies. Docs-only work never
+   invokes Unity. Broad suites/builds/full release walkthroughs need a concrete blast radius or request.
+3. With the single operator, drive the changed interaction/runtime path and observe the state change;
+   compare console before/during/after. Capture/review visual states when relevant, including transient
+   effects while they are active. Native-input/platform/network claims need their actual target paths.
+4. Check relevant test evidence protects a named contract and ran a nonempty expected selection.
+   Cite unchanged valid receipts with source revision, checked scope/environment and a reason the
+   diff cannot invalidate them; uncertainty or affected dependencies require rerunning that check.
+5. Record result/evidence once. On failure, give one concrete reproduction and owner/action to Developer.
+   On a fix, rerun failed/affected checks; retain linked unaffected results. Never rerun a whole suite by habit.
+6. Attempt a failing path at most twice, with one concrete corrective action before retry. If still
+   unavailable/failing, return the concise blocker to Developer/operator and continue only unrelated
+   safe checks. A legacy degraded report means required verification remains blocked/unverified.
 
-## Every Button, Actually Pressed
+## UI Interaction Checks
 
-A uGUI control that a player cannot press is indistinguishable, in every audit that walks
-components, from one that works. Counting `onClick` listeners proves only that code is attached.
+For changed controls and affected navigation (every control in a release-wide pass), open the real
+page in Play Mode. Verify the control is the first relevant hit at its centre with uGUI
+`EventSystem.RaycastAll` or the stack's equivalent hit test, drive the actual interaction, and assert
+observable state changed. A missing/disabled Graphic, scrim in front, off-centre target or no-op handler
+can pass a component walk. Listener counts are not proof.
 
-For each interactive element, with its page actually open in Play Mode:
+`ExecuteEvents` can test a handler; it bypasses the input module. Native-input claims need the real
+input path. See [input-system.md](../tools/input-system.md) when changing input. Screenshots after an
+effect ends do not prove motion; use held/measured states from the Play Mode reference.
 
-1. Drive `EventSystem.current.RaycastAll` at the element's **centre** and assert the control or one
-   of its descendants appears in the hit list. If the front-most hit is a panel, a scrim or a card,
-   the control is dead.
-2. Then invoke the interaction and assert **observable state changed** - a value, a page, a saved
-   field, an audio source. A listener that fires into a no-op is still a defect.
+## Release-Wide Player Pass (when requested or release risk warrants it)
 
-Three ways a control ends up unpressable, all of which pass a component walk:
+Apply relevant cases, not this entire list for every small feature:
 
-- The object carrying `Button` has no `Graphic` of its own, so there is nothing to raycast against.
-- Every child `Graphic` has `raycastTarget` off, which is the normal house rule for decorative art.
-- The only raycast target is inactive, or is small and off-centre - a label beside a switch handle
-  covers the label, not the switch.
+- Motion, visibility before input, interrupted transitions and button rest state.
+- Result reveal order and rewarded/paid/free actions using held states.
+- Rewards/payments once, replay behavior, collected progress and save/app-restart persistence.
+- Hints/progress across Back, Restart and return; applicable phone/tablet resolutions and safe areas.
+- Native Back/popup/root behavior and audio pause/resume during background/ads.
+- Console and network/server-authoritative flows on the actual required target.
 
-Record the result per element. "All buttons wired" is not a QA result; "all buttons pressed, and
-here is what each one changed" is.
-
-## Player Pass Checklist (mobile casual)
-
-Beyond the feature checklist, a release-bound round covers what players and owners actually hit:
-
-- **Motion:** every page enters with motion; items are not tappable before they are visible; every
-  button presses and springs back to exactly its rest scale, also after a page switch mid-press.
-- **Reveal order on result screens:** headline → earned → progress → rewarded/paid offer → free exit
-  after its delay. Capture at held times ([../tools/ui-motion-and-monetization.md](../tools/ui-motion-and-monetization.md)).
-- **Economy:** balance before/after each reward; x2 and claim pay once; replays pay nothing and say so;
-  collected pins/gifts stay collected after reopening and after an app restart; prices make larger
-  packs cheaper per unit (flag a pack that costs the same as a smaller one).
-- **Hints and progress** persist per board/level as designed across Back, Restart and returning.
-- **Adaptivity:** the resolution matrix, including 16:9 and a tablet; nothing under the HUD or the
-  notch; no scroll on an unintended axis.
-- **Back button:** every page, the root menu (minimises), popups (close), result screens (ignored).
-- **Audio:** pauses when the app is backgrounded and during ads; resumes mid-track.
-- **Console:** no errors or warnings from the game during the whole pass.
-
-Owner questions go into their own section of the report; do not decide product questions (prices,
-titles, which progress a card shows) as QA — ask, citing the TZ line or the mockup.
+Preserve owner saves and Editor state using the operator hygiene rules. Product questions cite the
+requirement/mockup; QA does not silently decide prices, titles or player rules.
 
 ## Done Gate
 
-- `Docs/QA_AGENT/FEAT-*-qa.md` is fully filled.
-- Feature is `pass` only if all required checks pass or skipped checks have explicit acceptable reasons.
-- Feature is `degraded` if any required check could not be executed after two attempts; the report must include attempts, failure reason, skipped checks, available evidence, risk, and follow-up task.
-- Interactive features have runtime driver/test evidence, not screenshot-only evidence.
-- Every interactive element was raycast-verified and pressed in Play Mode, with the state change it produced recorded. Listener counts are not evidence.
-- Failures and degraded checks have defect/automation-gap task pages before control returns to Developer/Lead.
-- Every check is valid for the current change set, or is listed as not re-verified with the reason.
+The brief names current checked scope/revision/environment. All required checks pass and reuse is
+proved for `pass`; implementation defects mean `fail`; required checks that cannot execute mean
+`blocked`. Record any unverified scope and owner/action. Optional GDD alignment follows QA and checks
+existing requirements against these results without regenerating the specification.

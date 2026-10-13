@@ -1,135 +1,79 @@
 # Mode: Standard
 
-**For:** Small complete game with quality balance — few mechanics, few screens, full process.
+**For:** A complete small game or scoped feature with independent player QA and proportionate tracking.
+Mode changes verification depth, not architecture complexity or document count.
 
-## Scope Limits (guidelines, not hard limits)
-- Mechanics: **3–6**
-- Screens: **3–6** (0 if `ui_mode = no_ui`)
-- Scenes: **2–5**
-- Features per iteration: **1–2**
+## INTAKE / PLAN
 
-## Pipeline Adjustments
+- Reuse a sufficient existing TZ/GDD/UI brief. Game Designer/Designer/Lead run only for unresolved
+  design, visual or planning gaps. Ask only about material ambiguity.
+- One concise work brief names requirements, scope/files, acceptance, reuse decision, driver/tests,
+  capture needs and risk. Existing plans can link it; no compulsory new spec/log/checklist tree.
+- Before nontrivial work, pass the [reuse gate](../tools/external-solution-reuse.md): project/built-ins
+  -> installed NeoTools -> compatible licensed libraries/assets -> allowed ready-project slices.
+  Stop at a fit. Custom requires demonstrated gap/poor fit and narrower/faster rationale, or explicit
+  from-scratch intent. Tiny glue needs local discovery, not a broad web search.
 
-### INTAKE
-- Use mandatory role subagents when tools are available: Game Designer for game design gaps, Designer for UI/visual work, Lead for planning, Developer for tasks, QA for independent feature verification.
-- Questions before plan: **yes, clarify** genre, mechanics, screens, style, platform.
-- Questions before feature: **yes, if in doubt.** If clear from plan → proceed.
+## BUILD / QA LOOP
 
-### PLAN
-- Short outline: genre, 2–3 mechanics, 2–3 screens, key SO data.
-- Short stages with per-stage checklist (files, scenes, what to check).
-- Reuse-first: check Unity + packages, search GitHub/web if needed.
-- Record reuse decisions in DEV_LOG and ARCHITECTURE if significant.
+1. One Developer subagent implements the scoped brief, preserves current contracts, and hands off
+   source-final files after relevant compile/import/console and the smallest useful selfcheck.
+2. A second independent QA subagent checks actual reuse integration and drives the changed player
+   outcome/contracts. Do not repeat a full Developer runtime QA round before handoff.
+3. QA writes its own pass/fail/blocked section in the same brief. A defect includes one reproduction,
+   expected/actual, evidence/revision and next owner/action; Developer fixes and hands back to QA.
+4. Rerun failed/affected checks only. Cite unaffected evidence with source revision/scope/environment
+   and why the diff cannot invalidate it; stale affected evidence and uncertainty require a recheck.
+5. At most two genuine failed attempts per path, with a concrete correction before retry. Return the
+   concise blocker to Developer/operator; unrelated safe work can continue, the blocked feature is
+   not done. No competing harness/framework or metadata-audit loop.
+6. Optional GDD alignment follows QA, checks the existing requirements against evidence and does not
+   regenerate the spec. Orchestrator closes/updates links at meaningful checkpoints after required checks pass.
 
-### BUILD
-- **Per feature checks** — Play Mode + `read_console` + screenshot after EACH feature.
-- Compile check after every code change.
-- Scene save after every feature.
-- Screenshot after every feature → link in DEV_STATE.
-- DEV_STATE + DEV_LOG update after every feature.
-- **Do NOT move to next feature until current passes all checks.**
-- Before closing any task/feature, run Play Mode when MCP or equivalent automation is available, check console during Play Mode, and verify the changed mechanic/UI/scene behavior directly.
-- Follow the universal feature-owned project structure; Editor builders are forbidden.
+One operator owns Unity/import/scene/assets/play/tests; code writers have disjoint scopes and freeze
+source before its single batch compile. If delegation is unavailable/prohibited, disclose local role
+switching and missing independent QA. Preserve the same outcome gates.
 
-### VERIFY
-- Full Play Mode walkthrough of complete game flow.
-- `read_console` — no new errors or warnings versus the preflight baseline; pre-existing ones are
-  reported, not silently inherited.
-- Screenshot series of all key screens.
-- QA checklist if enabled in DEV_CONFIG.
+## Verification
 
-### SHIP
-- Full report with screenshot gallery.
-- All docs updated.
-
-## Code Style
-- **Moderate** — clear separation, sensible structure.
-- Separate scripts per responsibility: `PlayerMovement`, `PlayerHealth`, `PlayerCombat`.
-- `[SerializeField]` for all Inspector fields.
-- Cache components in `Awake`/`Start`.
-- Data in SO, references via `[SerializeField]`.
-- Prefabs for repeated objects.
-- Events / UnityEvents for cross-system communication.
-- Do not add namespaces to new project scripts; keep them in the global namespace. Preserve an
-  existing namespace only when editing code already inside it; never perform namespace migration as
-  collateral work.
-- XML docs only for public APIs and non-obvious contracts.
-- `[Header]`, `[Tooltip]`, `[Range]` on SO fields.
-
-## Logging And Comments
-- Comments explain non-obvious intent, constraints, or workarounds. Do not replace comments with logs.
-- Log actionable lifecycle/state diagnostics only; do not add log volume as a quality target.
-- Use `Debug.LogError` for actionable failures and `Debug.LogWarning` for recoverable suspicious state.
-- Do not log every frame or duplicate state already visible in the debugger.
+- Docs-only work invokes no Unity. Changed C#/assets need relevant compile/import + console comparison.
+- Changed runtime/player behavior needs an actual driven Play Mode scenario; console is checked
+  during/after it. Interactive input/UI/collision/spawn/pause/restart cannot pass from screenshots alone.
+- Visual/runtime-visible changes need reviewed, correctly timed captures. Changed controls must be
+  reachable through the real hit/input path and produce an observable state change.
+- Apply the Test Value Gate in [Play Mode QA](../tools/playmode-qa-automation.md); no coverage quota,
+  empty test pass, reflection/source checks as player proof, or tests that mutate authored content.
+- Broader suites, builds, large manifests, profiler or full-game walkthroughs need actual affected
+  architecture/protocol/package/scene/data/platform risk, release/integration context or user request.
+- Native-input/network/platform claims require their actual target path; engine/unit checks alone
+  cannot prove them. Save only changed scenes through the operator.
 
 ## Docs
-- `Docs/DEV_STATE.md` — **required**, update at meaningful checkpoints.
-- `Docs/DEV_PLAN.md` — **required**, all tasks with checkboxes.
-- `Docs/Features/FEAT-*.md` — required for tracked nontrivial features.
-- `Docs/Tasks/TASK-*.md` — one page per meaningful implementation slice, not per tiny edit.
-- `Docs/QA/FEAT-*-qa.md` — required for tracked/risky feature QA; create the `QA_AGENT` duplicate only
-  when an independent QA pass is actually used.
-- `Docs/DEV_LOG/iteration-*.md` — **required**, completed task entries.
-- `Docs/AGENT_MEMORY.md` — **required**.
-- `Docs/ARCHITECTURE.md` — create when structure decisions are made.
 
-## Architecture
-- Feature nodes in hierarchy (`Feature_Player`, `Feature_Enemies`).
-- Moderate separation into features/subsystems.
-- MonoBehaviour for feature logic — no extra infra layers.
-- DI only when it clearly pays off.
-- Hierarchy: GameManager + Core/Features/UI, separate Environment.
-- Folder ownership follows [../tools/project-structure.md](../tools/project-structure.md); mode never
-  permits a mixed `Scripts`/assets dump.
-- No Editor setup/build scripts. Author scene and prefab state directly through Unity/MCP.
+One existing/new Feature or Task brief is the default acceptance/reuse/evidence record. Keep existing
+DEV_STATE/DEV_PLAN/DEV_LOG/AGENT_MEMORY links current where useful; do not copy results into all of them.
+Separate Task/QA/QA_AGENT records are explicit expanded tracking (`-DetailedTracking`, or legacy
+`-CreateIndependentQa` for a requested duplicate). Preserve existing profiles/docs without migration.
 
-## Input
-- Default: `Old` or `Both`.
-- Change only by agreement.
+## Code Style
 
-## QA
-- Apply the Test Value Gate before declaring or adding tests. Prefer the smallest focused regression
-  or runtime driver; `standard` has no coverage quota.
-- Standard/Pro Lead-Dev-QA workflow overrides any human-wait default: agent creates `Docs/QA/` and `Docs/QA_AGENT/` checklists, fills both through self QA/independent pass, and auto-advances after pass or degraded report with follow-up task.
-- After 2 failed/unavailable attempts for the same QA check, write a degraded report with skipped checks, create a follow-up defect/automation-gap task, and continue.
-- Ask the user only for blockers that cannot be bypassed with degraded reporting, missing required assets/credentials, or ambiguous product decisions.
-- **QA per feature:** on/off in DEV_CONFIG. If on, agent writes and fills feature QA plus QA-agent duplicate, then auto-advances after both pass or after a degraded report with follow-up task.
-- **Final QA:** if enabled in DEV_CONFIG.
+- Clear responsibility separation; MonoBehaviours for scene behavior, SO for useful authored data.
+- Private `[SerializeField]` Inspector fields, cached components, explicit prefab references.
+- Direct typed references/events or UnityEvents where they fit existing composition.
+- New project scripts stay in the global namespace; preserve existing namespaces when editing.
+  No collateral namespace migration. XML docs only for public/non-obvious contracts.
+- Comments explain non-obvious intent. Logs are actionable lifecycle/state diagnostics, not per-frame
+  spam or a quality quota. Use error/warning levels for actionable failures/recoverable state.
 
-## MCP Usage
-- Follow provider-neutral preflight from `tools/mcp-provider-neutral.md`.
-- If MCP is missing and `auto_install_mcp_in_manifest` is enabled, add the adapter package to `Packages/manifest.json`, retry MCP detection, then fall back to file-only only if still unavailable.
-- Per feature: import/compile readiness → console baseline/current comparison → Play Mode → console during Play Mode → screenshot.
-- Use object/component capabilities for scene setup and bulk/batch capabilities when creating multiple objects.
-- Save scene after every feature when the scene changed.
+## Architecture / Input
 
-## Checklist
+Preserve project architecture and input stack. Feature-owned typed folders remain required in all
+modes; follow [project-structure.md](../tools/project-structure.md). Editor builders are forbidden;
+author scenes/prefabs through the single Unity/MCP operator. No extra infrastructure or DI merely
+because the mode is standard. Keep TextMeshPro/null-safe UI rules from the main skill.
 
-Final gate (details in the sections above):
+## Final Gate
 
-- [ ] Lead docs complete: feature/task pages with acceptance criteria + QA and QA-agent checklists
-- [ ] Project structure audit passes and no Editor builders exist
-- [ ] Per feature: compile + Play Mode + `read_console` during play + screenshot reviewed; behavior verified
-- [ ] DEV_STATE + DEV_LOG updated after each feature
-- [ ] QA + QA-agent pass, or degraded report + follow-up task, before auto-advancing
-- [ ] Before handoff: full Play Mode walkthrough + clean console + final screenshots
-- [ ] All text uses TextMeshPro (never legacy Text)
-
-## Example
-
-```
-Genre: Top-down shooter.
-Mechanics: WASD move, mouse shoot, enemy waves.
-Screens: MainMenu, Gameplay, GameOver.
-SO: PlayerData (speed, fireRate, maxHealth), EnemyData, WaveData.
-
-Stage 1: Gameplay + character movement.
-  Files: PlayerController.cs, PlayerData.asset. Check: WASD works.
-Stage 2: Shooting.
-  Files: ShootController.cs, BulletPrefab. Check: bullets toward cursor.
-Stage 3: Enemies and waves.
-  Files: Enemy.cs, WaveSpawner.cs. Check: enemies spawn, move to player.
-Stage 4: UI (HUD + menu + GameOver).
-  Files: UIManager.cs, UiData.asset. Check: HP bar, score, transitions.
-Stage 5: Polish (balance, sound).
-```
+Required changed-behavior/risk checks pass, reuse is proved, and the brief links valid evidence and
+remaining risk. Missing/unsupported required checks mean blocked/unverified, not passed. A full-game
+release pass is warranted for release work; it is not mandatory for each reversible feature edit.
