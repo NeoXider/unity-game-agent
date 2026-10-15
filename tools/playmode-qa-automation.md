@@ -185,6 +185,12 @@ after the XML result is written. Restore the logging channel in the harness, run
 assembly, assert that at least one interaction was actually driven, and scan the full editor log for
 exceptions after the run.
 
+### Headless null graphics and capture sanity
+
+- Under `-batchmode -nographics`, `SystemInfo.graphicsDeviceType` is `Null`. Factories that build cosmetic visuals may return `null` on purpose there. Every caller must guard that `null` and keep the non-visual state (position, scale, health) updating; an unguarded dereference throws once per frame per object while the client keeps running with a flood of exceptions. Cover it with a regression test that runs under `-nographics` and asserts that the state still changes.
+- A screenshot that is one colour, or has only a few hundred distinct colours, warrants inspection for a hidden window, wrong camera or missing rendering. Low-colour scenes can be intentional: compare the expected content and capture path before rejecting it. An unexpectedly blank frame cannot support a visual pass; colour count alone proves neither failure nor success.
+- The retained desktop project raised an OS firewall prompt on its first networked server/host launch. Expect that possibility according to the OS and firewall configuration; do not approve a firewall change for the owner without authorization. Verify whether the selected solo mode opens sockets instead of assuming it does not.
+
 ### Headless screenshots at any resolution
 
 First look for an existing capture path (the editor MCP's game-view capture, Unity Recorder, the
@@ -213,6 +219,14 @@ Mockup beside the build frame, one comment field and one approve checkbox per pa
 ticks approve. Copy the mockups into the document's own screenshots folder (relative links into the art
 folder do not preview). Keep intentional deviations in their own section. When a new round supersedes an
 old file, carry the reviewer's comments over verbatim with their resolution before deleting it.
+
+## Test-Run Traps
+
+- **Compiling is not a pass.** Count results from the run's XML (passed, failed, skipped) and name the failing tests. A test that never ran in the engine is unverified, whatever the compiler says.
+- **Edit Mode is not the runtime lifecycle.** Do not infer `OnEnable`, `OnDisable` or `OnDestroy` behavior from a plain Edit Mode test; check the component and test setup. [Edit-mode execution attributes](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/ExecuteAlways.html) affect which events execute. Prefer Play Mode for runtime lifecycle/audio routing; calling a callback directly tests that method, not Unity dispatch. The project observed `AudioMixer.SetFloat` returning false in Edit Mode; inspect exposed parameters and snapshot editing as well, since the [API reference](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/Audio.AudioMixer.SetFloat.html) documents those failure conditions and recommends setting values from `Start` or later.
+- **Check the effective test timeout.** A 180 s limit from a prior run is not a universal NUnit batch default. Inspect the installed Unity Test Framework/NUnit version, test attributes, runner settings and timeout failure before choosing a budget (see [NUnit timeout configuration](https://docs.nunit.org/articles/nunit/writing-tests/attributes/timeout.html)). A source-wide regex scan can exceed a configured limit on a slow disk: prefilter with a cheap string check that preserves every possible regex match, without loosening the check.
+- **Budget from the project's measured suite.** A prior full EditMode run took about 20 minutes on a loaded machine; this is an observation, not a duration guarantee. Iterate with a fixture filter, then run the required full suite after the final changes and report the actual duration/results.
+- **Vendor package tests** that depend on IMGUI or a live window can fail in batch mode for reasons unrelated to the game. Name them as foreign in the report instead of ignoring the run.
 
 ## Bounded QA Attempts
 

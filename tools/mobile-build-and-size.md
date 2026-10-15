@@ -18,6 +18,9 @@ foreach (var g in AssetDatabase.FindAssets("t:Texture2D", new[] { "Assets/_sourc
 
 Sort by size. Any `RGBA32` / `RGB24` in the list is uncompressed and is the first target.
 
+Read the real totals from the Build Report (the `Build Report` block in the player build log: category sizes and `Complete build size`), not from folder sums, which are estimates. Measured on a 2D desktop build with 1024 px art: uncompressed textures were 94 % of a 346 MB player. Use `BuildOptions.CompressWithLz4HC` for release player data where supported by the target; it compresses data on disk without changing the art. The same project recorded a BC7 request falling back to RGBA32 when dimensions were not multiples of 4. Verify the target's imported format and warnings before changing dimensions; a multiple-of-4 constraint is distinct from a power-of-two constraint. Adjust dimensions only when appropriate for the art, or accept RGBA32 deliberately.
+
+
 ## 2. Why art ends up uncompressed: ETC2 needs multiples of 4
 
 Designer art at phone resolution (1290×2796, 1289×2796, 1109×314 …) is not a multiple of 4. With
@@ -90,6 +93,14 @@ Shop, Win …) so a page loads one texture and batches its draw calls.
   both, so "which build is on my phone" has an answer.
 - "Was a new APK built?" is answered from the file system and the commit it was built from (path, time,
   version), never from memory. If the code changed after the last build, the honest answer is "no".
+
+## 5b. Android APK (sideload build)
+
+- The editor needs Android Build Support with the SDK, NDK and OpenJDK modules (Unity Hub, Installs, Add modules). Check the SDK and JDK paths in External Tools before the first build.
+- For an ARM64 sideload target, use IL2CPP and ARM64; add ARMv7 only when the supported devices require it. Preserve the project's agreed minimum SDK and verify the exact Editor, package and device requirements. API 26 can be a project choice, not a universal Unity 6 minimum: [Unity 6.0 requirements](https://docs.unity3d.com/6000.0/Documentation/Manual/system-requirements.html) list API 23+. If using automatic target SDK selection, report the resolved API level and verify it against the intended distribution requirements.
+- Build an APK, not an AAB, for sideloading: `EditorUserBuildSettings.buildAppBundle = false` with `BuildOptions.CompressWithLz4HC`. Switching the active build target reimports the whole project (tens of minutes on a cold cache): do it once, in an otherwise idle editor.
+- Sign with the debug keystore for local tests only and say so in the report. A release keystore and its passwords belong to the owner: never create, store or commit one.
+- Name the output with version and build number; report path, size, result and what was not tested on a device.
 
 ## 6. Pushing a repository with heavy QA evidence
 

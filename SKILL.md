@@ -1,6 +1,6 @@
 ---
 name: unity-game-agent
-description: "Unity Game Agent: autonomous Unity game development pipeline for quick fixes, direct feature work, full game builds, verification, Play Mode checks, and MCP-driven Unity Editor automation. Use when working on Unity games, gameplay systems, scenes, UI, ScriptableObjects, builds, tests, or project continuation with Docs/ state files. Reuse-first: always search for a ready-made solution before building custom."
+description: "Build, fix and verify Unity games, gameplay, scenes, UI and assets; resume tracked projects or run focused feature work. Reuse existing project and package systems before custom code, and use live MCP capabilities for Editor operations."
 metadata:
   version: 3.7.0
   author: Neoxider
@@ -32,6 +32,15 @@ Developer must identify actual reused APIs/assets and their integration paths in
 QA rejects absent receipts, unknown import permissions, or claimed reuse that is only a clone/download
 beside homemade code. This is a stop gate, not optional advice. Apply
 [tools/external-solution-reuse.md](tools/external-solution-reuse.md) for the detailed decision.
+
+- **Scope: new things only.** The search runs when something new is added: a feature, a mechanic, a
+  system, a tool, a shader, a model, a separate task. It is NOT a gate on **bug fixes, corrections, small
+  edits and tuning of what already exists**: there, find the cause and change the existing code in place;
+  swapping in a different library or asset to "fix" a bug is a rewrite, not a fix, and is the dangerous
+  direction. If a fix really needs new machinery, stop and treat that part as a new task (search, record).
+- For new things it applies to small ones as to big ones: a curved title, a safe-area fitter, a back-button
+  bridge, a screenshot tool, a tween helper, a shader, a placeholder model. "It is only twenty lines" is
+  not a reason to skip the search; checking takes a minute.
 
 ## Operating Guardrails
 
@@ -97,8 +106,8 @@ Important policy meanings:
 - `qa_screenshot_evidence_required: true`: visual/runtime-visible checks need reviewed capture evidence linked once from the work brief.
 - `interactive_qa_requires_runtime_driver: true`: screenshot-only checks cannot pass interactive gameplay, input, UI flow, collision, spawn, scene transition, pause, or restart behavior.
 - `qa_max_attempts_before_degraded_report` / `qa_continue_after_degraded_report` / `qa_degraded_report_required`: at most 2 genuine failed attempts per path, then a concise blocked/degraded QA report with owner/action; continue only unrelated safe work. Never mark an unexecuted required check done. See [tools/playmode-qa-automation.md](tools/playmode-qa-automation.md), "Bounded QA Attempts".
-- `auto_install_mcp_in_manifest: true`: if MCP is missing in a Unity project, add the adapter package to `Packages/manifest.json` before falling back to file-only mode.
-- `neoxider_tools: "ask"`: ask before using NeoxiderTools systems when the project/task could benefit from them.
+- `auto_install_mcp_in_manifest: true`: when installation is within the authorized task, add a missing adapter to `Packages/manifest.json`, resolve it, and retry. This preference does not authorize installation during read-only or explicitly file-only work.
+- `neoxider_tools: "ask"`: ask when the stack choice is unresolved and reuse would help; preserve an existing project/pattern choice or earlier user authorization.
 - `external_reference_discovery: true`: search local and credible external ready solutions before planning nontrivial implementation work.
 - `external_solution_search_after_neoxider_miss: "required_for_common_nontrivial_tasks"`: after a
   NeoxiderTools/local/Unity miss, search credible internet sources before custom implementation;
@@ -144,7 +153,8 @@ Pattern selection (during Session Routing / INTAKE), at most one:
 3. **Confirm only when ambiguous** — weak detection + generic request -> ask; otherwise proceed with the
    best fit (or no pattern).
 
-Record the choice in `Docs/DEV_PROFILE.json` (`"pattern"`) and `Docs/AGENT_MEMORY.md`. A selected
+Record the choice in the resolved docs root's `DEV_PROFILE.json` (`"pattern"`) and `AGENT_MEMORY.md`
+when these docs exist or their creation is part of the task; do not bootstrap them for Quick Fix. A selected
 pattern's defaults override the universal defaults where they conflict (e.g. `casual-neoxider` treats
 NeoxiderTools reuse as the default, not an opt-in question). The universal preflight, verification gate,
 and QA policy always still apply. To add a pattern, see [patterns/README.md](patterns/README.md).
@@ -215,6 +225,10 @@ For `standard` and `pro`, use one Developer subagent and a second independent QA
 and authorization permit. Reuse them through the correction loop; do not spawn a role fleet for a
 decision-complete task.
 
+Use the host's actual agent API and honor explicit native/CLI, model and worker-count choices.
+If those constraints prevent a second independent reviewer, disclose the missing independent QA;
+do not silently substitute another fleet or label a selfcheck independent.
+
 Role routing:
 
 - Game Designer: [roles/game-designer.md](roles/game-designer.md) for missing/contradictory requirements; optional post-QA alignment with the existing GDD.
@@ -276,7 +290,8 @@ Start by classifying the user request.
 
 After classifying, **select a development pattern** (see Development Patterns): detect from the project,
 or match the request for a new project. A selected pattern (e.g. `casual-neoxider`) sets the stack
-defaults and reuse posture for the rest of the session; record it in `DOCS_ROOT/DEV_PROFILE.json`.
+defaults and reuse posture for the rest of the session. Record it in an existing or task-authorized
+`DOCS_ROOT/DEV_PROFILE.json`; Quick Fix does not bootstrap docs merely to store a pattern.
 
 Defaults:
 
@@ -285,7 +300,7 @@ Defaults:
   the project and problem, never from the mode name.
 - Platform: PC unless mobile/WebGL is implied.
 - UI: detect existing stack first; default to UI Toolkit for new projects.
-- MCP: assume available. If unavailable, install the adapter in `Packages/manifest.json` when allowed, let Unity resolve packages, retry MCP, and only then degrade to `file_only` with limitations.
+- MCP: discover live tools/resources and verify the target Editor. A package entry is not a connection. Install/resolve/retry only within authorized scope; use `file_only` when Editor access is unavailable or excluded and report unverified Unity-side checks.
 - Auto mode: work autonomously after the plan is approved; batch non-blocking questions.
 
 ## Mandatory Preflight
@@ -328,7 +343,7 @@ Unity Preflight:
 
 ## NeoxiderTools Decision Point
 
-If `ask_about_neoxider_tools` is true and the project is new/empty, or the task involves UI pages/navigation, game flow, audio, shop/economy, reusable managers, settings/save, quests, cards/decks, inventory, dialogue, spawning, movement/input helpers, editor tooling, docs, or other reusable game systems, ask:
+First honor an existing package, project choice, selected pattern, or earlier user decision; reuse it without asking again. When `ask_about_neoxider_tools` is true, the choice is unresolved, and the new project or task could benefit from reusable game systems, ask:
 
 ```text
 Use ready systems from NeoxiderTools, or build standalone for this project?

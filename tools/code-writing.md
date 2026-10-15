@@ -214,6 +214,10 @@ a colour tween.
 
 ---
 
+## DI Container Traps
+
+- **Make VContainer constructor selection explicit.** The retained project lesson involved an unexpected non-public overload with more parameters; do not assume every version selects the greediest constructor. Inspect the installed version and injection path. The [official constructor-injection guide](https://vcontainer.hadashikick.jp/resolving/constructor-injection) requires exactly one `[Inject]` constructor when multiple constructors exist. Mark the intended constructor and verify container resolution/startup with the project's dependency registrations.
+
 ## Code Quality by Mode
 
 | Check | fast | standard | pro |

@@ -82,7 +82,7 @@ Required set per [../POLICY_MATRIX.md](../POLICY_MATRIX.md); `fast` keeps each f
 - Parallel Unity workspaces are **off** in `fast`; use one workspace and one Unity operator.
   See [parallel-editors.md](../tools/parallel-editors.md) for the standard/pro workflow.
 - Follow provider-neutral preflight from `tools/mcp-provider-neutral.md`.
-- If MCP is missing and `auto_install_mcp_in_manifest` is enabled, add the adapter package to `Packages/manifest.json`, retry MCP detection, then fall back to file-only only if still unavailable.
+- If MCP is missing, installation is enabled and within authorized scope, add the adapter to `Packages/manifest.json`, resolve it and retry detection. Otherwise use file-only mode and report unverified Editor checks; read-only/file-only requests do not authorize installation.
 - `batch_execute` or equivalent bulk operations are recommended for multiple objects/components.
 - Console check after each feature for C# changes and after each batch for Play Mode.
 - Screenshot after batch or stage, not each feature unless the feature is visual.

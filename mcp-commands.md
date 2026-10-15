@@ -9,7 +9,8 @@ is in [tools/mcp-provider-neutral.md](tools/mcp-provider-neutral.md).
 
 ## Install (manifest)
 
-When the project has `Packages/manifest.json` and the adapter is missing, add it to `dependencies`:
+When the project has `Packages/manifest.json`, the adapter is missing, and installation is
+within the authorized task, add it to `dependencies` (preserve an existing pinned version):
 
 ```json
 "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity"
@@ -24,17 +25,25 @@ Rules:
 
 ## Enable
 
-Recent adapter versions auto-start the MCP server when the Unity Editor opens the project —
-usually nothing to enable manually. If tools are not visible:
+Use the installed adapter's **Window → MCP for Unity** window to inspect connection status
+and transport. Setup and auto-start behavior vary by version; package resolution alone
+does not prove the server or client is connected. If tools are not visible:
 
 1. Check the editor is actually running and finished importing.
-2. Unity menu: **Window → MCP for Unity → Start Server** (and check the window for the port/status).
-3. Check your MCP client config points at the same host/port.
-4. Verify with a session-start read: `mcpforunity://editor/state` (readiness), `mcpforunity://instances`
-   (pick one instance when several editors run).
+2. Inspect the adapter window; start/connect through the controls supplied by that version.
+3. Check the selected client's endpoint/transport. Configure only the intended client when
+   configuration is authorized; preserve unrelated client settings.
+4. Discover live tools/resources. With CoplayDev, read `mcpforunity://instances`, select the
+   intended instance if needed, then read `mcpforunity://editor/state`. Use the live schema for
+   `set_active_instance`; another adapter may expose different names.
 
-If the editor crashed, a stale `Temp/UnityLockfile` can make relaunches exit instantly — delete it,
-then relaunch the project.
+See the official [installation guide](https://coplaydev.github.io/unity-mcp/getting-started/install)
+and [multi-instance guide](https://coplaydev.github.io/unity-mcp/guides/multi-instance). Follow the
+installed version's UI/schema when they differ from current online examples.
+
+After a crash, inspect the launch log and exact project ownership before removing a suspected
+stale `Temp/UnityLockfile`. Remove only a confirmed stale lock with no owning Editor/batch process
+within the authorized repair. A lock file alone is not a diagnosis.
 
 If MCP stays unavailable after install/resolve/retry, fall back to file-only mode per
 [tools/mcp-provider-neutral.md](tools/mcp-provider-neutral.md) and report the limitation.

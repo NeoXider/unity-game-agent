@@ -58,6 +58,9 @@ Each line: when it was learned → where the rule lives now. Read the document, 
 | 2026-10 | Pin top rows to the top and bottom groups to the bottom; full-screen art ignores the safe area; marker clamp; foldable sizes | `project-profiles/plain-ugui.md`, `tools/meta-progress-map.md` |
 | 2026-10 | Sliced images over a 1-PPU kit need `pixelsPerUnitMultiplier` | `project-profiles/plain-ugui.md` |
 | 2026-10 | Predictive Back (API 33+) needs a registered `OnBackInvokedCallback` | `tools/input-system.md` |
+| 2026-10 | Release players: target-supported `CompressWithLz4HC`; read the Build Report; verify imported formats after the project's BC7/RGBA32 fallback lesson | `tools/mobile-build-and-size.md` |
+| 2026-10 | Headless null graphics: guard cosmetic factories; inspect unexpectedly flat captures against expected scene content | `tools/playmode-qa-automation.md` |
+| 2026-10 | Compiling is not a pass; verify runtime lifecycle/audio in Play Mode and effective test timeouts before source scans | `tools/playmode-qa-automation.md` |
 | 2026-10 | One-frame flashes of authoring state; headless capture settling; before/fix/after; PlayerPrefs export around QA | `tools/playmode-qa-automation.md` |
 | 2026-10 | Fades pin their final state; first-visit explainer cards; free exit a heartbeat behind the offer | `tools/ui-motion-and-monetization.md` |
 | 2026-10 | Casual economy: target as a felt rate, derive prices, test the band | `tools/playmode-qa-automation.md` |

@@ -21,12 +21,27 @@ All notable changes to this skill are documented here.
   worker-name orders, RAM admission and Editor/worker shutdown ordering.
 
 ### 🔧 Changed
+- Publication docs clarify authorization for MCP installation, preserve task-local routing choices, and
+  qualify retained constructor, build and QA lessons against version-specific docs or project evidence.
+  The 3.6.2 entry below remains a historical record of the original lessons.
 - Parallel workspaces default ON in `pro` for two or more concurrent Unity-bound tasks, are opt-in in
   `standard`, and off in `fast`. The single-operator rule now applies per workspace, preserving separate
   Libraries, pinned MCP instances and QA-before-merge integration.
 - Tests and validation builds use headless processes that exit; interactive Editors are reserved for
   scene/prefab/MCP authoring. Official documentation caveats for Dev Drive versions and Unity's idle
   import-worker controls are recorded in the guide.
+
+---
+
+## [3.6.2] — 2026-10-08
+
+### Changed — Prime Rule scope
+- `SKILL.md`: the reuse-first search applies to new features and separate tasks, not to bug fixes, corrections, small edits and tuning, where the existing code is repaired in place (replacing a part with a library to fix a bug is a rewrite). A fix that needs new machinery is split off as a new task.
+
+### Added — release-build and QA lessons from a shipped Unity game
+- `tools/mobile-build-and-size.md`: reading the Build Report, `CompressWithLz4HC` for release players, the desktop power-of-two texture fallback, a section 5b for Android APK builds (SDK/NDK/JDK modules, IL2CPP ARM64, debug versus owner keystore), and the first-run firewall prompt.
+- `tools/playmode-qa-automation.md`: null graphics under `-nographics` (guard and regression test), flat-colour captures are failed captures, and a "Test-Run Traps" section (compiling is not a pass, Edit Mode lifecycle, NUnit's 180 s timeout, full-run duration, foreign vendor tests).
+- `tools/code-writing.md`: the VContainer greediest-constructor trap and `[Inject]`.
 
 ---
 

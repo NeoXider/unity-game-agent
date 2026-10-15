@@ -24,7 +24,8 @@ If a capability is missing, do not fake the result. Use file-only fallback or re
 
 ## Missing MCP Installation
 
-If MCP is unavailable in a Unity project and `auto_install_mcp_in_manifest` is true:
+If MCP is unavailable, `auto_install_mcp_in_manifest` is true, and installation is within the
+authorized task (not a read-only or explicitly file-only pass):
 
 ```text
 1. Verify the project root has Packages/manifest.json.
@@ -34,7 +35,7 @@ If MCP is unavailable in a Unity project and `auto_install_mcp_in_manifest` is t
 5. Preserve existing dependencies and formatting as much as practical.
 6. Do not manually edit Packages/packages-lock.json; Unity updates it during package resolution.
 7. Let Unity resolve/import packages, then retry MCP detection.
-8. Use file-only fallback only if install/resolve/retry fails or the user disabled MCP.
+8. Use file-only fallback if install/resolve/retry fails, installation is outside scope, or the user disabled MCP.
 ```
 
 For the CoplayDev adapter, add:
@@ -108,6 +109,11 @@ Use with any script-capable toolset:
 
 Never overwrite user edits after a stale snapshot. Re-read and merge.
 
+An MCP caller timeout does not prove a mutation failed: Unity may finish it after the reply
+deadline. Inspect the target state before retrying a create/save or long-running operation;
+do not replay a potentially applied mutation blindly. Preserve one operator per workspace;
+independent workspaces may continue under the parallel-workspace policy.
+
 ## Scene And Visual Workflow
 
 For visual changes:
@@ -150,7 +156,7 @@ Provider-agnostic Unity Editor automation traps (each verified in production):
 | `onClick.Invoke()` does nothing | Handler implements `IPointerClickHandler` (0 persistent listeners) → simulate the click via `ExecuteEvents.Execute(...pointerClickHandler)` (recipe in [playmode-qa-automation.md](playmode-qa-automation.md)) |
 | `GameObject.Find` returns null | Target is inactive → `transform.Find(path)` from an active root or `GetComponentInChildren<T>(true)` |
 | Code-execution tool rejects valid-looking C# | Legacy compiler backends are C# 6: no string interpolation, no `using` in the body, qualify `UnityEngine.Object` explicitly |
-| Relaunch after editor crash exits instantly | Stale `Temp/UnityLockfile` → delete it and relaunch |
+| Relaunch after editor crash exits instantly | Inspect logs and exact project ownership; remove `Temp/UnityLockfile` only if confirmed stale with no owning Editor/batch process |
 | Mutation tool answers "cannot be used during play mode" | Editor is in Play Mode → read editor state first; edits applied in Play Mode are discarded on exit, and `SaveScene` is refused outright |
 | Scene edit silently reverts | The scene was open and dirty in the editor while you patched the YAML on disk → check loaded scenes and `isDirty` before any file-level scene edit |
 | Tracked files change without you touching them | A build or editor restart flipped `UnityConnectSettings` analytics `0 → 1`, cleared a TMP fallback list, changed `EditorSettings.m_EnterPlayModeOptions`, or dropped `.slnx`/`.vsconfig` → audit `git status` after every build/restart and revert what nobody asked for |
@@ -165,9 +171,9 @@ Batch mode fails in ways that look like project defects:
 
 - **`-quit` together with `-runTests` kills the run before the tests start.** Use `-runTests` with
   `-batchmode` and let the test runner exit on its own; add `-quit` only to non-test invocations.
-- **A stale `Temp/UnityLockfile` from a crashed or still-open editor makes batch mode exit 1 with
-  almost no output.** Before blaming the project: check for a running Unity process, then delete the
-  lockfile and retry. Exit code 1 with an empty log is this, not a compile error.
+- **A project lock can prevent a second Editor/batch launch.** Inspect the launch log and identify
+  the exact owning project/process. Do not delete a live project's lock or launch a competing batch
+  job; remove only a confirmed stale lock after a crash. Exit 1 or an empty log alone is inconclusive.
 - Always pass `-logFile -` (or a file you then read) — the default log location makes a failed batch
   run indistinguishable from a hung one.
 
@@ -175,7 +181,7 @@ Batch mode fails in ways that look like project defects:
 
 If MCP is unavailable:
 
-- First try manifest installation when the project is a Unity project and `auto_install_mcp_in_manifest` is enabled.
+- First try manifest installation when enabled and within the authorized task. Skip installation for read-only or explicitly file-only work.
 - Continue only with file-level work: scripts, docs, templates, config edits.
 - Do not claim scene objects, component wiring, Play Mode, console, or screenshot verification happened.
 - Tell the user what must be completed manually in Unity.
