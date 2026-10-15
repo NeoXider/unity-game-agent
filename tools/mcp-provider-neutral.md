@@ -50,7 +50,7 @@ Do not add MCP to a non-Unity folder, a package subfolder, or a project without 
 Run before Unity mutations when strict preflight is enabled.
 
 ```text
-1. Identify active Unity Editor instance.
+1. Resolve the assigned workspace project name/path and pin its registered Unity Editor instance.
 2. Read editor readiness and wait if compiling/importing/reloading.
 3. Resolve target scene:
    - use active scene if the task targets it;
@@ -62,6 +62,27 @@ Run before Unity mutations when strict preflight is enabled.
 ```
 
 Classification:
+
+Each parallel workspace owns an Editor registration/MCP instance and a separate Library. Match the
+`.uga-workspace.json` instance name (the workspace project folder name) as a candidate only. MCP for
+Unity HTTP instance listing does not include project paths; a matching name is not path verification.
+Use `set_active_instance`, then make a pinned read-only project-info call or read
+`UnityEngine.Application.dataPath` through the read-only code-execution capability. For example:
+
+```csharp
+return System.IO.Path.GetFullPath(System.IO.Path.GetDirectoryName(UnityEngine.Application.dataPath));
+```
+
+Compare that normalized absolute project root exactly with the assigned workspace path (case-insensitive
+on Windows; normalize separators/trailing separators). A mismatch or unavailable read blocks mutations.
+Repeat this pinned check after restart/reconnect or instance-ID changes. Use the live schema's instance
+identifier, with per-call `unity_instance` on every tool call when clients share active-instance state.
+When resource reads cannot be routed per call, use separate sessions per workspace with independently
+pinned active-instance state; if the bridge shares that state across sessions, serialize selection plus
+verification plus the affected call. Do not read an unroutable resource from a competing shared session.
+Never mutate an unresolved/foreign instance or
+auto-select the canonical Editor because it was first in the list. One operator serializes mutation
+inside each workspace; other isolated workspaces may run concurrently. See [parallel-editors.md](parallel-editors.md).
 
 | Status | Meaning | Action |
 |---|---|---|

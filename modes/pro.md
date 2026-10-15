@@ -30,6 +30,10 @@ ServiceLocator, mandatory interfaces/services, more managers, or deeper folders.
 - Before nontrivial implementation, pass the [reuse gate](../tools/external-solution-reuse.md) with
   a candidate/license/version/fit decision; handoff must prove actual integration.
 - Treat architecture escalation as an explicit decision with evidence, not a mode default.
+- When two or more Unity-bound tasks run concurrently, isolated workspaces are **ON by default**.
+  Follow [parallel-editors.md](../tools/parallel-editors.md): one worktree/Library/Editor/MCP instance
+  per task, one writer each, explicit scene/prefab ownership and QA before orchestrator integration.
+  Commit canonical changes needed by the tasks before creating workspaces from their chosen base.
 
 ## BUILD
 
@@ -41,7 +45,9 @@ ServiceLocator, mandatory interfaces/services, more managers, or deeper folders.
 - After each meaningful code task: compile/import readiness and console comparison.
 - Hand source-final work to a second independent QA subagent after relevant compile/selfcheck;
   QA drives changed runtime behavior, checks console and captures/reviews relevant visual evidence.
-- One operator serializes all Editor/import/assets/play operations. No repeated full Developer
+- One operator per workspace serializes all Editor/import/assets/play operations; separate workspaces
+  run concurrently. Pin MCP to that workspace and pass the RAM/disk gate before another Editor opens.
+  Tests and validation builds use a closed workspace headlessly and exit. No repeated full Developer
   runtime self-QA before independent QA; no doc-only Unity calls.
 - Update state/log documents at meaningful verified checkpoints, not after every tool call.
 
@@ -86,7 +92,7 @@ ServiceLocator, mandatory interfaces/services, more managers, or deeper folders.
 
 ## VERIFY
 
-- Confirm readiness after compilation/domain reload through the single operator.
+- Confirm readiness after compilation/domain reload through that workspace's operator.
 - Exercise the changed path and relevant recovery/reset/reload behavior.
 - Compare console baseline with current state.
 - Review screenshots for visual work and use measurements for layout claims.

@@ -20,6 +20,9 @@ Single source of truth for mode-specific cadences. No ambiguity.
 | **Lead planning pass** | Only for a planning gap | Only for a planning gap | Only for a planning gap |
 | **Role subskills** | Only selected roles | Developer + QA; design/Lead only for gaps | Same |
 | **Real subagents when available/allowed** | Optional | One Developer, second independent QA | Same; reuse agents through correction loop |
+| **Parallel Unity workspaces** | Off | Opt-in | Default ON when 2+ Unity-bound tasks run concurrently |
+| **Unity operator ownership** | One per workspace | One per workspace; independent workspaces may run concurrently | Same |
+| **Tests / validation builds in parallel work** | Single workspace | Headless in a closed workspace; exit afterwards | Same; interactive Editors for scene/prefab/MCP authoring |
 | **User approval (plan)** | Auto (skip if auto_mode) | Only if ambiguous/high-impact | Only if ambiguous/high-impact |
 | **User approval (feature)** | Never | Only if unclear/blocker | Only if unclear/blocker |
 | **Auto-advance after Agent QA** | After relevant checks pass | After required independent QA checks pass; blocked work stays unverified | Same |
@@ -31,6 +34,10 @@ Single source of truth for mode-specific cadences. No ambiguity.
 ---
 
 ## Code Quality
+
+Parallel workspace isolation, resource gates, MCP routing and integration rules are in
+[tools/parallel-editors.md](tools/parallel-editors.md). Every workspace has its own Library; shared-source
+test clones prohibit asset edits/saves. Assign scene/prefab ownership and merge committed work after QA.
 
 | Rule | fast | standard | pro |
 |------|------|----------|-----|

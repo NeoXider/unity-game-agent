@@ -81,7 +81,8 @@ $requiredTemplates = @(
     "templates/QA_AGENT_CHECKLIST.md",
     "tools/playmode-qa-automation.md",
     "tools/project-structure.md",
-    "tools/external-solution-reuse.md"
+    "tools/external-solution-reuse.md",
+    "tools/parallel-editors.md"
 )
 $requiredScripts = @(
     "setup_project.bat",
@@ -89,7 +90,9 @@ $requiredScripts = @(
     "tools/new-feature-docs.ps1",
     "tools/audit-project-structure.ps1",
     "tools/test-scripts.ps1",
-    "tools/validate-skill.ps1"
+    "tools/validate-skill.ps1",
+    "tools/unity-workspace.ps1",
+    "tools/test-unity-workspace.ps1"
 )
 $requiredRoles = @(
     "roles/game-designer.md",

@@ -2,7 +2,7 @@
 name: unity-game-agent
 description: "Unity Game Agent: autonomous Unity game development pipeline for quick fixes, direct feature work, full game builds, verification, Play Mode checks, and MCP-driven Unity Editor automation. Use when working on Unity games, gameplay systems, scenes, UI, ScriptableObjects, builds, tests, or project continuation with Docs/ state files. Reuse-first: always search for a ready-made solution before building custom."
 metadata:
-  version: 3.6.1
+  version: 3.7.0
   author: Neoxider
   homepage: https://github.com/NeoXider/unity-game-agent
 ---
@@ -172,7 +172,8 @@ and QA policy always still apply. To add a pattern, see [patterns/README.md](pat
 - Audio (generate → source → ask, import settings, pause in background/ads): [tools/audio.md](tools/audio.md)
 - Mobile build size (ASTC, sprite atlases, player-settings audit, APK, pushing heavy repos): [tools/mobile-build-and-size.md](tools/mobile-build-and-size.md)
 - Meta progress map (stops on a painted road, HUD obstacles, crops): [tools/meta-progress-map.md](tools/meta-progress-map.md)
-- Trustworthy UI screenshots (Device Simulator, one-editor rule, measuring instead of eyeballing): [tools/ui-screenshot-truth.md](tools/ui-screenshot-truth.md)
+- Parallel isolated Unity workspaces: [tools/parallel-editors.md](tools/parallel-editors.md) and [tools/unity-workspace.ps1](tools/unity-workspace.ps1)
+- Trustworthy UI screenshots (Device Simulator, one driver per workspace, measuring instead of eyeballing): [tools/ui-screenshot-truth.md](tools/ui-screenshot-truth.md)
 - Skill memory: [SKILL_MEMORY.md](SKILL_MEMORY.md) and [tools/append-skill-memory.ps1](tools/append-skill-memory.ps1)
 - Role subskills: [roles/game-designer.md](roles/game-designer.md), [roles/designer.md](roles/designer.md), [roles/lead.md](roles/lead.md), [roles/developer.md](roles/developer.md), [roles/qa.md](roles/qa.md)
 - Standard/Pro feature docs generator: [tools/new-feature-docs.ps1](tools/new-feature-docs.ps1)
@@ -225,7 +226,7 @@ Role routing:
 Subagent rules:
 
 - Give each agent its role, relevant requirement lines, brief, exact write scope and expected result. Load only references needed for its checks; do not forward full historical context.
-- One Unity operator serializes imports, scene/assets, Play Mode and tests. Code writers may work on explicitly disjoint source scopes, but no other agent drives the same Editor. Compile once after the source-final batch, not while writers are editing.
+- One Unity operator per workspace serializes imports, scene/assets, Play Mode and tests. No other agent drives that workspace's Editor. Independent workspaces may run in parallel; compile each source-final batch once, not while its writers are editing.
 - Developer and QA own separate sections of the same brief and update them sequentially. Orchestrator owns shared state/index links; no duplicate task logs by default.
 - Do not delegate the orchestrator's accountability: read role outputs, check contradictions, and choose the next step.
 - If delegation is unavailable or prohibited, disclose local role switching and the lack of independent QA in the brief. Follow the same outcome gates; do not call a selfcheck independent.
@@ -233,6 +234,23 @@ Subagent rules:
 - Role outputs go to the resolved docs root. Reuse the existing project-root `Docs/` or authoring-root
   `Assets/_source/Docs/`; never create a competing second tree. Universal role improvements may go
   to `SKILL_MEMORY.md` only under the skill memory rules.
+
+## Parallel Unity Workspaces
+
+**Default ON in `pro` whenever two or more Unity-bound tasks run concurrently; opt-in in `standard`;
+off in `fast`.** Give each task a git worktree at `<repo>.ws/<task>`, branch `agent/<task>`, its own
+Library, Editor and registered MCP instance. One writer owns each workspace. Commit needed canonical
+changes first: a new workspace sees its chosen commit (default canonical HEAD), never uncommitted edits.
+
+Use [tools/unity-workspace.ps1](tools/unity-workspace.ps1) and [tools/parallel-editors.md](tools/parallel-editors.md).
+Clone a quiescent Library instead of reimporting; never share a Library between Editors. Check disk,
+physical RAM and commit before opening another interactive Editor. Reserve interactive sessions for
+scene/prefab/MCP authoring; run tests and validation builds headless in a closed workspace, then exit.
+Pin MCP to the workspace project name/path; never mutate an unresolved or foreign instance.
+
+Assign scene/prefab file ownership and use Unity Smart Merge. Agents commit on their workspace branch;
+the orchestrator merges after QA. Shared-source test clones are **TEST ONLY: never edit or save assets**;
+their source junctions write straight into the canonical project, and `finish` refuses them.
 
 ## Session Routing
 
@@ -339,7 +357,7 @@ Use the same flow with any Unity MCP or file tool stack:
 2. Apply the smallest structured edit available.
 3. Use text patches only when semantic/script edits are unavailable.
 4. Validate syntax or script structure when the tool exposes validation.
-5. After the source-final batch, the single operator triggers/waits for one Unity import/compile.
+5. After the source-final batch, that workspace's operator triggers/waits for one Unity import/compile.
 6. Poll editor readiness until import/compile/domain reload completes.
 7. Read console and attribute only new errors/warnings to the change.
 8. Attach/use the script only after compilation succeeds.

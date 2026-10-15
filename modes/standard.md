@@ -30,8 +30,14 @@ Mode changes verification depth, not architecture complexity or document count.
 6. Optional GDD alignment follows QA, checks the existing requirements against evidence and does not
    regenerate the spec. Orchestrator closes/updates links at meaningful checkpoints after required checks pass.
 
-One operator owns Unity/import/scene/assets/play/tests; code writers have disjoint scopes and freeze
-source before its single batch compile. If delegation is unavailable/prohibited, disclose local role
+Parallel Unity workspaces are **opt-in**. When enabled, follow
+[parallel-editors.md](../tools/parallel-editors.md): separate worktree, Library, Editor and MCP instance
+for each Unity-bound task; commit needed canonical changes first. Use headless tests/build validation
+and check disk/RAM before opening an interactive Editor.
+
+One operator per workspace owns Unity/import/scene/assets/play/tests; code writers have disjoint scopes
+and freeze source before its single batch compile. Isolated workspaces may run concurrently.
+If delegation is unavailable/prohibited, disclose local role
 switching and missing independent QA. Preserve the same outcome gates.
 
 ## Verification
@@ -69,7 +75,7 @@ Separate Task/QA/QA_AGENT records are explicit expanded tracking (`-DetailedTrac
 
 Preserve project architecture and input stack. Feature-owned typed folders remain required in all
 modes; follow [project-structure.md](../tools/project-structure.md). Editor builders are forbidden;
-author scenes/prefabs through the single Unity/MCP operator. No extra infrastructure or DI merely
+author scenes/prefabs through the workspace's Unity/MCP operator. No extra infrastructure or DI merely
 because the mode is standard. Keep TextMeshPro/null-safe UI rules from the main skill.
 
 ## Final Gate

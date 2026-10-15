@@ -36,6 +36,8 @@ Unity Game Agent is built for that gap.
 | Planning record | No | Rare | One acceptance/reuse brief; Lead only for gaps |
 | One task per developer pass | No | Rare | Required |
 | Independent QA pass | No | Partial | Second QA subagent, same brief's QA section |
+| Parallel isolated Unity Editors | Manual | Rare | Worktree + own Library/Editor/MCP; pro default for concurrent Unity tasks |
+| Resource-aware parallel tests | Manual | Rare | Library cloning, disk/RAM gates, headless runs, shared-source test clones |
 | Play Mode verification policy | Weak | Partial | Required by mode |
 | EditMode/PlayMode test expectations | Optional | Optional | Declared per task/feature |
 | Screenshot evidence and visual review | Optional | Partial | Required for visual/runtime-visible work |
@@ -80,7 +82,9 @@ The orchestrator stays accountable, but work is split into small role files so t
 
 In `standard` and `pro`, use one Developer and a second independent QA when available and allowed;
 reuse them through corrections. Design/Lead passes are conditional. If delegation is unavailable,
-disclose local role switching and missing independent QA. One operator serializes Unity; source-final
+disclose local role switching and missing independent QA. One operator per workspace serializes Unity;
+isolated workspaces may run concurrently (pro default for 2+ Unity-bound tasks, standard opt-in, fast off).
+See [parallel Unity Editors](tools/parallel-editors.md). Source-final
 handoff precedes import/compile/player checks. After fixes, rerun failed/affected checks and cite valid
 unaffected evidence with source revision/scope/environment.
 
@@ -111,6 +115,7 @@ These are implemented in the skill today.
 | uGUI adaptivity canon (Expand + safe area) | Done | `project-profiles/plain-ugui.md` |
 | Pre-vetted uGUI effect packages before custom code | Done | `project-profiles/plain-ugui.md`, `tools/libraries-setup.md` |
 | Fast / standard / pro mode matrix | Done | `POLICY_MATRIX.md`, `modes/` |
+| Parallel Unity workspace isolation | Done | [Guide](tools/parallel-editors.md), [PowerShell helper](tools/unity-workspace.ps1) |
 | Reuse-first discovery policy | Done | `SKILL.md`, `tools/libraries-setup.md` |
 | Role subskills | Done | `roles/game-designer.md`, `roles/designer.md`, `roles/lead.md`, `roles/developer.md`, `roles/qa.md` |
 | Standard/pro feature docs | Done | `templates/FEATURE.md`, `templates/TASK.md` |

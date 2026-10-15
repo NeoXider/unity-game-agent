@@ -4,6 +4,32 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.7.0] — 2026-10-15
+
+### ✨ Added — parallel isolated Unity workspaces
+- `tools/unity-workspace.ps1`: PowerShell 5.1 workspace lifecycle, diagnostics, Library copying,
+  memory/disk gates, instance identity, headless NUnit summaries and safe removal with explicit flags.
+- `tools/parallel-editors.md`: Dev Drive setup, command reference, budgets, MCP routing, Smart Merge,
+  scene/prefab ownership and test-only shared-source junction clones; Netcode projects prefer Unity's
+  Multiplayer Play Mode package.
+- Script smoke coverage uses temporary fake projects and never launches a real Unity Editor.
+- Audit regressions cover native Windows command-line tokenization, real Unity 6 import-worker
+  shapes/parent routing, held canonical locks, per-volume admission/copy locks with stale recovery,
+  and pinned read-only MCP project-path verification guidance.
+- Worker-name detection accepts repeated `-name` options from complete observed Unity 6 command
+  lines while keeping duplicate `-projectPath` rejection strict; regression fixtures cover both
+  worker-name orders, RAM admission and Editor/worker shutdown ordering.
+
+### 🔧 Changed
+- Parallel workspaces default ON in `pro` for two or more concurrent Unity-bound tasks, are opt-in in
+  `standard`, and off in `fast`. The single-operator rule now applies per workspace, preserving separate
+  Libraries, pinned MCP instances and QA-before-merge integration.
+- Tests and validation builds use headless processes that exit; interactive Editors are reserved for
+  scene/prefab/MCP authoring. Official documentation caveats for Dev Drive versions and Unity's idle
+  import-worker controls are recorded in the guide.
+
+---
+
 ## [3.6.1] — 2026-10-08
 
 ### 🎯 Changed — the Prime Rule is now the first rule of the skill

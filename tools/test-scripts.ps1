@@ -120,6 +120,7 @@ try {
         "-Evidence", "Script created and appended markdown", "-SkillImpact", "tools"
     )
 
+    Invoke-CheckedPowerShell -ScriptPath (Join-Path $SkillRoot "tools/test-unity-workspace.ps1") -ScriptArgs @($SkillRoot)
     Invoke-CheckedPowerShell -ScriptPath (Join-Path $SkillRoot "tools/validate-skill.ps1") -ScriptArgs @($SkillRoot)
     $fixtureDir = Join-Path $projectRoot "Assets/_source/Scripts/Sample/EditModeSafe"
     New-Item -ItemType Directory -Path $fixtureDir -Force | Out-Null

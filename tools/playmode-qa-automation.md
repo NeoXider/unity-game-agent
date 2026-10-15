@@ -96,8 +96,11 @@ return the control (or a child) first. During an entrance animation an invisible
 be hit.
 
 Developer runs relevant compile/check before source-final handoff, not a mandatory full runtime
-self-QA round. Independent QA drives changed player outcomes. One assigned operator serializes MCP
-import/play/test/assets; batchmode is a fallback only when the project is not open in another Editor.
+self-QA round. Independent QA drives changed player outcomes. One assigned operator **per workspace**
+serializes MCP/import/play/test/assets. Separate [isolated workspaces](parallel-editors.md) can run in
+parallel. Prefer headless tests and validation builds; the specific workspace must have no interactive
+Editor open, even when other workspaces have Editors running. Each process owns a separate Library
+and exits after its run. Shared-source clones are test-only: never edit or save their junctioned assets.
 Current scoped compile/test receipts may be cited rather than run twice. Unavailable/empty/unsupported
 required selections mean blocked/degraded, not pass.
 
