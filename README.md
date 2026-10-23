@@ -130,18 +130,18 @@ use [isolated workspaces](tools/parallel-editors.md).
 Same small game (sized for 5-15 minutes), three Codex agents at once, one machine, run once each
 ([benchmark](benchmarks/clicker/README.md), [full results](benchmarks/clicker/results.md)):
 
-![Clicker benchmark: development time, time per 100 lines, time per test, compile errors caused by another agent, Unity Editor launches](benchmarks/clicker/chart.svg)
+![Clicker benchmark: compile errors caused by another agent, Unity Editor launches, time per test, development time, time per 100 lines](benchmarks/clicker/chart.svg)
 
 | | Without the skill | With the skill |
 |---|---|---|
-| Development time | 8.8 min | 13.2 min (1.0 min of it orchestrator setup) |
 | Compile errors caused by another agent | 2 | 0 |
-| Code written (game + tests, non-empty lines) | 443 | 435 |
-| Time per 100 lines | 2.0 min | 3.0 min |
+| Unity Editor launches | 3 | 1 |
 | Agents' own tests | 21 | 38 |
 | Time per test | 0.42 min | 0.35 min |
+| Development time | 8.8 min | 13.2 min (1.0 min of it orchestrator setup) |
+| Code written (game + tests, non-empty lines) | 443 | 435 |
+| Time per 100 lines | 2.0 min | 3.0 min |
 | Hidden acceptance tests | 17 / 17 | 17 / 17 |
-| Unity Editor launches | 3 | 1 |
 | Tokens | 2.05 M | 3.98 M (mostly cached input) |
 
 Both teams wrote about the same amount of code, so per line the skill was slower here as well; per

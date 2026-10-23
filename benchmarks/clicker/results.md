@@ -7,7 +7,7 @@ Run A was forbidden the skill, neoxider-agents and sub-agents; run B was asked t
 
 ## Headline
 
-![Development time, time per 100 lines, time per test, compile errors caused by another agent, Unity Editor launches](chart.svg)
+![Compile errors caused by another agent, Unity Editor launches, time per test, development time, time per 100 lines](chart.svg)
 
 | | Run A: no skill | Run B: with the skill |
 |---|---|---|
