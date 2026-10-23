@@ -1,6 +1,6 @@
 {
   "name": "com.neoxider.uga-editor-broker",
-  "version": "3.8.0",
+  "version": "3.9.0",
   "displayName": "Unity Game Agent - Editor Broker",
   "description": "Lets several AI agents share one Unity Editor without colliding: resource leases, one batched import/compile window, batched Play Mode and test windows, exclusive windows for packages/settings/builds, and a live board. Driven by the unity-game-agent skill's editor-broker CLI, with optional CoplayDev MCP and Unity Pipeline (Unity CLI) commands.",
   "unity": "6000.0",

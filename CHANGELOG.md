@@ -4,6 +4,28 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.9.0] - 2026-10-23
+
+### Added
+- Shared-editor telemetry per project: the Editor counts wait and run time per job, per agent and per
+  lane, time-weighted queue length and lease waiters (average and peak), lease waits, windows with
+  their drain; each finished session is appended to `Library/UgaBroker/telemetry.jsonl`.
+  `editor-broker.ps1 stats [-Json]` and the board show it.
+- `asset:` leases accept one `ProjectSettings/` file, so Build Settings, tags and layers are cold work
+  under a lease instead of an exclusive window. The agent decides; exclusive windows stay for changes
+  that recompile, reimport or reload for everyone.
+
+### Changed
+- Protocol: a request is not a pause. Agents keep working after `request` and wait idle (in the
+  background) only when nothing else is left.
+- README: only the illustrations are shown; the detailed SVG diagrams are linked. Human-facing docs
+  reworded for readability (DeepSeek through OpenCode, reviewed by hand).
+
+### Fixed
+- `doctor` listed stale registry entries and the project itself as other live brokers.
+
+---
+
 ## [3.8.0] - 2026-10-23
 
 ### Added - several agents in one Unity Editor (default for multi-agent work)

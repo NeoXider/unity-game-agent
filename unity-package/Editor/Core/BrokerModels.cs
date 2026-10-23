@@ -23,6 +23,7 @@ namespace UnityGameAgent.EditorBroker
         public List<BrokerJob> jobs = new List<BrokerJob>();
         public BrokerWindow window = new BrokerWindow();
         public List<BrokerViolation> violations = new List<BrokerViolation>();
+        public BrokerTelemetry telemetry = new BrokerTelemetry();
 
         public bool HasWindow => window != null && !string.IsNullOrEmpty(window.id);
         public bool SessionActive => !string.IsNullOrEmpty(sessionId);
@@ -44,7 +45,9 @@ namespace UnityGameAgent.EditorBroker
             if (sessionId == null) sessionId = "";
             if (sessionOwner == null) sessionOwner = "";
             if (projectSettingsRequest == null) projectSettingsRequest = "";
+            if (telemetry == null) telemetry = new BrokerTelemetry();
             window.Normalize();
+            telemetry.Normalize();
             foreach (var job in jobs) job.Normalize();
             if (nextId < 1) nextId = 1;
         }
@@ -62,6 +65,8 @@ namespace UnityGameAgent.EditorBroker
         public long expiresMs;
         public bool yielded;
         public string note = "";
+        public long waitedMs;   // time spent queued before the grant (telemetry)
+        public bool counted;    // already added to telemetry
     }
 
     [Serializable]
@@ -98,6 +103,7 @@ namespace UnityGameAgent.EditorBroker
         public bool doneRequested;
         public string summary = "";
         public List<string> details = new List<string>();
+        public bool counted;    // already added to telemetry
 
         public bool IsFinished => BrokerConstants.IsFinishedStatus(status);
 
@@ -228,7 +234,7 @@ namespace UnityGameAgent.EditorBroker
     public static class BrokerConstants
     {
         public const int Schema = 1;
-        public const string PackageVersion = "3.8.0";
+        public const string PackageVersion = "3.9.0";
 
         public const string KindCold = "cold";
         public const string KindFocus = "focus";

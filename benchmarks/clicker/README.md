@@ -2,9 +2,9 @@
 
 The question: when several agents build one Unity game on one computer at the same time, does this
 skill's shared-editor protocol make them faster and more reliable than agents left to organize
-themselves? The game is small on purpose: a team should finish it in roughly 5-15 minutes.
+themselves? The game is small on purpose. A team should finish it in roughly 5-15 minutes.
 
-Two runs build the same small game ([brief.md](brief.md)) with the same three roles working in
+Two runs build the same small game ([brief.md](brief.md)), with the same three roles working in
 parallel (`core`, `ui`, `scene`):
 
 | | Run A: no skill | Run B: with the skill |
@@ -16,14 +16,14 @@ parallel (`core`, `ui`, `scene`):
 | How to work | "Work however you think best." Unity Editor path and Unity CLI given | Read the skill; the orchestrator ran `doctor -Fix` and `session start`; one Editor is open |
 | Editor | None open; agents start Unity as they see fit | One Editor, opened by the orchestrator (its start counts toward the time) |
 
-The template project has the Unity Test Framework, uGUI and the Unity Pipeline package (so both runs
-can drive an open Editor with `unity command`). Run B additionally has the broker package, installed
-by the orchestrator during the run.
+The template project has the Unity Test Framework, uGUI and the Unity Pipeline package, so both runs
+can drive an open Editor with `unity command`. Run B also has the broker package, which the
+orchestrator installed during the run.
 
 ## Criteria
 
-Development time is the main criterion. The others explain where the time went and whether the
-result is any good.
+Development time is the main criterion. The rest explain where the time went and whether the result
+is any good.
 
 | # | Criterion | How it is measured | Better |
 |---|---|---|---|
@@ -54,8 +54,8 @@ Self-reported numbers (8, part of 7) are marked as such in the results.
 6. If acceptance fails, one fix round with the same agents, told only which acceptance checks failed.
 7. Record everything in [results.md](results.md).
 
-The runs go one after the other, never at the same time, on the same machine. Close other Unity
-projects first if memory is short: an Editor that cannot start distorts the times.
+The runs go one after the other on the same machine, never at the same time. Close other Unity
+projects first if memory is short. An Editor that cannot start distorts the times.
 
 ## Run texts ("How to work")
 

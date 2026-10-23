@@ -5,12 +5,14 @@ State lives in <project>/Library/UgaBroker and is executed by the com.neoxider.u
 package inside the Editor. This CLI works while the Editor compiles, reloads, plays or is closed.
 Written for Windows PowerShell 5.1 and PowerShell 7+ (pwsh on macOS/Linux); tested on 5.1. See tools/shared-editor.md.
 
+'stats' prints the project's telemetry (waits per agent, queue length, window and drain times).
+
 Exit codes: 0 ok | 2 invalid request | 3 lease queued | 4 gate says wait | 6 timeout |
 7 Editor offline | 8 job failed | 9 job blocked/canceled or doctor not ready.
 #>
 param(
     [Parameter(Position=0)]
-    [ValidateSet('install','doctor','session','take','renew','release','yield','gate','stage','request','wait','done','cancel','status','projects')]
+    [ValidateSet('install','doctor','session','take','renew','release','yield','gate','stage','request','wait','done','cancel','status','stats','projects')]
     [string]$Command = 'status',
     [Parameter(Position=1)][string]$Action,
     # Several projects on one machine: give every agent its project explicitly (this parameter,
@@ -66,7 +68,7 @@ function Stop-Broker([string]$Message, [int]$Code = 2) { throw [BrokerCliError]:
 # ---------------------------------------------------------------- paths and resources
 function Test-BrokerAgent([string]$Name) { return [bool]($Name -cmatch '^[A-Za-z0-9][A-Za-z0-9._-]{0,47}$') }
 
-function Get-BrokerNormalizedPath([string]$Raw, [bool]$Folder) {
+function Get-BrokerNormalizedPath([string]$Raw, [bool]$Folder, [bool]$AllowProjectSettings = $false) {
     if ([string]::IsNullOrWhiteSpace($Raw)) { return $null }
     $value = $Raw.Trim().Replace('\', '/')
     while ($value.Contains('//')) { $value = $value.Replace('//', '/') }
@@ -78,9 +80,10 @@ function Get-BrokerNormalizedPath([string]$Raw, [bool]$Folder) {
     $segments = $value.Split('/')
     foreach ($segment in $segments) { if ($segment.Length -eq 0 -or $segment -eq '.' -or $segment -eq '..') { return $null } }
     $root = $segments[0]
-    if ($root -ine 'Assets' -and $root -ine 'Packages') { return $null }
+    $settings = $AllowProjectSettings -and -not $Folder -and $root -ieq 'ProjectSettings'
+    if ($root -ine 'Assets' -and $root -ine 'Packages' -and -not $settings) { return $null }
     if (-not $Folder -and $segments.Count -lt 2) { return $null }
-    $segments[0] = if ($root -ieq 'Assets') { 'Assets' } else { 'Packages' }
+    $segments[0] = if ($settings) { 'ProjectSettings' } elseif ($root -ieq 'Assets') { 'Assets' } else { 'Packages' }
     $joined = $segments -join '/'
     if ($Folder) { return $joined + '/' }
     return $joined
@@ -120,8 +123,9 @@ function ConvertFrom-BrokerResource([string]$Resource, [scriptblock]$Resolver) {
             return @{ ok = $true; type = $type; path = $p; error = '' }
         }
         'asset' {
-            $p = Get-BrokerNormalizedPath $value $false
-            if ($null -eq $p) { return & $fail 'An asset resource needs an Assets/ or Packages/ file path.' }
+            # ProjectSettings files (Build Settings, tags and layers) can be leased like assets.
+            $p = Get-BrokerNormalizedPath $value $false $true
+            if ($null -eq $p) { return & $fail 'An asset resource needs an Assets/, Packages/ or ProjectSettings/ file path.' }
             return @{ ok = $true; type = $type; path = $p; error = '' }
         }
         'folder' {
@@ -206,7 +210,8 @@ function New-BrokerStringList($Items) {
 
 function ConvertTo-BrokerLease($s) {
     return [ordered]@{ id = [string]$s.id; agent = [string]$s.agent; kind = [string]$s.kind; resource = [string]$s.resource; path = [string]$s.path
-        grantedMs = [long]$s.grantedMs; expiresMs = [long]$s.expiresMs; yielded = [bool]$s.yielded; note = [string]$s.note }
+        grantedMs = [long]$s.grantedMs; expiresMs = [long]$s.expiresMs; yielded = [bool]$s.yielded; note = [string]$s.note
+        waitedMs = [long]$s.waitedMs; counted = [bool]$s.counted }
 }
 
 function ConvertTo-BrokerWaiter($s) {
@@ -220,7 +225,7 @@ function ConvertTo-BrokerJob($s) {
         paths = (New-BrokerStringList $s.paths); tests = [string]$s.tests; testMode = [string]$s.testMode; scene = [string]$s.scene
         minutes = [double]$s.minutes; reason = [string]$s.reason; createdMs = [long]$s.createdMs; status = $status
         startedMs = [long]$s.startedMs; finishedMs = [long]$s.finishedMs; windowId = [string]$s.windowId; doneRequested = [bool]$s.doneRequested
-        summary = [string]$s.summary; details = (New-BrokerStringList $s.details) }
+        summary = [string]$s.summary; details = (New-BrokerStringList $s.details); counted = [bool]$s.counted }
 }
 
 function ConvertTo-BrokerWindow($s) {
@@ -248,6 +253,8 @@ function New-BrokerState($Source) {
         window = ConvertTo-BrokerWindow $(if ($null -ne $Source.window) { $Source.window } else { [pscustomobject]@{} })
         violations = New-BrokerList (@($Source.violations) | Where-Object { $null -ne $_ } | ForEach-Object { ConvertTo-BrokerViolation $_ })
     }
+    # Telemetry is counted by the Editor (BrokerTelemetry.cs); the CLI only carries it through.
+    if ($null -ne $Source.telemetry) { $state.telemetry = $Source.telemetry }
     return $state
 }
 
@@ -295,9 +302,9 @@ function New-BrokerResult([string]$Status, [string]$Message) {
     return [ordered]@{ status = $Status; message = $Message; leaseId = ''; jobId = ''; position = 0 }
 }
 
-function Add-BrokerLease($State, [string]$Agent, [string]$Kind, [string]$ResourceText, [string]$LeasePath, [long]$TtlMs, [long]$Now) {
+function Add-BrokerLease($State, [string]$Agent, [string]$Kind, [string]$ResourceText, [string]$LeasePath, [long]$TtlMs, [long]$Now, [long]$WaitedMs = 0) {
     $lease = [ordered]@{ id = (New-BrokerId $State 'L'); agent = $Agent; kind = $Kind; resource = $ResourceText; path = $LeasePath
-        grantedMs = $Now; expiresMs = 0; yielded = $false; note = '' }
+        grantedMs = $Now; expiresMs = 0; yielded = $false; note = ''; waitedMs = [Math]::Max([long]0, $WaitedMs); counted = $false }
     $lease.expiresMs = if ($Kind -eq 'focus') { Get-BrokerFocusExpiry $State $Agent $Now $TtlMs $Now } else { $Now + $TtlMs }
     [void]$State.leases.Add($lease)
     return $lease
@@ -334,8 +341,9 @@ function Invoke-BrokerTake($State, [string]$Agent, [string]$LeaseKind, [string]$
         if ((Test-BrokerConflict $Agent $LeaseKind $LeasePath $w.agent $w.kind $w.path) -and -not $blockers.Contains($label)) { [void]$blockers.Add($label) }
     }
     if ($blockers.Count -eq 0) {
-        if ($ownWaiterIndex -ge 0) { $State.waiting.RemoveAt($ownWaiterIndex) }
-        $lease = Add-BrokerLease $State $Agent $LeaseKind $ResourceText $LeasePath $ttlMs $Now
+        $waitedMs = 0
+        if ($ownWaiterIndex -ge 0) { $waitedMs = $Now - [long]$State.waiting[$ownWaiterIndex].requestedMs; $State.waiting.RemoveAt($ownWaiterIndex) }
+        $lease = Add-BrokerLease $State $Agent $LeaseKind $ResourceText $LeasePath $ttlMs $Now $waitedMs
         $r = New-BrokerResult 'granted' 'Lease granted.'; $r.leaseId = $lease.id; return $r
     }
     $message = 'Waiting behind ' + ($blockers -join ', ') + '.'
@@ -365,7 +373,7 @@ function Invoke-BrokerPromote($State, [long]$Now) {
         }
         if ($blocked) { $i++; continue }
         $State.waiting.RemoveAt($i)
-        [void]$granted.Add((Add-BrokerLease $State $w.agent $w.kind $w.resource $w.path ([long][Math]::Max(10, $w.ttlSec) * 1000) $Now))
+        [void]$granted.Add((Add-BrokerLease $State $w.agent $w.kind $w.resource $w.path ([long][Math]::Max(10, $w.ttlSec) * 1000) $Now ($Now - [long]$w.requestedMs)))
     }
     return ,$granted
 }
@@ -625,6 +633,103 @@ function Format-BrokerAge([long]$Ms) {
     if ($Ms -lt 1000) { return "$Ms ms" }
     if ($Ms -lt 120000) { return ([long]($Ms / 1000)).ToString() + ' s' }
     return ([long]($Ms / 60000)).ToString() + ' min'
+}
+
+# ---------------------------------------------------------------- telemetry (counted by BrokerTelemetry.cs)
+function Get-BrokerRatio([double]$Total, [double]$Count) { if ($Count -le 0) { return 0 } return $Total / $Count }
+
+# One segment (the live counters or a line of telemetry.jsonl) as averages and peaks.
+function Get-BrokerTelemetryView($T, [long]$Now) {
+    $since = [long]$T.sinceMs
+    $until = if ([long]$T.endedMs -gt 0) { [long]$T.endedMs } else { $Now }
+    $span = [Math]::Max([long]1, $until - $since)
+    # [long]0: with a plain 0 PowerShell picks Math.Max(int, int) and overflows on millisecond stamps.
+    $avgLevel = { param($integral, $level, $levelSince)
+        $from = if ([long]$levelSince -gt 0) { [long]$levelSince } else { $since }
+        ([double]$integral + [double]$level * [Math]::Max([long]0, $until - $from)) / $span }
+    $agents = foreach ($a in @($T.agents)) {
+        if ($null -eq $a) { continue }
+        [ordered]@{ agent = [string]$a.agent; jobs = [int]$a.jobs; failed = [int]$a.failed; blocked = [int]$a.blocked
+            avgWaitMs = [long](Get-BrokerRatio $a.waitMs $a.jobs); maxWaitMs = [long]$a.waitMaxMs; avgRunMs = [long](Get-BrokerRatio $a.runMs $a.jobs)
+            leaseWaits = [int]$a.leaseWaits; avgLeaseWaitMs = [long](Get-BrokerRatio $a.leaseWaitMs $a.leaseWaits); maxLeaseWaitMs = [long]$a.leaseWaitMaxMs }
+    }
+    $lanes = foreach ($l in @($T.lanes)) {
+        if ($null -eq $l) { continue }
+        [ordered]@{ lane = [string]$l.lane; jobs = [int]$l.jobs; avgWaitMs = [long](Get-BrokerRatio $l.waitMs $l.jobs); maxWaitMs = [long]$l.waitMaxMs
+            avgRunMs = [long](Get-BrokerRatio $l.runMs $l.jobs); windows = [int]$l.windows; avgWindowMs = [long](Get-BrokerRatio $l.windowMs $l.windows)
+            avgDrainMs = [long](Get-BrokerRatio $l.drainMs $l.windows) }
+    }
+    return [ordered]@{
+        sessionId = [string]$T.sessionId; sinceMs = $since; endedMs = [long]$T.endedMs; minutes = [Math]::Round($span / 60000.0, 1)
+        jobs = [int]$T.jobs; failed = [int]$T.failed; blocked = [int]$T.blocked; canceled = [int]$T.canceled
+        avgWaitMs = [long](Get-BrokerRatio $T.waitMs $T.jobs); maxWaitMs = [long]$T.waitMaxMs; avgRunMs = [long](Get-BrokerRatio $T.runMs $T.jobs)
+        windows = [int]$T.windows; avgWindowMs = [long](Get-BrokerRatio $T.windowMs $T.windows); maxWindowMs = [long]$T.windowMaxMs
+        avgDrainMs = [long](Get-BrokerRatio $T.drainMs $T.windows)
+        avgQueue = [Math]::Round((& $avgLevel $T.queueIntegral $T.queueLevel $T.queueSinceMs), 2); queuePeak = [int]$T.queuePeak
+        avgLeaseWaiters = [Math]::Round((& $avgLevel $T.waitersIntegral $T.waitersLevel $T.waitersSinceMs), 2); leaseWaitersPeak = [int]$T.waitersPeak
+        leaseWaits = [int]$T.leaseWaits; avgLeaseWaitMs = [long](Get-BrokerRatio $T.leaseWaitMs $T.leaseWaits); maxLeaseWaitMs = [long]$T.leaseWaitMaxMs
+        agents = @($agents); lanes = @($lanes)
+    }
+}
+
+# Every closed segment in telemetry.jsonl plus the live one, summed up for the project.
+function Get-BrokerStats([string]$Project, $State, [long]$Now) {
+    $history = New-Object System.Collections.ArrayList
+    $file = Join-Path (Get-BrokerDir $Project) 'telemetry.jsonl'
+    if (Test-Path -LiteralPath $file) {
+        foreach ($line in [IO.File]::ReadAllLines($file)) {
+            if ([string]::IsNullOrWhiteSpace($line)) { continue }
+            try { [void]$history.Add((Get-BrokerTelemetryView ($line | ConvertFrom-Json) $Now)) } catch { continue }
+        }
+    }
+    $current = if ($null -ne $State.telemetry -and [long]$State.telemetry.sinceMs -gt 0) { Get-BrokerTelemetryView $State.telemetry $Now } else { $null }
+    $all = New-Object System.Collections.ArrayList
+    foreach ($v in $history) { [void]$all.Add($v) }
+    if ($null -ne $current) { [void]$all.Add($current) }
+    # Ordered dictionaries do not work with Measure-Object -Property: sum by hand.
+    $jobs = 0; $minutes = 0.0; $waitTotal = 0.0; $queueWeighted = 0.0; $windows = 0; $drainTotal = 0.0; $maxWait = [long]0; $queuePeak = 0
+    foreach ($v in $all) {
+        $jobs += $v.jobs; $minutes += $v.minutes; $windows += $v.windows
+        $waitTotal += [double]$v.avgWaitMs * $v.jobs; $queueWeighted += [double]$v.avgQueue * $v.minutes; $drainTotal += [double]$v.avgDrainMs * $v.windows
+        $maxWait = [Math]::Max($maxWait, [long]$v.maxWaitMs); $queuePeak = [Math]::Max($queuePeak, [int]$v.queuePeak)
+    }
+    # Not $project: PowerShell names ignore case, and that would overwrite the [string]$Project parameter.
+    $totals = [ordered]@{
+        segments = $all.Count; minutes = [Math]::Round($minutes, 1); jobs = $jobs
+        avgWaitMs = [long](Get-BrokerRatio $waitTotal $jobs); maxWaitMs = $maxWait
+        avgQueue = [Math]::Round((Get-BrokerRatio $queueWeighted $minutes), 2); queuePeak = $queuePeak
+        windows = $windows; avgDrainMs = [long](Get-BrokerRatio $drainTotal $windows)
+    }
+    return [ordered]@{ current = $current; history = @($history); project = $totals }
+}
+
+function Format-BrokerStats($Stats) {
+    $lines = New-Object System.Collections.ArrayList
+    $c = $Stats.current
+    if ($null -eq $c) { [void]$lines.Add('No telemetry yet: the Editor counts it while the broker runs.') }
+    else {
+        $label = if ($c.sessionId) { "Session $($c.sessionId)" } else { 'Outside a session' }
+        [void]$lines.Add("$label, $($c.minutes) min")
+        [void]$lines.Add("  Jobs: $($c.jobs) ($($c.failed) failed, $($c.blocked) blocked, $($c.canceled) canceled); wait avg $(Format-BrokerAge $c.avgWaitMs), max $(Format-BrokerAge $c.maxWaitMs); run avg $(Format-BrokerAge $c.avgRunMs)")
+        [void]$lines.Add("  Queue: avg $($c.avgQueue) queued job(s), peak $($c.queuePeak); lease waiters avg $($c.avgLeaseWaiters), peak $($c.leaseWaitersPeak)")
+        [void]$lines.Add("  Windows: $($c.windows), run avg $(Format-BrokerAge $c.avgWindowMs), max $(Format-BrokerAge $c.maxWindowMs); drain avg $(Format-BrokerAge $c.avgDrainMs)")
+        [void]$lines.Add("  Lease waits: $($c.leaseWaits), avg $(Format-BrokerAge $c.avgLeaseWaitMs), max $(Format-BrokerAge $c.maxLeaseWaitMs)")
+        if (@($c.agents).Count -gt 0) {
+            [void]$lines.Add('  Agent            jobs  wait avg  wait max   run avg  lease waits  lease wait avg')
+            foreach ($a in @($c.agents | Sort-Object { $_.agent })) {
+                [void]$lines.Add(('  {0,-15} {1,5} {2,9} {3,9} {4,9} {5,12} {6,15}' -f $a.agent, $a.jobs, (Format-BrokerAge $a.avgWaitMs), (Format-BrokerAge $a.maxWaitMs), (Format-BrokerAge $a.avgRunMs), $a.leaseWaits, (Format-BrokerAge $a.avgLeaseWaitMs)))
+            }
+        }
+        if (@($c.lanes).Count -gt 0) {
+            [void]$lines.Add('  Lane        jobs  wait avg  windows  window avg  drain avg')
+            foreach ($l in @($c.lanes | Sort-Object { $_.lane })) {
+                [void]$lines.Add(('  {0,-10} {1,5} {2,9} {3,8} {4,11} {5,10}' -f $l.lane, $l.jobs, (Format-BrokerAge $l.avgWaitMs), $l.windows, (Format-BrokerAge $l.avgWindowMs), (Format-BrokerAge $l.avgDrainMs)))
+            }
+        }
+    }
+    $p = $Stats.project
+    [void]$lines.Add("Project ($($p.segments) segment(s), $($p.minutes) min): $($p.jobs) job(s), wait avg $(Format-BrokerAge $p.avgWaitMs), max $(Format-BrokerAge $p.maxWaitMs); queue avg $($p.avgQueue), peak $($p.queuePeak); $($p.windows) window(s), drain avg $(Format-BrokerAge $p.avgDrainMs)")
+    return ($lines -join "`n")
 }
 
 function Format-BrokerBoard($State, $Editor) {
@@ -888,6 +993,11 @@ function Invoke-BrokerCli {
             }
             $editor = Read-BrokerEditor $project
             if ($Json) { Write-Output ([ordered]@{ state = $state; editor = $editor } | ConvertTo-Json -Depth 20 -Compress) } else { Write-Output (Format-BrokerBoard $state $editor) }
+        }
+        'stats' {
+            $state = Invoke-BrokerUpdate $project { param($s, $ctx) }
+            $stats = Get-BrokerStats $project $state $now
+            if ($Json) { Write-Output ($stats | ConvertTo-Json -Depth 8 -Compress) } else { Write-Output (Format-BrokerStats $stats) }
         }
         'session' {
             if ($Action -notin @('start','stop')) { Stop-Broker "Use: session start -Agent <owner> | session stop" 2 }

@@ -118,6 +118,7 @@ namespace UnityGameAgent.EditorBroker
         public static void EndWindow(BrokerState state, BrokerConfig cfg, long now)
         {
             var windowId = state.window.id;
+            BrokerTelemetryOps.RecordWindow(state, now);
             foreach (var job in state.jobs.Where(j => j.windowId == windowId && j.status == BrokerConstants.JobQueued))
                 job.windowId = "";
             state.window.Clear();

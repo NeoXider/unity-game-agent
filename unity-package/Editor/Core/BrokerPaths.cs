@@ -48,9 +48,10 @@ namespace UnityGameAgent.EditorBroker
                         return Fail("A prefab resource needs an Assets/ or Packages/ path ending in .prefab.", out path, out error);
                     return true;
                 case "asset":
-                    path = NormalizePath(value, false);
+                    // ProjectSettings files (Build Settings, tags and layers) can be leased like assets.
+                    path = NormalizePath(value, false, true);
                     if (path == null)
-                        return Fail("An asset resource needs an Assets/ or Packages/ file path.", out path, out error);
+                        return Fail("An asset resource needs an Assets/, Packages/ or ProjectSettings/ file path.", out path, out error);
                     return true;
                 case "folder":
                     path = NormalizePath(value, true);
@@ -83,8 +84,9 @@ namespace UnityGameAgent.EditorBroker
         }
 
         // Returns a project-relative path with forward slashes, or null when the value is not a
-        // safe path under Assets/ or Packages/. Folders always end with '/', files never do.
-        public static string NormalizePath(string raw, bool folder)
+        // safe path under Assets/ or Packages/ (or a ProjectSettings/ file when allowed). Folders
+        // always end with '/', files never do.
+        public static string NormalizePath(string raw, bool folder, bool allowProjectSettings = false)
         {
             if (string.IsNullOrWhiteSpace(raw)) return null;
             var value = raw.Trim().Replace('\\', '/');
@@ -100,10 +102,11 @@ namespace UnityGameAgent.EditorBroker
                 if (segment.Length == 0 || segment == "." || segment == "..") return null;
             }
             var root = segments[0];
+            var settings = allowProjectSettings && !folder && root.Equals("ProjectSettings", StringComparison.OrdinalIgnoreCase);
             if (!root.Equals("Assets", StringComparison.OrdinalIgnoreCase) &&
-                !root.Equals("Packages", StringComparison.OrdinalIgnoreCase)) return null;
+                !root.Equals("Packages", StringComparison.OrdinalIgnoreCase) && !settings) return null;
             if (!folder && segments.Length < 2) return null;
-            segments[0] = root.Equals("Assets", StringComparison.OrdinalIgnoreCase) ? "Assets" : "Packages";
+            segments[0] = settings ? "ProjectSettings" : root.Equals("Assets", StringComparison.OrdinalIgnoreCase) ? "Assets" : "Packages";
             var joined = string.Join("/", segments);
             return folder ? joined + "/" : joined;
         }

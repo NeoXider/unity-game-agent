@@ -66,6 +66,7 @@ namespace UnityGameAgent.EditorBroker
             DrawWindow(now);
             DrawLeases(now);
             DrawJobs(now);
+            DrawTelemetry(now);
             DrawViolations();
             DrawSettings();
             EditorGUILayout.EndScrollView();
@@ -169,6 +170,24 @@ namespace UnityGameAgent.EditorBroker
                     : job.status == BrokerConstants.JobBlocked ? MessageType.Warning : MessageType.Error;
                 EditorGUILayout.HelpBox(job.id + " " + job.agent + " " + job.lane + "/" + job.kind + ": " + job.status + " - " + job.summary, type);
             }
+        }
+
+        // Live counters of this segment; the project history is in 'editor-broker.ps1 stats'.
+        void DrawTelemetry(long now)
+        {
+            var t = m_State.telemetry;
+            if (t == null || t.sinceMs == 0) return;
+            GUILayout.Space(6);
+            GUILayout.Label("Telemetry (" + BrokerBoard.Age(now - t.sinceMs) + ")", m_Header);
+            EditorGUILayout.LabelField("Jobs", t.jobs + " (" + t.failed + " failed, " + t.blocked + " blocked); wait avg " +
+                                               BrokerBoard.Age(t.jobs > 0 ? t.waitMs / t.jobs : 0) + ", max " + BrokerBoard.Age(t.waitMaxMs));
+            EditorGUILayout.LabelField("Queue", "avg " + BrokerTelemetryOps.AverageQueue(t, now).ToString("0.00") + ", peak " + t.queuePeak +
+                                                "; lease waiters avg " + BrokerTelemetryOps.AverageWaiters(t, now).ToString("0.00") + ", peak " + t.waitersPeak);
+            EditorGUILayout.LabelField("Windows", t.windows + "; run avg " + BrokerBoard.Age(t.windows > 0 ? t.windowMs / t.windows : 0) +
+                                                  ", drain avg " + BrokerBoard.Age(t.windows > 0 ? t.drainMs / t.windows : 0));
+            foreach (var a in t.agents.OrderBy(a => a.agent))
+                EditorGUILayout.LabelField("   " + a.agent, a.jobs + " job(s), wait avg " + BrokerBoard.Age(a.jobs > 0 ? a.waitMs / a.jobs : 0) +
+                                                             ", max " + BrokerBoard.Age(a.waitMaxMs) + "; lease waits " + a.leaseWaits);
         }
 
         void DrawViolations()

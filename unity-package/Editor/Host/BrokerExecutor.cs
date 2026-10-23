@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -19,11 +20,16 @@ namespace UnityGameAgent.EditorBroker
 
         static BrokerConfig Cfg => BrokerConfig.Default;
 
+        // A telemetry segment closed by a session change; appended only after the state write succeeded.
+        static BrokerTelemetry s_ClosedTelemetry;
+
         public static void Step(BrokerStore store, BrokerFacts facts, long now)
         {
             BrokerState state;
             string error;
+            s_ClosedTelemetry = null;
             if (!store.TryUpdate(s => Housekeeping(s, facts, now), 50, out state, out error)) return;
+            if (s_ClosedTelemetry != null) AppendTelemetry(store, s_ClosedTelemetry);
             BrokerHost.LastState = state;
             if (!state.HasWindow) return;
             switch (state.window.phase)
@@ -42,12 +48,29 @@ namespace UnityGameAgent.EditorBroker
         {
             var changed = BrokerOps.Expire(s, now) > 0;
             changed |= BrokerOps.Promote(s, Cfg, now).Count > 0;
+            bool counted;
+            s_ClosedTelemetry = BrokerTelemetryOps.Record(s, now, out counted);
+            changed |= counted;
             if (s.HasWindow) return changed;
             var decision = BrokerScheduler.Decide(s, facts, Cfg, now);
             BrokerHost.LastDecision = decision.reason;
             if (!decision.OpensWindow) return changed;
             BrokerScheduler.BeginWindow(s, decision, Cfg, now);
             return true;
+        }
+
+        // One JSON line per closed session segment: the project's history for 'editor-broker stats'.
+        static void AppendTelemetry(BrokerStore store, BrokerTelemetry segment)
+        {
+            try
+            {
+                Directory.CreateDirectory(store.Dir);
+                File.AppendAllText(Path.Combine(store.Dir, "telemetry.jsonl"), JsonUtility.ToJson(segment) + "\n", new UTF8Encoding(false));
+            }
+            catch (IOException)
+            {
+                // History is best effort; the live counters stay in the state file.
+            }
         }
 
         static bool Update(BrokerStore store, Func<BrokerState, bool> mutate)

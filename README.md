@@ -2,14 +2,15 @@
 
 ![Unity Game Agent header](assets/unity-game-agent-header.png)
 
-Autonomous Unity game development skill for Claude Code, Codex, Cursor, and other AI coding agents: from an idea or existing project task to implemented, documented, and verified Unity work.
+A Unity game development skill for Claude Code, Codex, Cursor and other AI coding agents. It takes an idea or an existing project task and carries it through to implemented, documented and verified Unity work.
 
-The pipeline uses scoped task ownership, Unity preflight, reuse gates, independent player QA and bounded correction loops.
+The pipeline gives each task one owner, runs a Unity preflight, checks reuse before new code, has an independent QA agent check what the player actually gets, and caps correction loops.
 
-**Prime rule: prove reuse before implementation.** Nontrivial work searches the project, installed
-NeoTools, compatible licensed assets/libraries and allowed ready-project slices. The brief records
-source/license/version/fit; QA checks actual integration. Custom requires demonstrated misses/poor fit
-and a narrower/faster rationale, or explicit from-scratch intent. A clone beside homemade code is not reuse.
+**Prime rule: prove reuse before implementation.** For nontrivial work, search the project, the
+installed NeoTools, compatible licensed assets and libraries, and allowed ready-project slices. The
+brief records source, license, version and fit; QA checks the actual integration. Writing custom code
+requires demonstrated misses or a poor fit plus a narrower, faster rationale, or an explicit
+from-scratch intent. A clone sitting next to homemade code is not reuse.
 
 ```text
 Existing sufficient TZ/GDD -> one brief -> Developer -> independent QA -> SHIP
@@ -21,9 +22,9 @@ Existing sufficient TZ/GDD -> one brief -> Developer -> independent QA -> SHIP
 
 Most Unity agents can write scripts. That is not the hard part.
 
-The hard part is staying aligned with an existing project, not rewriting working systems, testing gameplay instead of claiming it works, tracking state across sessions, and moving forward when tools fail.
+The hard part is staying aligned with an existing project. That means not rewriting working systems, testing gameplay instead of claiming it works, keeping state across sessions, and moving forward when tools fail.
 
-Unity Game Agent is built for that gap.
+That is the gap this skill fills.
 
 ## What Makes It Different
 
@@ -71,16 +72,11 @@ flowchart TD
 
 ## Role System
 
-The orchestrator stays accountable, but work is split into small role files so the agent does not keep every responsibility in one context.
+The orchestrator stays accountable, but the work is split into small role files so one agent does not hold every responsibility in a single context.
 
 ![Orchestrator and subagents](assets/illustration-agent-pipeline.jpg)
 
-<details>
-<summary>Diagram: brief, Developer, independent QA and the defect loop</summary>
-
-![Orchestrator, role subagents and the independent QA loop](assets/diagram-agent-pipeline.svg)
-
-</details>
+Detailed diagram: [brief, Developer, independent QA and the defect loop](assets/diagram-agent-pipeline.svg).
 
 | Role | Goal | Main output |
 |---|---|---|
@@ -90,45 +86,38 @@ The orchestrator stays accountable, but work is split into small role files so t
 | Developer | Implement the scoped brief with suitable ready systems | Source-final files plus Developer handoff section |
 | QA | Independently verify actual reuse and player outcome | Same brief's QA result/defects/evidence |
 
-In `standard` and `pro`, use one Developer and a second independent QA when available and allowed;
-reuse them through corrections. Design/Lead passes are conditional. If delegation is unavailable,
-disclose local role switching and missing independent QA. Source-final handoff precedes
-import/compile/player checks. After fixes, rerun failed/affected checks and cite valid unaffected
-evidence with source revision/scope/environment.
+In `standard` and `pro`, use one Developer and a second, independent QA when that is available and
+allowed, and keep them through corrections. Design and Lead passes are conditional. If delegation is
+not available, say so: the agent switches roles locally and there is no independent QA. The
+source-final handoff comes before import, compile and player checks. After a fix, rerun the failed or
+affected checks. For checks you did not rerun, cite evidence that is still valid, with source
+revision, scope and environment.
 
 ## Several Agents, One Unity Editor
 
-Cloning a Unity project per agent costs a Library and an Editor each, and branches collide on one
-machine. Unity Game Agent instead lets every agent work **in the same project, branch and Editor**:
-an Editor-only broker package (Unity 6+) schedules the Editor like a shared resource.
+Cloning a Unity project for each agent costs a Library and an Editor per clone, and the branches
+collide on one machine. Instead, every agent works **in the same project, branch and Editor**. An
+Editor-only broker package (Unity 6+) schedules the Editor as a shared resource.
 
 ![Several agents, one Unity Editor](assets/illustration-shared-editor.jpg)
 
-<details>
-<summary>Diagram: leases, lanes and the Editor timeline</summary>
+Detailed diagram: [leases, lanes and the Editor timeline](assets/diagram-shared-editor.svg).
 
-![Several agents share one Unity Editor through leases and batched windows](assets/diagram-shared-editor.svg)
-
-</details>
-
-- **Order of operations:** cold work always wins; staged scripts and heavy imports from everyone are
-  compiled together; tests and Play Mode run batched and last; one agent at a time gets the whole
+- **Order of operations:** cold work always wins. Staged scripts and heavy imports from every agent are
+  compiled together. Tests and Play Mode run batched, at the end. One agent at a time gets the whole
   Editor for packages or builds.
-- **Compile errors find their author:** the agent that broke the build gets `failed` with the errors,
-  everyone else gets `blocked` instead of a mystery failure.
+- **Compile errors find their author:** the agent that broke the build gets `failed` with the errors.
+  Everyone else gets `blocked` instead of a failure with no explanation.
 - **Background waiting:** an agent with nothing else to do waits on its window as a background task.
-- **Both adapters:** rules for MCP for Unity (CoplayDev) and the Unity CLI (Pipeline package), plus an
+- **Both adapters:** rules for MCP for Unity (CoplayDev) and the Unity CLI (Pipeline package), with an
   `uga_broker` command for each.
-- **Several projects on one machine** stay independent; `editor-broker.ps1 projects` shows them all.
+- **Several projects on one machine** stay independent. `editor-broker.ps1 projects` lists them all.
+- **Telemetry per project:** `editor-broker.ps1 stats` shows how long each agent waits, how long the
+  queue gets and how long windows take, for the current session and across past ones.
 
 ![Several projects on one machine](assets/illustration-multi-project.jpg)
 
-<details>
-<summary>Diagram: per-project brokers and the machine registry</summary>
-
-![Several projects on one machine stay independent](assets/diagram-multi-project.svg)
-
-</details>
+Detailed diagram: [per-project brokers and the machine registry](assets/diagram-multi-project.svg).
 
 Start: `tools/editor-broker.ps1 doctor -Fix`, then `session start`. Protocol and adapter tables:
 [tools/shared-editor.md](tools/shared-editor.md). Separate branches or simultaneous Play Mode still
@@ -139,29 +128,37 @@ use [isolated workspaces](tools/parallel-editors.md).
 Same small game (sized for 5-15 minutes), three Codex agents at once, one machine, run once each
 ([benchmark](benchmarks/clicker/README.md), [full results](benchmarks/clicker/results.md)):
 
+![Clicker benchmark: development time, time per 100 lines, time per test, compile errors caused by another agent, Unity Editor launches](benchmarks/clicker/chart.svg)
+
 | | Without the skill | With the skill |
 |---|---|---|
 | Development time | 8.8 min | 13.2 min (1.0 min of it orchestrator setup) |
 | Compile errors caused by another agent | 2 | 0 |
-| Hidden acceptance tests | 17 / 17 | 17 / 17 |
+| Code written (game + tests, non-empty lines) | 443 | 435 |
+| Time per 100 lines | 2.0 min | 3.0 min |
 | Agents' own tests | 21 | 38 |
+| Time per test | 0.42 min | 0.35 min |
+| Hidden acceptance tests | 17 / 17 | 17 / 17 |
 | Unity Editor launches | 3 | 1 |
 | Tokens | 2.05 M | 3.98 M (mostly cached input) |
 
-This is a deliberately simple project, so the time win does not show here: the protocol's fixed costs
+Both teams wrote about the same amount of code, so per line the skill was slower here as well; per
+test it was faster, because its team wrote 38 tests instead of 21.
+
+This is a deliberately simple project, so the time win does not show here. The protocol's fixed costs
 (reading the skill, waiting for windows) are as large as the work itself. What the run does show is the
 cost of working without it: even three agents on a ten-minute game broke each other's build twice and
-started three Editors. Every extra agent is one more writer that can break the shared build, lock the
-project or take the Editor away, so without the skill conflicts and waiting grow with the number of
-agents and development stretches out. The skill keeps every compile error with its author and the
+started three Editors. Each extra agent is one more writer that can break the shared build, lock the
+project or take the Editor away. Without the skill, conflicts and waiting grow with the number of
+agents, and development stretches out. The skill keeps every compile error with its author and the
 whole team in one Editor.
 
 ## Development Patterns
 
-The pipeline is the engine; a **development pattern** is a swappable playbook for one *family* of games.
-A pattern fills the same pipeline with concrete stack choices, scene skeletons, reuse maps, golden rules,
-and anti-patterns — and is auto-selected by detecting the project (packages, namespaces, scene shape) or
-matching the request for a new project.
+The pipeline is the engine. A **development pattern** is a swappable playbook for one *family* of
+games. It fills the same pipeline with concrete stack choices, scene skeletons, reuse maps, golden
+rules and anti-patterns. The skill picks a pattern by detecting the project (packages, namespaces,
+scene shape) or by matching the request for a new project.
 
 | Pattern | Use for | Stack |
 |---|---|---|
@@ -185,6 +182,7 @@ These are implemented in the skill today.
 | Fast / standard / pro mode matrix | Done | `POLICY_MATRIX.md`, `modes/` |
 | Several agents in one Editor (broker, lanes, board) | Done | [Protocol](tools/shared-editor.md), [CLI](tools/editor-broker.ps1), [package](unity-package/README.md), CLI + EditMode + live Unity e2e tests |
 | Several projects on one machine | Done | `editor-broker.ps1 projects`, machine registry, reference-counted Editor preferences |
+| Shared-editor telemetry per project | Done | `editor-broker.ps1 stats`: wait per agent, queue length, window and drain times, session history |
 | Isolated workspaces (escalation) | Done | [Guide](tools/parallel-editors.md), [PowerShell helper](tools/unity-workspace.ps1) |
 | Reuse-first discovery policy | Done | `SKILL.md`, `tools/libraries-setup.md` |
 | Role subskills | Done | `roles/game-designer.md`, `roles/designer.md`, `roles/lead.md`, `roles/developer.md`, `roles/qa.md` |
@@ -249,8 +247,8 @@ The degraded report must include:
 - player/user risk;
 - next owner/action (a follow-up task only when existing tracking needs it).
 
-Unrelated safe work may continue. Missing/empty/unsupported required checks cannot pass; do not start
-another harness or metadata-audit loop to avoid the limit.
+Unrelated safe work may continue. Missing, empty or unsupported required checks cannot pass. Do not
+start another harness or metadata-audit loop just to dodge the limit.
 
 ## Modes
 
@@ -285,9 +283,9 @@ Docs/
   QA_AGENT/
 ```
 
-Use `-DetailedTracking` for explicit separate Task/QA output. Legacy `-CreateIndependentQa` still
+Use `-DetailedTracking` for separate Task/QA output. The legacy `-CreateIndependentQa` flag still
 requests expanded output plus a QA_AGENT duplicate; existing files are never overwritten. This flag
-controls document output, not whether a QA agent runs.
+controls document output. It does not decide whether a QA agent runs.
 
 ## Quick Start
 
@@ -328,13 +326,13 @@ It expects the agent to prefer MCP/Editor automation when available:
 - save scenes;
 - run builds when relevant.
 
-If MCP is unavailable, the skill falls back to CLI/file-level work only where safe, records degraded verification, and avoids pretending runtime behavior was tested.
+If MCP is unavailable, the skill falls back to CLI or file-level work, and only where that is safe. It records the verification as degraded and does not pretend runtime behavior was tested.
 
 ## Honest Limits
 
-This skill does not make Unity verification magically perfect. Some projects still need custom QA hooks, deterministic seeds, test scenes, or input drivers.
+This skill does not make Unity verification perfect. Some projects still need custom QA hooks, deterministic seeds, test scenes or input drivers.
 
-The difference is that the skill forces those gaps to become visible tasks instead of hidden assumptions.
+The difference is that the skill turns those gaps into visible tasks instead of leaving them as hidden assumptions.
 
 ## Best Fit
 

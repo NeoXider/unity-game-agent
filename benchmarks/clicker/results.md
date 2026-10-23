@@ -7,6 +7,8 @@ Run A was forbidden the skill, neoxider-agents and sub-agents; run B was asked t
 
 ## Headline
 
+![Development time, time per 100 lines, time per test, compile errors caused by another agent, Unity Editor launches](chart.svg)
+
 | | Run A: no skill | Run B: with the skill |
 |---|---|---|
 | **Development time** (first orchestrator action to last agent's reply) | **8.8 min** | **13.2 min** |
@@ -19,16 +21,16 @@ Run A was forbidden the skill, neoxider-agents and sub-agents; run B was asked t
 | Waiting reported by agents (self-reported) | 4.3 min (0.4 + 1.0 + 2.9) | 3.4 min (1.4 + 0 + 2.0) |
 | "Blocked by another agent" (self-reported) | 4 | 5 (waits for windows, by design) |
 
-On this game, sized for 5-15 minutes, the skill was **slower** (+4.4 min, +3.0 min without the
-orchestrator setup) and removed the cross-agent compile breaks. Both teams shipped a game that passes
-every acceptance check.
+On this game, sized for 5-15 minutes, the skill was **slower**: +4.4 min, or +3.0 min without the
+orchestrator setup. It did remove the cross-agent compile breaks. Both teams shipped a game that
+passes every acceptance check.
 
-> **A very simple project.** The time win does not show on a game this small: the protocol's fixed
+> **A very simple project.** The time win does not show on a game this small. The protocol's fixed
 > costs (reading the skill, waiting for windows) are as large as the work itself. The conflicts are
 > the part that scales. Each extra agent is one more writer that can break the shared build, lock the
-> project or take the Editor away, so without the skill conflicts and mutual waiting grow with the
-> number of agents and development stretches out; three agents on a ten-minute game already broke each
-> other's build twice. This growth is the expected trend, not something this single run measured.
+> project or take the Editor away. Without the skill, conflicts and mutual waiting grow with the
+> number of agents, and development stretches out. Three agents on a ten-minute game already broke
+> each other's build twice. This growth is the expected trend, not something this single run measured.
 
 ## Everything else
 
@@ -48,12 +50,12 @@ every acceptance check.
 | 9 | Extra disk over the template | 24 MB | 39 MB (TextMesh Pro resources) |
 | 10 | Human help | 0 | 0 |
 
-Self-reported numbers come from the block every agent ends with; everything else comes from logs,
+Self-reported numbers come from the block every agent ends with. Everything else comes from logs,
 the broker board, the process sampler and the acceptance run.
 
 ### How much each team built
 
-The teams built the same contract with different scope, which shifts time and tokens:
+The teams built the same contract with different scope, and that shifts time and tokens:
 
 | | Run A | Run B |
 |---|---|---|
@@ -63,11 +65,25 @@ The teams built the same contract with different scope, which shifts time and to
 | Text | legacy `UI.Text` | TextMesh Pro (imported its essential resources: 33 files, 2.7 MB) |
 | PlayMode test | sends the click event straight to the button | raycasts through the EventSystem, checks the button is the top visible target, sends down/up/click |
 
+Normalized by what each team wrote (development time divided by the work):
+
+| | Run A | Run B |
+|---|---|---|
+| Code written (game + tests, non-empty lines) | 443 | 435 |
+| Time per 100 lines | 2.0 min | 3.0 min |
+| Agent-minutes per 100 lines (sum of the three agents' time) | 4.1 | 6.1 |
+| Time per own test | 0.42 min | 0.35 min |
+
+Both teams wrote about the same amount of code, so normalizing by lines does not change the picture:
+per line the skill was slower in this run. Per test it was faster, because run B wrote 38 tests
+instead of 21. Lines are a rough measure here: they leave out the prefab (11 vs 14 objects) and the
+imported TextMesh Pro resources.
+
 ### Quality (reviewed by hand)
 
-Both cores are clean, defensive (NaN/infinity, versioned save data) and match the rules. Both
+Both cores are clean and defensive (NaN/infinity, versioned save data), and both match the rules. Both
 presenters unsubscribe on destroy and save on pause and quit. Run B's UI is more polished (TextMesh
-Pro, header, subtitle, save hint) but marks an unaffordable upgrade only by a slightly darker
+Pro, header, subtitle, save hint), but it marks an unaffordable upgrade only with a slightly darker
 background; run A dims it clearly. Run B's PlayMode test is closer to real input. Run B's test class
 has no namespace.
 
@@ -82,20 +98,21 @@ Auto Clicker).
 ## Where run B lost time
 
 - **Exclusive windows for small edits.** `scene` took 4 exclusive windows (Build Settings and scene
-  saves). Each one drains every agent; `core`'s tests waited 1.4 min behind one.
-- **Headless shared Editor.** The orchestrator opened the shared Editor with `-nographics`, so `ui` and
-  `scene` tried to take the screenshots the skill asks for and could not. Run A's agents did not try.
-- **Reading the skill.** 0.3-0.6 min and about 16-18 k tokens of documents per agent, carried as cached
-  input in every later step. This is a fixed cost: on a larger project it is small, on a 10-minute
-  game it is visible.
+  saves). Each one drains every agent. `core`'s tests waited 1.4 min behind one.
+- **Headless shared Editor.** The orchestrator opened the shared Editor with `-nographics`, so `ui`
+  and `scene` tried to take the screenshots the skill asks for and could not. Run A's agents did not
+  try.
+- **Reading the skill.** 0.3-0.6 min and about 16-18 k tokens of documents per agent, carried as
+  cached input in every later step. This cost is fixed. On a larger project it is small; on a
+  10-minute game it is visible.
 - **Bigger scope.** TextMesh Pro, more UI and 17 more tests.
 
 ## What this does and does not show
 
-- Shown: on one machine, three agents with the skill worked in one Editor with no cross-agent compile
-  breaks, no lock failures, no protocol violations and one Editor launch; without it, two agents hit
-  compile errors they did not write and three Editors were started.
-- Shown: on a 5-15 minute game the protocol costs time and tokens; here it did not pay for itself.
+- Shown: on one machine, three agents with the skill worked in one Editor. There were no cross-agent
+  compile breaks, no lock failures, no protocol violations and one Editor launch. Without the skill,
+  two agents hit compile errors they did not write, and three Editors were started.
+- Shown: on a 5-15 minute game the protocol costs time and tokens. Here it did not pay for itself.
 - Not measured yet: a larger project and more agents, where conflicts and Editor restarts grow with
   every extra writer while the reading cost is spread over hours. One run per side; numbers vary
   between runs.

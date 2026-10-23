@@ -182,6 +182,40 @@ try {
     } finally { Remove-Item Env:UGA_PROJECT_ROOT -ErrorAction SilentlyContinue }
     Remove-Item -LiteralPath $registry -Recurse -Force
 
+    # telemetry: CLI updates carry the Editor's counters through, a lease granted after waiting
+    # records how long it waited, and 'stats' turns counters and history into averages and peaks.
+    $tNow = Get-BrokerNowMs
+    [void](Invoke-BrokerUpdate $project { param($s, $ctx)
+        $s.telemetry = [ordered]@{ sessionId = ''; sinceMs = $tNow - 600000; endedMs = 0; jobs = 4; failed = 1; blocked = 0; canceled = 0
+            waitMs = 40000; waitMaxMs = 25000; runMs = 20000; windows = 2; windowMs = 30000; windowMaxMs = 20000; drainMs = 6000
+            queueLevel = 0; queueSinceMs = $tNow - 300000; queueIntegral = 600000; queuePeak = 3
+            waitersLevel = 0; waitersSinceMs = $tNow; waitersIntegral = 0; waitersPeak = 1
+            leaseWaits = 1; leaseWaitMs = 7000; leaseWaitMaxMs = 7000
+            agents = @([ordered]@{ agent = 'core'; jobs = 4; failed = 1; blocked = 0; waitMs = 40000; waitMaxMs = 25000; runMs = 20000; leaseWaits = 1; leaseWaitMs = 7000; leaseWaitMaxMs = 7000 })
+            lanes = @([ordered]@{ lane = 'sync'; jobs = 4; waitMs = 40000; waitMaxMs = 25000; runMs = 20000; windows = 2; windowMs = 30000; drainMs = 6000 }) }
+        $ctx.save = $true })
+    [void](Invoke-Cli @('take', '-Agent', 'ta', '-Resource', 'folder:Assets/Tele/'))
+    [void](Invoke-Cli @('take', '-Agent', 'tb', '-Resource', 'asset:Assets/Tele/x.asset') 3)
+    [void](Invoke-Cli @('release', '-Agent', 'ta'))
+    [void](Invoke-Cli @('take', '-Agent', 'tb', '-Resource', 'asset:Assets/Tele/x.asset'))
+    $tState = Invoke-BrokerUpdate $project { param($s, $ctx) }
+    Assert-Broker ([int]$tState.telemetry.jobs -eq 4) 'CLI updates must keep the Editor telemetry'
+    $tb = @($tState.leases | Where-Object { $_.agent -eq 'tb' })[0]
+    Assert-Broker ([long]$tb.waitedMs -gt 0) "a lease granted after waiting must record waitedMs (got $($tb.waitedMs))"
+    $history = [ordered]@{ sessionId = 'S0'; sinceMs = $tNow - 7200000; endedMs = $tNow - 3600000; jobs = 6; waitMs = 60000; waitMaxMs = 40000
+        windows = 3; drainMs = 9000; queueIntegral = 3600000; queueLevel = 0; queueSinceMs = $tNow - 3600000; queuePeak = 5; agents = @(); lanes = @() }
+    [IO.File]::WriteAllText((Join-Path (Get-BrokerDir $project) 'telemetry.jsonl'), (($history | ConvertTo-Json -Compress) + "`n"), $script:Utf8NoBom)
+    $statsText = Invoke-Cli @('stats')
+    Assert-Broker ($statsText -like '*Jobs: 4 (1 failed*wait avg 10 s, max 25 s*') "stats text:`n$statsText"
+    Assert-Broker ($statsText -like '*core*') "stats should list agents:`n$statsText"
+    $stats = (Invoke-Cli @('stats', '-Json')) | ConvertFrom-Json
+    Assert-Broker ($stats.current.avgWaitMs -eq 10000 -and $stats.current.queuePeak -eq 3) 'stats: current averages'
+    # 600 s of queue-time over a 10-minute segment, plus the seconds this test took.
+    Assert-Broker ([Math]::Abs($stats.current.avgQueue - 1.0) -lt 0.05) "stats: average queue should be about 1.0, got $($stats.current.avgQueue)"
+    Assert-Broker ($stats.project.segments -eq 2 -and $stats.project.jobs -eq 10 -and $stats.project.queuePeak -eq 5) 'stats: project totals over history'
+    [void](Invoke-Cli @('release', '-Agent', 'tb'))
+    Remove-Item -LiteralPath (Join-Path (Get-BrokerDir $project) 'telemetry.jsonl')
+
     # install: embed is idempotent and leaves the manifest alone; git mode writes JSON without a BOM.
     $manifestBefore = [IO.File]::ReadAllText((Join-Path $project 'Packages/manifest.json'))
     [void](Invoke-Cli @('install'))

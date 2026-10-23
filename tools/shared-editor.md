@@ -69,7 +69,7 @@ worker values live in the project's untracked `UserSettings/` and are restored p
 | 1b | focus | Scene-graph edits and Scene/Game view captures; the broker makes your scene the active one | One holder, max 3 min per hold while others wait, FIFO | When no window runs |
 | 2 | sync | Publish staged files, import, one `Refresh`, one compile | One window for every requester | Requests exist and (oldest waited 30 s, or every lease holder yielded, or a hot window is due) |
 | 3 | hot | All test selections of one mode in a single Test Runner execution, then Play Mode sessions one by one | Exclusive | Cold work is quiet, or the oldest hot request waited 10 min, or 3 hot requests are queued; never while scripts fail to compile |
-| 4 | exclusive | Packages, ProjectSettings, build target, builds, merges into the folder | One holder | After every other agent yields, or after 2 min |
+| 4 | exclusive | Changes that recompile, reimport or reload for everyone: packages, scripting defines, build target, color space or graphics API, builds, merges into the folder | One holder | After every other agent yields, or after 2 min |
 
 Before a window starts the broker **drains**: it waits until every lease holder (except the window's
 holder) has called `yield`, at most 60 s. Then the window runs and agents calling `gate` hear `wait`.
@@ -90,7 +90,14 @@ a requester whose files broke the build gets `failed` with the compiler errors; 
 ```
 
 - Resources: `scene:`, `prefab:`, `asset:` (one file), `folder:` (everything below), `asmdef:<name>`
-  (the folder of that assembly). Paths start with `Assets/` or `Packages/`; matching ignores case.
+  (the folder of that assembly). Paths start with `Assets/` or `Packages/`; `asset:` also takes one
+  `ProjectSettings/` file. Matching ignores case.
+- **Settings without a window.** A settings file whose change triggers no compile, import or domain
+  reload is cold work under a lease on that file: Build Settings scene list
+  (`asset:ProjectSettings/EditorBuildSettings.asset`), tags and layers (`TagManager.asset`), input
+  axes, time or physics values. You decide: take the lease and edit it, and request an exclusive
+  window only when the change recompiles, reimports or reloads for everyone (packages, scripting
+  defines, build target, color space, graphics API).
 - Overlapping leases of different agents conflict; the later request waits in FIFO order and never
   jumps an earlier waiter. `take -Wait` blocks until granted. Exit code 3 means queued.
 - `focus` needs a cold lease on the same scene. Only one agent holds focus at a time.
@@ -100,17 +107,20 @@ a requester whose files broke the build gets `failed` with the compiler errors; 
 
 ```text
 take leases -> loop { gate (exit 0 = go, 4 = wait) -> one short batch of Editor calls -> save your own assets }
-           -> stage compiled/heavy files -> request sync -> yield -> wait (or keep working on other files)
+           -> stage compiled/heavy files -> request sync -> yield -> keep working on your next task
+           -> check the job with status -Job when you need its result
            -> request hot tests/session when behavior must be proven -> release when done
 ```
 
+- **A request is not a pause.** After `request` keep working: the next file, the next test, the next
+  part of your task, reviews of what is already done. Look at the job with `status -Job <id>` when you
+  actually need its result. Waiting idle is only for the moment nothing else is left.
 - `gate` before each batch of Editor calls. `yield` whenever you stop touching the Editor (reading,
   thinking, writing files): it lets windows start without waiting for the drain deadline.
 - Save only your own scene/prefab/asset. Never "save all": it saves other agents' half-done work.
-- **Background waiting:** if you need a window's result and have nothing else to do, run
-  `request ... -Wait` (or `wait -Job <id>`) as a background task and end your turn; the process exits
-  with the result. Exit codes: 0 passed, 8 failed, 9 blocked/canceled, 6 timeout, 7 Editor offline.
-  If other work remains, continue and check later with `status -Job <id>`.
+- **Background waiting** (only when nothing else is left): run `request ... -Wait` (or
+  `wait -Job <id>`) as a background task and end your turn; the process exits with the result. Exit
+  codes: 0 passed, 8 failed, 9 blocked/canceled, 6 timeout, 7 Editor offline.
 
 ## Staging: compiled and heavy files
 
@@ -147,9 +157,37 @@ another agent would compile in the middle of everyone's work. Therefore:
 ## Exclusive work
 
 `request -Lane exclusive -Reason 'Add Input System package' -Minutes 10`, then `wait` until your job is
-`running`; during the window you alone may change packages, ProjectSettings, the build target, run a
-build or merge a branch into the folder. Call `done` when finished; the broker refreshes the project
+`running`; during the window you alone may change packages, scripting defines, the build target, run
+a build or merge a branch into the folder. Call `done` when finished; the broker refreshes the project
 and reports compile errors.
+
+An exclusive window stops every other agent, so it is for changes that need it. Editing the Build
+Settings scene list, tags and layers or other settings that do not recompile or reimport is cold work
+under a lease on that settings file (see Leases).
+
+## Telemetry
+
+The Editor counts how the team shares it, per project, and `stats` shows it:
+
+```powershell
+& $broker stats -ProjectRoot $project          # current session, per agent and per lane, project totals
+& $broker stats -ProjectRoot $project -Json    # the same for scripts and dashboards
+```
+
+| Number | Meaning |
+|---|---|
+| Wait per job (avg, max), per agent and per lane | From `request` to the start of its window (includes the drain) |
+| Run per job | From the window start to the job's result |
+| Queue length (time-weighted average, peak) | Jobs waiting for a window |
+| Lease waiters (average, peak) and lease wait (avg, max) | Agents queued behind another agent's lease |
+| Windows (count, run avg/max, drain avg) | How often the Editor was taken away and for how long |
+| Failed / blocked / canceled jobs | Compile breaks and their knock-on effect |
+
+Live counters sit in `state.json`; when a session starts or stops, the finished segment is appended
+to `Library/UgaBroker/telemetry.jsonl`, so the project keeps its history across sessions. The board
+shows the live numbers. Use them to tune the split: long lease waits mean overlapping ownership, a
+long queue or drain means agents hold the Editor without `yield`, frequent exclusive windows mean
+work that could be cold.
 
 ## Splitting work between agents
 
@@ -220,7 +258,8 @@ Pipeline 0.9 names commands `<group> <name>` (`unity command scene save`); the 0
 | `gameobject *`, `component add / remove / set_properties / set_field`, `prefab instantiate`, `scene open / set_active`, `capture *` | With the focus token for your scene | - |
 | `prefab save_contents / create_variant / apply_overrides / revert_overrides`, `material *`, `animation.*`, `asset move / rename / copy / delete` | Cold lane, inside your lease | - |
 | `scene save` | Your scene only | - |
-| `scene create`, `scene add_to_build` | Your scene only, inside your lease (build settings are shared: one owner) | - |
+| `scene create` | Your scene only, inside your lease | - |
+| `scene add_to_build / remove_from_build` | Cold, with a lease on `asset:ProjectSettings/EditorBuildSettings.asset`; no exclusive window | - |
 | `editor save_all`, `editor invoke_menu` | **No** | `scene save` for your scene |
 | `script create / attach` of new scripts, `asset write_text` for compiled files, `script recompile`, `script.methodreload *`, CLI `unity recompile` | **No** | Staging + sync |
 | `asset import` / `asset create` in batches, large files | **No** | Staging + sync |

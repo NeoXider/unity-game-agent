@@ -2,7 +2,7 @@
 name: unity-game-agent
 description: "Build, fix and verify Unity games, gameplay, scenes, UI and assets; resume tracked projects or run focused feature work. Reuse existing project and package systems before custom code, and use live MCP capabilities for Editor operations."
 metadata:
-  version: 3.8.0
+  version: 3.9.0
   author: Neoxider
   homepage: https://github.com/NeoXider/unity-game-agent
 ---
@@ -279,10 +279,13 @@ adapter tables and troubleshooting: [tools/shared-editor.md](tools/shared-editor
    QA holds no leases. Write each agent's leases into its brief.
 3. **Order of operations:** cold work on leased resources always runs; a sync window publishes staged
    files and compiles once for everyone; a hot window batches tests and Play Mode sessions and runs
-   last; an exclusive window gives one agent packages, ProjectSettings, builds or merges.
+   last; an exclusive window gives one agent packages, scripting defines, the build target, builds or
+   merges. Settings that do not recompile or reimport (the Build Settings scene list, tags, layers)
+   are cold work under a lease on that `ProjectSettings/` file; the agent decides which applies.
 4. **Agents:** `gate` before each batch of Editor calls, `yield` when they stop touching the Editor,
-   stage compiled/heavy files, never refresh/compile/play/test/save-all directly, and run
-   `request ... -Wait` as a background task when they have nothing else to do.
+   stage compiled/heavy files, never refresh/compile/play/test/save-all directly. A request is not a
+   pause: they keep working on the rest of their task and check the job when they need its result;
+   only with nothing else left do they wait (`request ... -Wait` as a background task).
 5. **Close:** agents release leases; the orchestrator integrates, then `session stop`.
 
 Several projects on one machine each get their own Editor and broker; pass `-ProjectRoot` (or

@@ -430,6 +430,16 @@ static class E2EHelpers
         'holder go, others wait, closed by the holder'
     }
 
+    Step 'telemetry counts jobs, waits, the queue and windows per agent' {
+        $c = ((Invoke-E2ECli @('stats', '-Json')) | ConvertFrom-Json).current
+        Assert-E2E ($null -ne $c -and $c.jobs -ge 8) "telemetry should count the finished jobs, got $($c.jobs)"
+        Assert-E2E ($c.windows -ge 5) "telemetry should count windows, got $($c.windows)"
+        Assert-E2E ($c.failed -ge 1 -and $c.blocked -ge 1) "telemetry should count the failed and the blocked sync job (failed $($c.failed), blocked $($c.blocked))"
+        Assert-E2E (@($c.agents | Where-Object { $_.agent -eq 'a' -or $_.agent -eq 'b' }).Count -eq 2) 'telemetry should list agents a and b'
+        Assert-E2E ($c.queuePeak -ge 1 -and $c.maxWaitMs -gt 0) "telemetry should see the queue (peak $($c.queuePeak)) and waiting (max $($c.maxWaitMs) ms)"
+        "$($c.jobs) jobs, $($c.windows) windows, wait avg $($c.avgWaitMs) ms, max $($c.maxWaitMs) ms, queue peak $($c.queuePeak)"
+    }
+
     Step 'idle import workers shut down to one standby during a session' {
         $before = @(Get-WorkerProcesses $script:ProjectA).Count
         Wait-Until { @(Get-WorkerProcesses $script:ProjectA).Count -le 1 } 'project A import workers to drop to one' 90
@@ -448,6 +458,8 @@ static class E2EHelpers
         [void](Invoke-E2ECli @('release', '-Agent', 'b'))
         [void](Invoke-E2ECli @('session', 'stop', '-Force'))
         Wait-Until { (Read-BrokerEditor $script:ProjectA).sessionId -eq '' } 'project A session closed'
+        $historyFile = Join-Path (Get-BrokerDir $script:ProjectA) 'telemetry.jsonl'
+        Wait-Until { (Test-Path -LiteralPath $historyFile) -and ([IO.File]::ReadAllText($historyFile) -match '"sessionId":"S\d+"') } 'project A session in telemetry.jsonl' 30
         if ($isWindows) { Assert-E2E ((Get-PrefValue 'kAutoRefreshMode') -eq 0) 'project B still needs auto refresh off' }
         Wait-Until { (Get-WorkerSettings $script:ProjectA) -eq $script:WorkersBefore } "project A import workers restored to $($script:WorkersBefore)" 30
         [void](Invoke-E2ECli @('release', '-Agent', 'x') 0 $script:ProjectB)

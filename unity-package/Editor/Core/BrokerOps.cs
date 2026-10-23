@@ -91,8 +91,14 @@ namespace UnityGameAgent.EditorBroker
 
             if (blockers.Count == 0)
             {
-                if (ownWaiterIndex >= 0) state.waiting.RemoveAt(ownWaiterIndex);
+                var waitedMs = 0L;
+                if (ownWaiterIndex >= 0)
+                {
+                    waitedMs = Math.Max(0, now - state.waiting[ownWaiterIndex].requestedMs);
+                    state.waiting.RemoveAt(ownWaiterIndex);
+                }
                 var lease = Grant(state, cfg, agent, kind, resource, path, ttlMs, now);
+                lease.waitedMs = waitedMs;
                 return new BrokerOpResult { status = "granted", leaseId = lease.id, message = "Lease granted." };
             }
 
@@ -158,7 +164,9 @@ namespace UnityGameAgent.EditorBroker
                     continue;
                 }
                 state.waiting.RemoveAt(i);
-                granted.Add(Grant(state, cfg, w.agent, w.kind, w.resource, w.path, Math.Max(10, w.ttlSec) * 1000L, now));
+                var lease = Grant(state, cfg, w.agent, w.kind, w.resource, w.path, Math.Max(10, w.ttlSec) * 1000L, now);
+                lease.waitedMs = Math.Max(0, now - w.requestedMs);
+                granted.Add(lease);
             }
             return granted;
         }
