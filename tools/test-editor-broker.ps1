@@ -100,10 +100,12 @@ foreach ($scenario in $vectors.scenarios) {
 }
 
 foreach ($c in $vectors.forecasts) {
-    $state = New-BrokerState ([pscustomobject]@{ jobs = $c.jobs; window = $c.window })
+    $state = New-BrokerState ([pscustomobject]@{ jobs = $c.jobs; window = $c.window; leases = $c.leases })
     $forecast = Get-BrokerForecast $state (Get-BrokerLaneAverages $c.lanes) ([long]$c.now)
     $actual = @($forecast | ForEach-Object { "$($_.jobId)|$($_.order)|$($_.startMs)|$($_.doneMs)" })
     Assert-Broker (($actual -join ';') -ceq (@($c.expect) -join ';')) "forecast $($c.name): [$($actual -join ';')]"
+    $held = @($forecast | Where-Object { $_.waitsForCold } | ForEach-Object { $_.jobId })
+    Assert-Broker (($held -join ';') -ceq (@($c.waitsForCold) -join ';')) "forecast $($c.name) waitsForCold: [$($held -join ';')]"
 }
 foreach ($c in $vectors.boards) {
     $entries = ConvertFrom-BrokerBoard $c.text

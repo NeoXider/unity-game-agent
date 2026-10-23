@@ -95,7 +95,9 @@ namespace UnityGameAgent.EditorBroker.Tests
             public List<BrokerLaneStats> lanes = new List<BrokerLaneStats>();
             public BrokerWindow window = new BrokerWindow();
             public List<BrokerJob> jobs = new List<BrokerJob>();
+            public List<BrokerLease> leases = new List<BrokerLease>();
             public List<string> expect = new List<string>();
+            public List<string> waitsForCold = new List<string>();
         }
 
         [Serializable]
@@ -201,11 +203,12 @@ namespace UnityGameAgent.EditorBroker.Tests
         {
             foreach (var c in Load().forecasts)
             {
-                var state = new BrokerState { window = c.window ?? new BrokerWindow(), jobs = c.jobs };
+                var state = new BrokerState { window = c.window ?? new BrokerWindow(), jobs = c.jobs, leases = c.leases ?? new List<BrokerLease>() };
                 state.Normalize();
-                var forecast = BrokerTeam.Forecast(state, BrokerTeam.LaneAverages(c.lanes), c.now)
-                    .Select(f => f.jobId + "|" + f.order + "|" + f.startMs + "|" + f.doneMs).ToList();
+                var entries = BrokerTeam.Forecast(state, BrokerTeam.LaneAverages(c.lanes), c.now);
+                var forecast = entries.Select(f => f.jobId + "|" + f.order + "|" + f.startMs + "|" + f.doneMs).ToList();
                 CollectionAssert.AreEqual(c.expect, forecast, c.name + ": " + string.Join(";", forecast.ToArray()));
+                CollectionAssert.AreEqual(c.waitsForCold ?? new List<string>(), entries.Where(f => f.waitsForCold).Select(f => f.jobId).ToList(), c.name + " waitsForCold");
             }
         }
 

@@ -23,9 +23,11 @@ namespace UnityGameAgent.EditorBroker
         public string agent = "";
         public string lane = "";
         public string kind = "";
+        public string status = "";
         public int order;       // 0: the active window; 1, 2, ...: planned windows in run order
         public long startMs;
         public long doneMs;
+        public bool waitsForCold;   // a hot window held by cold work: startMs is the latest start
     }
 
     public sealed class BrokerBoardEntry
@@ -172,7 +174,7 @@ namespace UnityGameAgent.EditorBroker
         {
             return new BrokerForecastEntry
             {
-                jobId = job.id, agent = job.agent, lane = job.lane, kind = job.kind, order = order, startMs = start, doneMs = done
+                jobId = job.id, agent = job.agent, lane = job.lane, kind = job.kind, status = job.status, order = order, startMs = start, doneMs = done
             };
         }
 
@@ -213,13 +215,13 @@ namespace UnityGameAgent.EditorBroker
         }
 
         // A planned window opens after the previous one plus a drain, and not before its oldest job is
-        // as old as the lane's average wait (which folds in how long agents take to yield).
+        // as old as the lane's average wait (which folds in how long agents take to yield) or notBefore.
         static long AddPlanned(List<BrokerForecastEntry> forecast, string lane, List<BrokerJob> jobs, long cursor,
-            Dictionary<string, BrokerLaneAverage> averages, int order, long now)
+            Dictionary<string, BrokerLaneAverage> averages, int order, long now, long notBefore = 0)
         {
             var avg = averages[lane];
             var oldest = jobs.Min(j => j.createdMs);
-            var start = Math.Max(cursor + avg.drainMs, oldest + avg.waitMs);
+            var start = Math.Max(Math.Max(cursor + avg.drainMs, oldest + avg.waitMs), notBefore);
             return AddWindow(forecast, lane, jobs, start, averages, order, now);
         }
 
@@ -258,7 +260,19 @@ namespace UnityGameAgent.EditorBroker
             var hot = queued.Where(j => j.lane == BrokerConstants.LaneHot && j.kind == BrokerConstants.JobTests)
                 .Concat(queued.Where(j => j.lane == BrokerConstants.LaneHot && j.kind != BrokerConstants.JobTests))
                 .ToList();
-            if (hot.Count > 0) AddPlanned(forecast, BrokerConstants.LaneHot, hot, cursor, averages, ++order, now);
+            if (hot.Count > 0)
+            {
+                // Cold work wins: while a lease holder has not yielded or a lease request waits, the hot
+                // window opens only at the scheduler's maximum wait (or with a full batch). The forecast
+                // then gives that latest time and says so; agents yielding earlier make it sooner.
+                var cfg = BrokerConfig.Default;
+                var coldQuiet = BrokerOps.Active(state, now).All(l => l.yielded) && state.waiting.Count == 0;
+                var held = !coldQuiet && hot.Count < cfg.hotBatchSize;
+                var notBefore = held ? hot.Min(j => j.createdMs) + cfg.hotMaxWaitMs : 0;
+                var first = forecast.Count;
+                AddPlanned(forecast, BrokerConstants.LaneHot, hot, cursor, averages, ++order, now, notBefore);
+                if (held) for (var i = first; i < forecast.Count; i++) forecast[i].waitsForCold = true;
+            }
             return forecast;
         }
 
@@ -495,9 +509,12 @@ namespace UnityGameAgent.EditorBroker
                 text.AppendLine("Queue (start -> done, " + (measured ? "ETA from telemetry" : "ETA from defaults, no telemetry yet") + "):");
                 foreach (var f in forecast)
                 {
-                    var start = f.startMs <= now ? "running" : "~" + BrokerBoard.Age(f.startMs - now);
+                    var start = f.status == BrokerConstants.JobRunning ? "running"
+                        : f.waitsForCold ? "by ~" + BrokerBoard.Age(f.startMs - now)
+                        : f.startMs <= now ? "next" : "~" + BrokerBoard.Age(f.startMs - now);
                     text.AppendLine("  " + (f.order == 0 ? "now" : "#" + f.order) + " " + f.jobId + " " + f.agent + " " +
                                     JobShort(state.jobs.FirstOrDefault(j => j.id == f.jobId)) + ": " + start + " -> ~" + BrokerBoard.Age(f.doneMs - now) +
+                                    (f.waitsForCold ? ", waits for cold work to go quiet" : "") +
                                     (BrokerOps.SameAgent(f.agent, agent) ? " <- yours" : ""));
                 }
             }

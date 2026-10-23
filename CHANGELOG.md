@@ -4,6 +4,16 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.10.1] - 2026-10-23
+
+### Fixed
+- Queue ETA: a hot window held by cold work (a lease holder has not yielded, or a lease request
+  waits) is now forecast at the scheduler's latest start and marked "waits for cold work to go
+  quiet"; a queued job is never shown as running. Found in a real three-agent session, where `brief`
+  showed queued tests as running for five minutes.
+
+---
+
 ## [3.10.0] - 2026-10-23
 
 ### Added

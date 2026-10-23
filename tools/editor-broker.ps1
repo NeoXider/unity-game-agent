@@ -760,6 +760,7 @@ function Format-BrokerStats($Stats) {
 $script:BrokerTeamConfig = [ordered]@{
     rosterTtlMs = 7200000; activeMs = 600000; maxMessageChars = 300; maxRoleChars = 32; maxDoingChars = 120
     briefMessages = 5; messageLineChars = 160
+    hotMaxWaitMs = 600000; hotBatchSize = 3   # the scheduler's hot rule (BrokerConfig.cs)
 }
 # Guesses for a lane without telemetry yet; the sync and exclusive waits are the scheduler's maximum.
 $script:BrokerForecastDefaults = @{
@@ -844,7 +845,7 @@ function Get-BrokerJobDurationMs($JobItem, $Average) {
 
 function New-BrokerForecastEntry($JobItem, [int]$Order, [long]$Start, [long]$Done) {
     return [ordered]@{ jobId = [string]$JobItem.id; agent = [string]$JobItem.agent; lane = [string]$JobItem.lane; kind = [string]$JobItem.kind
-        order = $Order; startMs = $Start; doneMs = $Done }
+        status = [string]$JobItem.status; order = $Order; startMs = $Start; doneMs = $Done; waitsForCold = $false }
 }
 
 function Test-BrokerBatchJob([string]$WindowLane, $JobItem) { return $WindowLane -eq 'sync' -or ($WindowLane -eq 'hot' -and $JobItem.kind -eq 'tests') }
@@ -874,12 +875,12 @@ function Add-BrokerForecastWindow($Forecast, [string]$WindowLane, $Jobs, [long]$
 }
 
 # A planned window opens after the previous one plus a drain, and not before its oldest job is as
-# old as the lane's average wait (which folds in how long agents take to yield).
-function Add-BrokerPlannedWindow($Forecast, [string]$WindowLane, $Jobs, [long]$Cursor, $Averages, [int]$Order, [long]$Now) {
+# old as the lane's average wait (which folds in how long agents take to yield) or $NotBefore.
+function Add-BrokerPlannedWindow($Forecast, [string]$WindowLane, $Jobs, [long]$Cursor, $Averages, [int]$Order, [long]$Now, [long]$NotBefore = 0) {
     $avg = $Averages[$WindowLane]
     $oldest = [long]::MaxValue
     foreach ($j in $Jobs) { if ([long]$j.createdMs -lt $oldest) { $oldest = [long]$j.createdMs } }
-    $start = [Math]::Max($Cursor + [long]$avg.drainMs, $oldest + [long]$avg.waitMs)
+    $start = [Math]::Max([Math]::Max($Cursor + [long]$avg.drainMs, $oldest + [long]$avg.waitMs), $NotBefore)
     return Add-BrokerForecastWindow $Forecast $WindowLane $Jobs $start $Averages $Order $Now
 }
 
@@ -916,7 +917,18 @@ function Get-BrokerForecast($State, $Averages, [long]$Now) {
     if ($sync.Count -gt 0) { $order++; $cursor = Add-BrokerPlannedWindow $forecast 'sync' $sync $cursor $Averages $order $Now }
     foreach ($e in @($queued | Where-Object { $_.lane -eq 'exclusive' })) { $order++; $cursor = Add-BrokerPlannedWindow $forecast 'exclusive' @($e) $cursor $Averages $order $Now }
     $hot = @(@($queued | Where-Object { $_.lane -eq 'hot' -and $_.kind -eq 'tests' }) + @($queued | Where-Object { $_.lane -eq 'hot' -and $_.kind -ne 'tests' }))
-    if ($hot.Count -gt 0) { $order++; $cursor = Add-BrokerPlannedWindow $forecast 'hot' $hot $cursor $Averages $order $Now }
+    if ($hot.Count -gt 0) {
+        # Cold work wins: while a lease holder has not yielded or a lease request waits, the hot window
+        # opens only at the scheduler's maximum wait (or with a full batch). The forecast then gives
+        # that latest time and says so; agents yielding earlier make it sooner.
+        $coldQuiet = @($State.leases | Where-Object { $_.expiresMs -gt $Now -and -not $_.yielded }).Count -eq 0 -and $State.waiting.Count -eq 0
+        $held = -not $coldQuiet -and $hot.Count -lt $script:BrokerTeamConfig.hotBatchSize
+        $notBefore = [long]0
+        if ($held) { foreach ($j in $hot) { $due = [long]$j.createdMs + $script:BrokerTeamConfig.hotMaxWaitMs; if ($notBefore -eq 0 -or $due -lt $notBefore) { $notBefore = $due } } }
+        $first = $forecast.Count
+        $order++; $cursor = Add-BrokerPlannedWindow $forecast 'hot' $hot $cursor $Averages $order $Now $notBefore
+        if ($held) { for ($i = $first; $i -lt $forecast.Count; $i++) { $forecast[$i].waitsForCold = $true } }
+    }
     return ,$forecast
 }
 
@@ -1111,8 +1123,9 @@ function Format-BrokerBrief($Brief) {
         [void]$lines.Add("Queue (start -> done, $source):")
         foreach ($q in @($Brief.queue)) {
             $slot = if ($q.order -eq 0) { 'now' } else { '#' + $q.order }
-            $start = if ($q.startMs -le $now) { 'running' } else { '~' + (Format-BrokerAge ($q.startMs - $now)) }
-            [void]$lines.Add("  $slot $($q.jobId) $($q.agent) $($q.label): $start -> ~$(Format-BrokerAge ($q.doneMs - $now))" + $(if ($q.mine) { ' <- yours' } else { '' }))
+            $start = if ($q.status -eq 'running') { 'running' } elseif ($q.waitsForCold) { 'by ~' + (Format-BrokerAge ($q.startMs - $now)) } elseif ($q.startMs -le $now) { 'next' } else { '~' + (Format-BrokerAge ($q.startMs - $now)) }
+            $why = if ($q.waitsForCold) { ', waits for cold work to go quiet' } else { '' }
+            [void]$lines.Add("  $slot $($q.jobId) $($q.agent) $($q.label): $start -> ~$(Format-BrokerAge ($q.doneMs - $now))$why" + $(if ($q.mine) { ' <- yours' } else { '' }))
         }
     } else { [void]$lines.Add('Queue: empty.') }
     $mine = @()
@@ -1554,7 +1567,8 @@ function Invoke-BrokerCli {
             if ($null -ne $eta) {
                 $result.startMs = $eta.startMs; $result.doneMs = $eta.doneMs
                 $slot = if ($eta.order -eq 0) { 'the current window' } else { "window #$($eta.order) of the queue" }
-                $etaText = "ETA (rough): $slot, starts in ~$(Format-BrokerAge ($eta.startMs - $now)), done in ~$(Format-BrokerAge ($eta.doneMs - $now)). Keep working meanwhile; brief shows the whole queue."
+                $when = if ($eta.waitsForCold) { "starts by ~$(Format-BrokerAge ($eta.startMs - $now)) (hot work waits until cold work goes quiet)" } else { "starts in ~$(Format-BrokerAge ($eta.startMs - $now))" }
+                $etaText = "ETA (rough): $slot, $when, done in ~$(Format-BrokerAge ($eta.doneMs - $now)). Keep working meanwhile; brief shows the whole queue."
             }
             Write-BrokerResult $result $etaText
             if ($Wait) { Wait-BrokerJob $project $result.jobId }

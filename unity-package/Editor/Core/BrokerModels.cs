@@ -260,7 +260,7 @@ namespace UnityGameAgent.EditorBroker
     public static class BrokerConstants
     {
         public const int Schema = 1;
-        public const string PackageVersion = "3.10.0";
+        public const string PackageVersion = "3.10.1";
 
         public const string KindCold = "cold";
         public const string KindFocus = "focus";
