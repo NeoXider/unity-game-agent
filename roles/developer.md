@@ -26,8 +26,10 @@ and integration path, selfcheck evidence, skipped checks and remaining risk. No 
 
 ## Allowed Writes
 
-Only assigned implementation files and the Developer-owned brief section. A dedicated Unity operator
-owns Editor/import/scene/assets/play operations; submit the final batch and wait for its compile result.
+Only assigned implementation files and the Developer-owned brief section. In a shared-editor session
+take the leases named in the brief, `gate` before Editor calls, write compiled files to your staging
+folder and `request -Lane sync`; without a session the Unity operator compiles. Never refresh,
+compile, play or run tests directly while other agents share the Editor ([shared-editor.md](../tools/shared-editor.md)).
 
 ## Forbidden Actions
 
@@ -47,7 +49,8 @@ owns Editor/import/scene/assets/play operations; submit the final batch and wait
    recorded; tiny glue uses local discovery without an internet exercise.
 3. Implement; add only a narrow driver or focused regression that proves a named outcome/contract.
 4. Freeze the batch on disk. Run relevant compile/import + console and the smallest useful selfcheck
-   through the operator. Docs-only work invokes no Unity. Do not duplicate QA's full runtime/visual pass.
+   through the operator or a sync window; with nothing else to do, wait for the window's result as a
+   background task. Docs-only work invokes no Unity. Do not duplicate QA's full runtime/visual pass.
 5. Hand off once with source revision, actual integration paths and evidence. On QA failure, fix the
    supplied reproduction, identify affected checks and hand off the new revision to the same QA agent.
 

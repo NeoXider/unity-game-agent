@@ -1,0 +1,29 @@
+{
+    "name": "UnityGameAgent.EditorBroker.Coplay",
+    "rootNamespace": "UnityGameAgent.EditorBroker.Adapters",
+    "references": [
+        "UnityGameAgent.EditorBroker",
+        "MCPForUnity.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UGA_BROKER_COPLAY"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.coplaydev.unity-mcp",
+            "expression": "9.0.0",
+            "define": "UGA_BROKER_COPLAY"
+        }
+    ],
+    "noEngineReferences": false
+}

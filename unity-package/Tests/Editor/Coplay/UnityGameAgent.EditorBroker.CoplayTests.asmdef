@@ -1,0 +1,34 @@
+{
+    "name": "UnityGameAgent.EditorBroker.CoplayTests",
+    "rootNamespace": "UnityGameAgent.EditorBroker.Tests",
+    "references": [
+        "UnityGameAgent.EditorBroker",
+        "UnityGameAgent.EditorBroker.Coplay",
+        "MCPForUnity.Editor",
+        "UnityEditor.TestRunner",
+        "UnityEngine.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS",
+        "UGA_BROKER_COPLAY"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.coplaydev.unity-mcp",
+            "expression": "9.0.0",
+            "define": "UGA_BROKER_COPLAY"
+        }
+    ],
+    "noEngineReferences": false
+}

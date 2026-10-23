@@ -60,7 +60,12 @@ Run before Unity mutations when strict preflight is enabled.
 4. Read console baseline before changes.
 5. Discover task-relevant capabilities and installed packages.
 6. Classify state: READY, BUSY, BLOCKED, DEGRADED.
+7. Two or more agents on this project: run the shared-editor readiness check
+   (`editor-broker.ps1 doctor`, `session start`) and follow its lanes; see shared-editor.md.
 ```
+
+In a shared-editor session the broker is the single operator for imports, compiles, Play Mode and
+tests; agents hold leases and use windows ([shared-editor.md](shared-editor.md)).
 
 Classification:
 
@@ -164,6 +169,14 @@ Provider-agnostic Unity Editor automation traps (each verified in production):
 | Code-execution call times out with no result | The eval channel has a hard timeout (≈30 s on common adapters) → never run a whole-project `AssetDatabase.FindAssets("t:Prefab")`/`t:Scene` sweep inside it; scope the search to a folder, page it, or grep the files on disk instead |
 | Two `EventSystem` warnings that do not reproduce in a build | Two scenes are open additively in the editor → the build loads the scene in `Single` mode and has one. Check `list_open_scenes` before filing it as a defect |
 | Property set on a prefab instance disappears after reload | Instance property edits need `PrefabUtility.RecordPrefabInstancePropertyModifications(component)`. Sibling-order changes made **inside the prefab asset** do propagate to instances on their own — reorder in the asset, do not patch each instance |
+| Package Manager says `manifest.json` "is not valid JSON" after a script edit | The file was written with a UTF-8 byte order mark (Windows PowerShell 5.1 `Set-Content -Encoding UTF8` does that) → write UTF-8 without BOM |
+| An editor tool's `[InitializeOnLoad]` runs twice or fights over a file | Asset import worker processes load editor assemblies too → return early when `AssetDatabase.IsAssetImportWorkerProcess()` |
+| A batch-mode editor script burns a CPU core | `EditorApplication.update` spins thousands of times per second in batch mode → throttle by `EditorApplication.timeSinceStartup` |
+| A ProjectSettings change made from code is not in the file | In Unity 6 `AssetDatabase.SaveAssetIfDirty` and `InternalEditorUtility.SaveToSerializedFileAndForget` leave ProjectSettings untouched; only `AssetDatabase.SaveAssets()` writes them, and it also saves every other dirty asset → call it only when nobody else has unsaved work, then re-read the file |
+| `EditorSettings.enterPlayModeOptionsEnabled` reads false although Play Mode options are set | Unity 6 decides by the `enterPlayModeOptions` flags → check `DisableDomainReload` in the flags |
+| The second Play Mode test run in one Editor session reports zero tests | Observed on Unity 6000.6 with Test Framework 1.8 in batch mode when domain reload is disabled: only the first Play Mode run discovers tests → enable domain reload for Play Mode test runs (the shared-editor broker does this per run and restores the project setting) |
+| Several agents' MCP calls disconnect each other | A stdio MCP transport accepts one client → use an HTTP transport and the shared-editor broker |
+| An Editor exits at startup after "[Package Manager] Array buffer allocation failed … No packages loaded" | The machine is out of commit memory (RAM + page file), even with free RAM showing → close idle Editors or browsers and relaunch; do not "repair" the project |
 
 ## Unity CLI / Batch Mode
 

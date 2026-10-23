@@ -1,0 +1,149 @@
+{
+  "asmdefs": [
+    { "name": "Game.Combat", "path": "Assets/Game/Combat/Game.Combat.asmdef" },
+    { "name": "Game.UI", "path": "Assets/Game/UI/Game.UI.asmdef" }
+  ],
+  "paths": [
+    { "resource": "scene:Assets/Levels/Arena.unity", "ok": true, "type": "scene", "path": "Assets/Levels/Arena.unity" },
+    { "resource": "folder:Assets\\UI", "ok": true, "type": "folder", "path": "Assets/UI/" },
+    { "resource": "folder:assets/ui/", "ok": true, "type": "folder", "path": "Assets/ui/" },
+    { "resource": "prefab:Assets/UI/Menu.prefab", "ok": true, "type": "prefab", "path": "Assets/UI/Menu.prefab" },
+    { "resource": "prefab:Assets/UI/Menu.asset", "ok": false },
+    { "resource": "scene:Assets/Levels/Arena.prefab", "ok": false },
+    { "resource": "asset:./Assets//Data/Enemy.asset", "ok": true, "type": "asset", "path": "Assets/Data/Enemy.asset" },
+    { "resource": "asset:Assets/../Secrets.txt", "ok": false },
+    { "resource": "asset:C:/Project/Assets/A.asset", "ok": false },
+    { "resource": "asset:/Assets/A.asset", "ok": false },
+    { "resource": "asset:ProjectSettings/EditorSettings.asset", "ok": false },
+    { "resource": "asset:Assets/Data/", "ok": false },
+    { "resource": "asset:Assets", "ok": false },
+    { "resource": "folder:Assets", "ok": true, "type": "folder", "path": "Assets/" },
+    { "resource": "folder:Packages/com.example.tool", "ok": true, "type": "folder", "path": "Packages/com.example.tool/" },
+    { "resource": "asmdef:Game.Combat", "ok": true, "type": "asmdef", "path": "Assets/Game/Combat/" },
+    { "resource": "asmdef:Assets/Game/UI/Game.UI.asmdef", "ok": true, "type": "asmdef", "path": "Assets/Game/UI/" },
+    { "resource": "asmdef:Missing.Assembly", "ok": false },
+    { "resource": "texture:Assets/A.png", "ok": false },
+    { "resource": "nonsense", "ok": false },
+    { "resource": "scene:", "ok": false }
+  ],
+  "overlaps": [
+    { "a": "Assets/UI/", "b": "Assets/UI/Menu.prefab", "overlap": true },
+    { "a": "Assets/UI/Menu/", "b": "Assets/UI/Menu.prefab", "overlap": false },
+    { "a": "Assets/UI/", "b": "Assets/ui/Menu.prefab", "overlap": true },
+    { "a": "Assets/UI/", "b": "Assets/UIKit/Button.prefab", "overlap": false },
+    { "a": "Assets/A.unity", "b": "Assets/A.unity", "overlap": true },
+    { "a": "Assets/A.unity", "b": "Assets/B.unity", "overlap": false },
+    { "a": "Assets/", "b": "Packages/com.example.tool/", "overlap": false },
+    { "a": "Assets/Game/", "b": "Assets/Game/Combat/", "overlap": true }
+  ],
+  "covers": [
+    { "lease": "Assets/UI/", "asset": "Assets/UI/Menu.prefab", "covered": true },
+    { "lease": "Assets/UI/", "asset": "Assets/UI/Menu.prefab.meta", "covered": true },
+    { "lease": "Assets/UI/Menu.prefab", "asset": "Assets/UI/Menu.prefab.meta", "covered": true },
+    { "lease": "Assets/UI/Menu.prefab", "asset": "Assets/UI/Other.prefab", "covered": false },
+    { "lease": "Assets/UI/", "asset": "Assets\\UI\\Sub\\Icon.png", "covered": true }
+  ],
+  "scenarios": [
+    {
+      "name": "fifo-grant-after-release",
+      "steps": [
+        { "op": "take", "agent": "ui", "kind": "cold", "resource": "folder:Assets/UI/", "at": 0, "expect": "granted" },
+        { "op": "take", "agent": "menu", "kind": "cold", "resource": "prefab:Assets/UI/Menu.prefab", "at": 10, "expect": "queued", "position": 1 },
+        { "op": "take", "agent": "hero", "kind": "cold", "resource": "prefab:Assets/Game/Hero.prefab", "at": 20, "expect": "granted" },
+        { "op": "take", "agent": "menus", "kind": "cold", "resource": "folder:Assets/UI/Menu/", "at": 30, "expect": "queued", "position": 2 },
+        { "op": "release", "agent": "ui", "resource": "folder:Assets/UI/", "at": 40, "count": 1 },
+        { "op": "promote", "at": 40, "granted": [ "menu|cold|Assets/UI/Menu.prefab", "menus|cold|Assets/UI/Menu/" ] },
+        { "op": "leases", "at": 40, "list": [ "hero|cold|Assets/Game/Hero.prefab", "menu|cold|Assets/UI/Menu.prefab", "menus|cold|Assets/UI/Menu/" ] }
+      ]
+    },
+    {
+      "name": "newcomer-queues-behind-earlier-waiter",
+      "steps": [
+        { "op": "take", "agent": "a", "kind": "cold", "resource": "scene:Assets/A.unity", "at": 0, "expect": "granted" },
+        { "op": "take", "agent": "b", "kind": "cold", "resource": "scene:Assets/A.unity", "at": 10, "expect": "queued", "position": 1 },
+        { "op": "release", "agent": "a", "resource": "", "at": 20, "count": 1 },
+        { "op": "take", "agent": "c", "kind": "cold", "resource": "scene:Assets/A.unity", "at": 30, "expect": "queued", "position": 2 },
+        { "op": "promote", "at": 40, "granted": [ "b|cold|Assets/A.unity" ] },
+        { "op": "waiting", "at": 40, "list": [ "c|cold|Assets/A.unity" ] }
+      ]
+    },
+    {
+      "name": "same-agent-nested-and-renew",
+      "steps": [
+        { "op": "take", "agent": "ui", "kind": "cold", "resource": "folder:Assets/UI/", "at": 0, "expect": "granted" },
+        { "op": "take", "agent": "UI", "kind": "cold", "resource": "prefab:Assets/UI/X.prefab", "at": 10, "expect": "granted" },
+        { "op": "take", "agent": "ui", "kind": "cold", "resource": "folder:Assets/UI", "at": 20, "expect": "renewed" },
+        { "op": "renew", "agent": "ui", "at": 30, "count": 2 }
+      ]
+    },
+    {
+      "name": "ttl-expiry-frees-resource",
+      "steps": [
+        { "op": "take", "agent": "a", "kind": "cold", "resource": "asset:Assets/Data/Enemy.asset", "ttl": 10, "at": 0, "expect": "granted" },
+        { "op": "take", "agent": "b", "kind": "cold", "resource": "asset:Assets/Data/Enemy.asset", "at": 5000, "expect": "queued", "position": 1 },
+        { "op": "promote", "at": 9000, "granted": [] },
+        { "op": "promote", "at": 10001, "granted": [ "b|cold|Assets/Data/Enemy.asset" ] }
+      ]
+    },
+    {
+      "name": "focus-token-is-global-and-capped",
+      "steps": [
+        { "op": "take", "agent": "a", "kind": "focus", "resource": "scene:Assets/A.unity", "at": 0, "expect": "error" },
+        { "op": "take", "agent": "a", "kind": "cold", "resource": "scene:Assets/A.unity", "at": 0, "expect": "granted" },
+        { "op": "take", "agent": "a", "kind": "focus", "resource": "scene:Assets/A.unity", "at": 10, "expect": "granted" },
+        { "op": "take", "agent": "b", "kind": "cold", "resource": "scene:Assets/B.unity", "at": 20, "expect": "granted" },
+        { "op": "take", "agent": "b", "kind": "focus", "resource": "scene:Assets/B.unity", "at": 30, "expect": "queued", "position": 1 },
+        { "op": "renew", "agent": "a", "ttl": 900, "at": 170000, "count": 2 },
+        { "op": "promote", "at": 180009, "granted": [] },
+        { "op": "promote", "at": 180010, "granted": [ "b|focus|Assets/B.unity" ] }
+      ]
+    },
+    {
+      "name": "gate-yield-and-window-holder",
+      "steps": [
+        { "op": "take", "agent": "a", "kind": "cold", "resource": "folder:Assets/A/", "at": 0, "expect": "granted" },
+        { "op": "take", "agent": "b", "kind": "cold", "resource": "folder:Assets/B/", "at": 0, "expect": "granted" },
+        { "op": "gate", "agent": "a", "at": 10, "expect": "go" },
+        { "op": "window", "lane": "sync", "holder": "", "at": 20 },
+        { "op": "gate", "agent": "a", "at": 30, "expect": "wait" },
+        { "op": "yielded", "agent": "a", "at": 30, "value": true },
+        { "op": "yielded", "agent": "b", "at": 30, "value": false },
+        { "op": "yield", "agent": "b", "at": 40, "count": 1 },
+        { "op": "yielded", "agent": "b", "at": 40, "value": true },
+        { "op": "endwindow", "at": 50 },
+        { "op": "gate", "agent": "a", "at": 60, "expect": "go" },
+        { "op": "yielded", "agent": "a", "at": 60, "value": false },
+        { "op": "window", "lane": "exclusive", "holder": "a", "at": 70 },
+        { "op": "gate", "agent": "a", "at": 80, "expect": "go" },
+        { "op": "gate", "agent": "b", "at": 80, "expect": "wait" }
+      ]
+    },
+    {
+      "name": "request-validation-and-dedupe",
+      "steps": [
+        { "op": "take", "agent": "dev", "kind": "cold", "resource": "folder:Assets/Game/Combat/", "at": 0, "expect": "granted" },
+        { "op": "request", "agent": "dev", "lane": "sync", "kind": "sync", "paths": "Assets/Other/Thing.png", "at": 10, "expect": "error" },
+        { "op": "request", "agent": "dev", "lane": "sync", "kind": "sync", "paths": "Assets/Game/Combat/Sword.png", "at": 20, "expect": "queued" },
+        { "op": "request", "agent": "dev", "lane": "sync", "kind": "sync", "paths": "Assets/Game/Combat/Sword.png", "at": 30, "expect": "exists" },
+        { "op": "request", "agent": "qa", "lane": "hot", "kind": "tests", "tests": "", "at": 40, "expect": "error" },
+        { "op": "request", "agent": "qa", "lane": "hot", "kind": "tests", "tests": "group:([", "at": 40, "expect": "error" },
+        { "op": "request", "agent": "qa", "lane": "hot", "kind": "tests", "tests": "category:Smoke; name:Game.Tests.CombatTests.Hit", "at": 50, "expect": "queued" },
+        { "op": "request", "agent": "qa", "lane": "hot", "kind": "tests", "tests": "category:Smoke", "mode": "Desktop", "at": 55, "expect": "error" },
+        { "op": "request", "agent": "lead", "lane": "exclusive", "kind": "exclusive", "reason": "", "at": 60, "expect": "error" },
+        { "op": "request", "agent": "lead", "lane": "exclusive", "kind": "exclusive", "reason": "Add Input System package", "at": 70, "expect": "queued" },
+        { "op": "request", "agent": "bad name", "lane": "hot", "kind": "session", "at": 80, "expect": "error" },
+        { "op": "request", "agent": "qa", "lane": "hot", "kind": "session", "scene": "Assets/Levels/Arena.unity", "minutes": 2, "at": 90, "expect": "queued" },
+        { "op": "request", "agent": "qa", "lane": "warm", "kind": "sync", "at": 100, "expect": "error" }
+      ]
+    }
+  ],
+  "filters": [
+    { "spec": "category:Smoke", "fullName": "Game.Tests.A.B", "assembly": "Game.Tests", "categories": [ "Smoke" ], "match": true },
+    { "spec": "category:Smoke", "fullName": "Game.Tests.A.B", "assembly": "Game.Tests", "categories": [ "Slow" ], "match": false },
+    { "spec": "name:Game.Tests.A.B; name:Game.Tests.A.C", "fullName": "Game.Tests.A.C", "assembly": "Game.Tests", "categories": [], "match": true },
+    { "spec": "group:^Game\\.Tests\\.A\\.; category:Smoke", "fullName": "Game.Tests.A.B", "assembly": "Game.Tests", "categories": [ "Fast" ], "match": false },
+    { "spec": "group:^Game\\.Tests\\.A\\.", "fullName": "Game.Tests.A.B", "assembly": "Game.Tests", "categories": [], "match": true },
+    { "spec": "assembly:game.tests", "fullName": "X.Y", "assembly": "Game.Tests", "categories": [], "match": true },
+    { "spec": "Game.Tests.A.B", "fullName": "Game.Tests.A.B", "assembly": "", "categories": [], "match": true }
+  ]
+}

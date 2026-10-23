@@ -72,9 +72,11 @@ to a `1170`-wide capture without normalising is the most common source of bogus 
 A Unity editor is a single-writer resource. Two agents driving it will switch scenes and toggle Play
 Mode under each other, and every screenshot taken during the overlap is of an unknown state.
 
-- Serialise editor work **inside each workspace**: one agent at a time, batched by page group.
-  Independent [workspaces](parallel-editors.md) may capture in parallel with their own Library,
-  Editor and pinned MCP instance; never let one workspace's driver select another's Editor.
+- Serialise captures: in a [shared-editor session](shared-editor.md) an edit-mode capture needs the
+  focus token, a Play Mode capture happens inside your hot session, and files go outside `Assets/`
+  (a capture saved under `Assets/` triggers an import). Without a broker, one agent drives the Editor
+  at a time, batched by page group. Independent [workspaces](parallel-editors.md) may capture in
+  parallel with their own Editor and pinned MCP instance; never select another workspace's Editor.
 - Scene mutation and `SaveScene` **fail during Play Mode** ("cannot be used during play mode"), and
   edits applied in Play Mode are discarded on exit. Read the editor state before editing.
 - Require every editor agent to exit Play Mode and restore any device/profile it changed. A left-on

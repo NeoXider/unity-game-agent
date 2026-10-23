@@ -30,13 +30,13 @@ Mode changes verification depth, not architecture complexity or document count.
 6. Optional GDD alignment follows QA, checks the existing requirements against evidence and does not
    regenerate the spec. Orchestrator closes/updates links at meaningful checkpoints after required checks pass.
 
-Parallel Unity workspaces are **opt-in**. When enabled, follow
-[parallel-editors.md](../tools/parallel-editors.md): separate worktree, Library, Editor and MCP instance
-for each Unity-bound task; commit needed canonical changes first. Use headless tests/build validation
-and check disk/RAM before opening an interactive Editor.
+Two or more concurrent agents **share one Editor through the broker**: readiness check, disjoint
+leases per brief, staged compiled files, batched sync/hot/exclusive windows; see
+[shared-editor.md](../tools/shared-editor.md). [Isolated workspaces](../tools/parallel-editors.md) are
+an opt-in escalation for separate branches, package sets or simultaneous Play Mode.
 
-One operator per workspace owns Unity/import/scene/assets/play/tests; code writers have disjoint scopes
-and freeze source before its single batch compile. Isolated workspaces may run concurrently.
+Without a broker session one operator owns Unity/import/scene/assets/play/tests; code writers have
+disjoint scopes and freeze source before its single batch compile.
 If delegation is unavailable/prohibited, disclose local role
 switching and missing independent QA. Preserve the same outcome gates.
 

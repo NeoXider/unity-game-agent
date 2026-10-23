@@ -1,8 +1,10 @@
-# Parallel Unity Editors
+# Parallel Unity Editors (isolated workspaces)
 
-Use isolated workspaces for concurrent features, scene/prefab authoring, tests and multiplayer checks.
-They are **ON by default in `pro` when 2+ Unity-bound tasks run concurrently**, opt-in in `standard`,
-and off in `fast`. A docs-only or file-only task does not need an Editor workspace.
+**This is the escalation path.** Several agents on one project share one Editor by default through
+the broker: see [shared-editor.md](shared-editor.md). Use isolated workspaces only when tasks need
+separate branches, different package sets, simultaneous Play Mode, or multiplayer clients. Each
+workspace costs a Library and an Editor's worth of disk and RAM. A docs-only or file-only task does not
+need an Editor workspace.
 
 ## Ownership and isolation
 
@@ -24,17 +26,13 @@ scene/prefab. Give a shared asset one owner and integrate it before dependent au
 
 1. Install the exact Editor in `ProjectSettings/ProjectVersion.txt`, Git for Windows, and the project's
    MCP adapter. Run the PowerShell commands below without elevation.
-2. The **owner** creates storage, not the agent: Windows 11 **Settings → System → Storage → Advanced
-   storage settings → Disks & volumes → Create Dev Drive**. Choose a new VHD or suitable unused space,
-   and follow Windows' prompts. Creation can require owner/admin approval and at least 50 GB;
-   the workspace helper does not create, format or resize volumes.
-3. Close the canonical Editor and wait for its workers to exit. Copy the entire repository, including
-   hidden `.git` and its existing Library, onto that Dev Drive. Keep the original until `git status`,
-   remotes and an Editor launch at the destination are verified. Move before creating worktrees;
-   moving an existing worktree tree needs git path repair. Set the new location in Unity Hub.
-4. Put the default sibling `<repo>.ws` on the **same ReFS volume** as the source Library. A custom
-   `-Root` on another volume cannot share the source's blocks.
-5. Run `doctor`, configure Smart Merge below, and choose the local import-worker settings below.
+2. Disk: on NTFS every workspace stores a full Library copy; measure it with `doctor` first. **Do not
+   suggest creating a Dev Drive unless the owner asks about disk space for workspaces or a Dev Drive
+   (ReFS) volume already exists.** If it exists, keep the repository and `<repo>.ws` on that same ReFS
+   volume so Library copies share blocks (the next paragraph). Moving a repository there is the
+   owner's decision: copy it with hidden `.git` and Library, verify `git status`, remotes and an
+   Editor launch at the destination, and only then retire the original.
+3. Run `doctor`, configure Smart Merge below, and choose the local import-worker settings below.
 
 Microsoft documents automatic Dev Drive block cloning from **Windows 11 24H2**. An older Moment 5
 installation is not a documented guarantee. On supported same-volume ReFS copies, normal Windows

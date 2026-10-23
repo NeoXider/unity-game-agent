@@ -2,7 +2,7 @@
 name: unity-game-agent
 description: "Build, fix and verify Unity games, gameplay, scenes, UI and assets; resume tracked projects or run focused feature work. Reuse existing project and package systems before custom code, and use live MCP capabilities for Editor operations."
 metadata:
-  version: 3.7.0
+  version: 3.8.0
   author: Neoxider
   homepage: https://github.com/NeoXider/unity-game-agent
 ---
@@ -46,6 +46,9 @@ beside homemade code. This is a stop gate, not optional advice. Apply
 
 Act as a senior Unity C# game development agent that makes working, verified changes.
 
+- The skill targets **Unity 6 (6000.0) and newer**. On an older Editor, say so before planning,
+  recommend the upgrade, and do not use Unity 6-only APIs; multi-agent shared-editor sessions refuse
+  older Editors.
 - Read the existing codebase before choosing architecture. Follow local style and project patterns unless they are clearly broken.
 - Make the smallest change that correctly solves the task. Prefer targeted edits over redesigns.
 - Preserve existing systems, public APIs, serialized field names, prefabs, scenes, ScriptableObjects, and data layouts whenever possible.
@@ -124,6 +127,12 @@ Important policy meanings:
 - `skill_memory_write_policy: "auto_after_verified_task"`: append a memory entry after a verified task when a reusable skill-level lesson was found.
 - `skill_memory_scope: "universal_only"`: store only lessons that apply across Unity projects, not project-local decisions.
 - `role_subskills_enabled: true`: load compact role files from `roles/` instead of expanding the main orchestrator.
+- `multi_agent_editor: "shared_broker"`: two or more agents on one project share one Editor through
+  the broker ([tools/shared-editor.md](tools/shared-editor.md)); `"isolated_workspaces"` selects
+  [parallel workspaces](tools/parallel-editors.md) instead.
+- `shared_editor_settings: "apply"`: the orchestrator's `doctor -Fix` applies the project settings a
+  shared session needs (Enter Play Mode without domain reload, parallel import) and records them;
+  `"report"` only lists them. Per-user session preferences are always restored by `session stop`.
 - `mandatory_subagents_standard_pro: "developer_then_independent_qa"`: one implementation subagent, then a second independent QA subagent when delegation is available and allowed.
 - `subagent_fallback_policy: "only_when_tools_unavailable"`: local role switching is allowed only when subagent tools are unavailable or blocked.
 - `gd_before_lead: true`: fill real design gaps before implementation; reuse sufficient existing requirements. Optional GDD alignment review runs after QA.
@@ -182,7 +191,9 @@ and QA policy always still apply. To add a pattern, see [patterns/README.md](pat
 - Audio (generate → source → ask, import settings, pause in background/ads): [tools/audio.md](tools/audio.md)
 - Mobile build size (ASTC, sprite atlases, player-settings audit, APK, pushing heavy repos): [tools/mobile-build-and-size.md](tools/mobile-build-and-size.md)
 - Meta progress map (stops on a painted road, HUD obstacles, crops): [tools/meta-progress-map.md](tools/meta-progress-map.md)
-- Parallel isolated Unity workspaces: [tools/parallel-editors.md](tools/parallel-editors.md) and [tools/unity-workspace.ps1](tools/unity-workspace.ps1)
+- Several agents in one Editor (default for multi-agent work), adapter rules for MCP for Unity and the Unity CLI, several projects on one machine: [tools/shared-editor.md](tools/shared-editor.md), [tools/editor-broker.ps1](tools/editor-broker.ps1), package `unity-package/` ([README](unity-package/README.md))
+- Isolated workspaces (escalation: separate branches/packages/simultaneous Play Mode): [tools/parallel-editors.md](tools/parallel-editors.md) and [tools/unity-workspace.ps1](tools/unity-workspace.ps1)
+- Broker tests: [tools/test-editor-broker.ps1](tools/test-editor-broker.ps1) (no Unity) and [tools/test-editor-broker-unity.ps1](tools/test-editor-broker-unity.ps1) (live Unity 6 Editor)
 - Trustworthy UI screenshots (Device Simulator, one driver per workspace, measuring instead of eyeballing): [tools/ui-screenshot-truth.md](tools/ui-screenshot-truth.md)
 - Skill memory: [SKILL_MEMORY.md](SKILL_MEMORY.md) and [tools/append-skill-memory.ps1](tools/append-skill-memory.ps1)
 - Role subskills: [roles/game-designer.md](roles/game-designer.md), [roles/designer.md](roles/designer.md), [roles/lead.md](roles/lead.md), [roles/developer.md](roles/developer.md), [roles/qa.md](roles/qa.md)
@@ -240,7 +251,10 @@ Role routing:
 Subagent rules:
 
 - Give each agent its role, relevant requirement lines, brief, exact write scope and expected result. Load only references needed for its checks; do not forward full historical context.
-- One Unity operator per workspace serializes imports, scene/assets, Play Mode and tests. No other agent drives that workspace's Editor. Independent workspaces may run in parallel; compile each source-final batch once, not while its writers are editing.
+- Several agents may drive one Editor only through the broker: each holds leases on what it edits,
+  calls `gate` before Editor calls, stages compiled files, and requests sync/hot/exclusive windows
+  instead of refreshing, compiling, playing or testing itself. Without a broker session, one operator
+  per Editor serializes imports, assets, Play Mode and tests.
 - Developer and QA own separate sections of the same brief and update them sequentially. Orchestrator owns shared state/index links; no duplicate task logs by default.
 - Do not delegate the orchestrator's accountability: read role outputs, check contradictions, and choose the next step.
 - If delegation is unavailable or prohibited, disclose local role switching and the lack of independent QA in the brief. Follow the same outcome gates; do not call a selfcheck independent.
@@ -249,22 +263,35 @@ Subagent rules:
   `Assets/_source/Docs/`; never create a competing second tree. Universal role improvements may go
   to `SKILL_MEMORY.md` only under the skill memory rules.
 
-## Parallel Unity Workspaces
+## Shared Editor Sessions (multi-agent default)
 
-**Default ON in `pro` whenever two or more Unity-bound tasks run concurrently; opt-in in `standard`;
-off in `fast`.** Give each task a git worktree at `<repo>.ws/<task>`, branch `agent/<task>`, its own
-Library, Editor and registered MCP instance. One writer owns each workspace. Commit needed canonical
-changes first: a new workspace sees its chosen commit (default canonical HEAD), never uncommitted edits.
+**Two or more agents on one project use one Editor, one folder and one branch** (`standard` and
+`pro`; `fast` runs one agent). The broker package executes batched windows inside the Editor and the
+agents coordinate through [tools/editor-broker.ps1](tools/editor-broker.ps1). Full protocol, lanes,
+adapter tables and troubleshooting: [tools/shared-editor.md](tools/shared-editor.md).
 
-Use [tools/unity-workspace.ps1](tools/unity-workspace.ps1) and [tools/parallel-editors.md](tools/parallel-editors.md).
-Clone a quiescent Library instead of reimporting; never share a Library between Editors. Check disk,
-physical RAM and commit before opening another interactive Editor. Reserve interactive sessions for
-scene/prefab/MCP authoring; run tests and validation builds headless in a closed workspace, then exit.
-Pin MCP to the workspace project name/path; never mutate an unresolved or foreign instance.
+1. **Orchestrator readiness check** before delegating: `doctor -Fix` (installs the package, applies
+   the project settings when `shared_editor_settings` is `"apply"`), `doctor` must say READY,
+   `session start -Agent <orchestrator>`. Record applied settings in `AGENT_MEMORY.md`.
+2. **Split the work without overlap:** programmers by assembly (`asmdef:` lease) when assemblies match
+   the task boundaries, otherwise by feature folder (an epic is a set of folders for one owner); one
+   scene per scene builder (scene-graph edits need the focus token); one screen folder per UI agent;
+   QA holds no leases. Write each agent's leases into its brief.
+3. **Order of operations:** cold work on leased resources always runs; a sync window publishes staged
+   files and compiles once for everyone; a hot window batches tests and Play Mode sessions and runs
+   last; an exclusive window gives one agent packages, ProjectSettings, builds or merges.
+4. **Agents:** `gate` before each batch of Editor calls, `yield` when they stop touching the Editor,
+   stage compiled/heavy files, never refresh/compile/play/test/save-all directly, and run
+   `request ... -Wait` as a background task when they have nothing else to do.
+5. **Close:** agents release leases; the orchestrator integrates, then `session stop`.
 
-Assign scene/prefab file ownership and use Unity Smart Merge. Agents commit on their workspace branch;
-the orchestrator merges after QA. Shared-source test clones are **TEST ONLY: never edit or save assets**;
-their source junctions write straight into the canonical project, and `finish` refuses them.
+Several projects on one machine each get their own Editor and broker; pass `-ProjectRoot` (or
+`UGA_PROJECT_ROOT`) on every call and route MCP per project. `editor-broker.ps1 projects` lists them.
+
+**Isolated workspaces are the escalation**, not the default: use [parallel-editors.md](tools/parallel-editors.md)
+only when tasks need separate branches, different package sets or simultaneous Play Mode. Suggest a
+Dev Drive only when the owner asks about disk space for workspaces or a Dev Drive (ReFS) volume
+already exists.
 
 ## Session Routing
 
@@ -319,6 +346,8 @@ Required facts:
 - project-owned authoring root and the runtime/editor/test/typed-asset boundaries from
   [tools/project-structure.md](tools/project-structure.md), including any forbidden Editor builders;
 - task-relevant capabilities: UI Toolkit, uGUI, TMP, Input System, URP/HDRP/Built-in, Cinemachine, ProBuilder, tests, build support, NeoxiderTools;
+- multi-agent readiness when two or more agents will share the project: Unity 6+, broker package,
+  live heartbeat, project settings, MCP transport, active session (`editor-broker.ps1 doctor`);
 - status classification: `READY`, `BUSY`, `BLOCKED`, or `DEGRADED`.
 
 Strict blocking rules:
@@ -372,7 +401,8 @@ Use the same flow with any Unity MCP or file tool stack:
 2. Apply the smallest structured edit available.
 3. Use text patches only when semantic/script edits are unavailable.
 4. Validate syntax or script structure when the tool exposes validation.
-5. After the source-final batch, that workspace's operator triggers/waits for one Unity import/compile.
+5. After the source-final batch, trigger/wait for one Unity import/compile (in a shared-editor session:
+   write the files to your staging folder and `request -Lane sync`).
 6. Poll editor readiness until import/compile/domain reload completes.
 7. Read console and attribute only new errors/warnings to the change.
 8. Attach/use the script only after compilation succeeds.
@@ -591,6 +621,10 @@ Docs rules:
 
 ## Anti-Patterns
 
+- In a shared-editor session: refresh, compile, enter Play Mode, run tests, save all, open a prefab
+  stage or change packages directly instead of through the broker's windows; edit outside your lease;
+  write scripts straight into `Assets/` instead of your staging folder; switch branches in the shared folder.
+- Recommend creating a Dev Drive unprompted (only when the owner asks or one already exists).
 - **Build a model, shader, material, effect, mechanic, system, tool or helper from scratch without a
   recorded search for a ready-made one, or build it when adopting the existing one was cheaper and
   faster (the Prime Rule).**

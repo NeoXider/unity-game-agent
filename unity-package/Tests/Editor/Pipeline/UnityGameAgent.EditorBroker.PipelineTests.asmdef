@@ -1,0 +1,32 @@
+{
+    "name": "UnityGameAgent.EditorBroker.PipelineTests",
+    "rootNamespace": "UnityGameAgent.EditorBroker.Tests",
+    "references": [
+        "UnityGameAgent.EditorBroker",
+        "UnityGameAgent.EditorBroker.Pipeline",
+        "UnityEditor.TestRunner",
+        "UnityEngine.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS",
+        "UGA_BROKER_PIPELINE"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.pipeline",
+            "expression": "0.8.0-exp.1",
+            "define": "UGA_BROKER_PIPELINE"
+        }
+    ],
+    "noEngineReferences": false
+}

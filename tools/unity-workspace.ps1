@@ -435,7 +435,9 @@ function Invoke-UgaWorkspace {
         if ($Command -in @('doctor','status')) {
             $volume = Get-UgaVolume $container; $memory = Get-UgaMemory
             Write-Output ('Target {0}: filesystem={1}, disk free={2:N2} GB; RAM free={3:N2} GB, commit headroom={4:N2} GB.' -f $container,$volume.FileSystemType,($volume.SizeRemaining/1GB),$memory.PhysicalGB,$memory.CommitGB)
-            Write-Output 'ReFS/Dev Drive: automatic block cloning eligible on Windows 11 24H2+, same volume, supported files. NTFS/cross-volume/unsupported copies: full copy. See parallel-editors.md for budgets.'
+            # Dev Drive is mentioned only when the target already is ReFS; never suggested unprompted.
+            if ($volume.FileSystemType -eq 'ReFS') { Write-Output 'ReFS/Dev Drive volume: block cloning is eligible on Windows 11 24H2+ for same-volume copies. See parallel-editors.md for budgets.' }
+            else { Write-Output 'Each workspace Library is a full copy on this volume. See parallel-editors.md for budgets.' }
             if ($Command -eq 'doctor') {
                 $editor = Get-UgaEditor $canonical $EditorPath
                 Write-Output "Unity version: $($editor.Version); Editor: $($editor.Path)"

@@ -48,6 +48,23 @@ within the authorized repair. A lock file alone is not a diagnosis.
 If MCP stays unavailable after install/resolve/retry, fall back to file-only mode per
 [tools/mcp-provider-neutral.md](tools/mcp-provider-neutral.md) and report the limitation.
 
+## Several agents on one Editor
+
+MCP for Unity must use the **HTTP transport** for a shared-editor session: with stdio, every new client
+connection closes the others. All clients' calls are serialized on the Editor's main thread, so the
+broker's lanes decide what may run when ([tools/shared-editor.md](tools/shared-editor.md)).
+
+Install the broker package with `tools/editor-broker.ps1 install` (embedded copy, default) or
+`install -Mode git` (a `unity-package` git URL that follows `main`; `-GitRef <tag|commit>` pins a
+version). It adds the `uga_broker` MCP
+tool automatically when MCP for Unity is installed.
+
+**Unity CLI route:** the official Unity CLI drives a running Editor through the Pipeline package
+(`com.unity.pipeline`, Unity 6+): `unity pipeline install --project-path <project>`, then
+`unity status --project-path <project>`. With Pipeline 0.8+ the broker registers
+`unity command uga_broker --action status|take|...`. Pass `--project-path` on every call when more
+than one Editor runs.
+
 ## Pin the workspace instance
 
 Each [parallel workspace](tools/parallel-editors.md) runs its own Editor registration/MCP instance.

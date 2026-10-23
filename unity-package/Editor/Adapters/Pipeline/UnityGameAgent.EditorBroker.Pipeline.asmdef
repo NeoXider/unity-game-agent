@@ -1,0 +1,27 @@
+{
+    "name": "UnityGameAgent.EditorBroker.Pipeline",
+    "rootNamespace": "UnityGameAgent.EditorBroker.Adapters",
+    "references": [
+        "UnityGameAgent.EditorBroker",
+        "Unity.Pipeline.Attributes"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UGA_BROKER_PIPELINE"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.pipeline",
+            "expression": "0.8.0-exp.1",
+            "define": "UGA_BROKER_PIPELINE"
+        }
+    ],
+    "noEngineReferences": false
+}

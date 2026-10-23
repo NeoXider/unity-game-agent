@@ -156,6 +156,10 @@ failed/affected checks; required Critical/Major defects cannot be reported as a 
 
 ### Editor hygiene during QA (all learned the hard way)
 
+- **In a shared-editor session, tests and Play Mode go through hot windows** (`editor-broker.ps1
+  request -Lane hot`): selections of one mode run in a single Test Runner execution, sessions follow
+  with a time box, and unsaved scenes block the window instead of raising a modal dialog. Adapter test
+  tools that save every dirty scene first are forbidden there ([shared-editor.md](shared-editor.md)).
 - **Never run QA while the owner is playing in the editor.** The tester drives the same editor and
   the same save: the owner saw coins "come back" because the tester's session loaded over theirs.
   Ask, or wait until the editor is idle.
@@ -222,6 +226,10 @@ old file, carry the reviewer's comments over verbatim with their resolution befo
 
 ## Test-Run Traps
 
+- **A zero-test run after an earlier run is a tooling trap, not a result.** With domain reload
+  disabled (Enter Play Mode Options), Unity 6000.6 / Test Framework 1.8 ran tests only in the first
+  Play Mode run of a batch-mode Editor session; later runs reported zero tests. Reload the domain for
+  Play Mode test runs and treat an unexpected empty run as blocked.
 - **Compiling is not a pass.** Count results from the run's XML (passed, failed, skipped) and name the failing tests. A test that never ran in the engine is unverified, whatever the compiler says.
 - **Edit Mode is not the runtime lifecycle.** Do not infer `OnEnable`, `OnDisable` or `OnDestroy` behavior from a plain Edit Mode test; check the component and test setup. [Edit-mode execution attributes](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/ExecuteAlways.html) affect which events execute. Prefer Play Mode for runtime lifecycle/audio routing; calling a callback directly tests that method, not Unity dispatch. The project observed `AudioMixer.SetFloat` returning false in Edit Mode; inspect exposed parameters and snapshot editing as well, since the [API reference](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/Audio.AudioMixer.SetFloat.html) documents those failure conditions and recommends setting values from `Start` or later.
 - **Check the effective test timeout.** A 180 s limit from a prior run is not a universal NUnit batch default. Inspect the installed Unity Test Framework/NUnit version, test attributes, runner settings and timeout failure before choosing a budget (see [NUnit timeout configuration](https://docs.nunit.org/articles/nunit/writing-tests/attributes/timeout.html)). A source-wide regex scan can exceed a configured limit on a slow disk: prefilter with a cheap string check that preserves every possible regex match, without loosening the check.

@@ -39,6 +39,8 @@
   "skill_memory_scope": "universal_only",
   "role_subskills_enabled": true,
   "mandatory_subagents_standard_pro": "developer_then_independent_qa",
+  "multi_agent_editor": "shared_broker",
+  "shared_editor_settings": "apply",
   "subagent_fallback_policy": "only_when_tools_unavailable",
   "gd_before_lead": true,
   "designer_before_lead_when_visual": true,

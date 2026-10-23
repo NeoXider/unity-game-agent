@@ -36,8 +36,9 @@ Unity Game Agent is built for that gap.
 | Planning record | No | Rare | One acceptance/reuse brief; Lead only for gaps |
 | One task per developer pass | No | Rare | Required |
 | Independent QA pass | No | Partial | Second QA subagent, same brief's QA section |
-| Parallel isolated Unity Editors | Manual | Rare | Worktree + own Library/Editor/MCP; pro default for concurrent Unity tasks |
-| Resource-aware parallel tests | Manual | Rare | Library cloning, disk/RAM gates, headless runs, shared-source test clones |
+| Several agents in one Unity Editor | Manual | Rare | Broker package: leases, one batched import/compile, batched tests and Play Mode, exclusive windows, live board |
+| Several projects on one machine | Manual | Rare | Independent broker per project, machine-wide registry, shared Editor preferences reference-counted |
+| Isolated Editors when really needed | Manual | Rare | Worktree + own Library/Editor/MCP as an escalation, disk/RAM gates, headless runs |
 | Play Mode verification policy | Weak | Partial | Required by mode |
 | EditMode/PlayMode test expectations | Optional | Optional | Declared per task/feature |
 | Screenshot evidence and visual review | Optional | Partial | Required for visual/runtime-visible work |
@@ -72,6 +73,15 @@ flowchart TD
 
 The orchestrator stays accountable, but work is split into small role files so the agent does not keep every responsibility in one context.
 
+![Orchestrator and subagents](assets/illustration-agent-pipeline.jpg)
+
+<details>
+<summary>Diagram: brief, Developer, independent QA and the defect loop</summary>
+
+![Orchestrator, role subagents and the independent QA loop](assets/diagram-agent-pipeline.svg)
+
+</details>
+
 | Role | Goal | Main output |
 |---|---|---|
 | Game Designer | Turn idea or vague gameplay into implementable design | `Docs/GAME_DESIGN.md` |
@@ -82,11 +92,69 @@ The orchestrator stays accountable, but work is split into small role files so t
 
 In `standard` and `pro`, use one Developer and a second independent QA when available and allowed;
 reuse them through corrections. Design/Lead passes are conditional. If delegation is unavailable,
-disclose local role switching and missing independent QA. One operator per workspace serializes Unity;
-isolated workspaces may run concurrently (pro default for 2+ Unity-bound tasks, standard opt-in, fast off).
-See [parallel Unity Editors](tools/parallel-editors.md). Source-final
-handoff precedes import/compile/player checks. After fixes, rerun failed/affected checks and cite valid
-unaffected evidence with source revision/scope/environment.
+disclose local role switching and missing independent QA. Source-final handoff precedes
+import/compile/player checks. After fixes, rerun failed/affected checks and cite valid unaffected
+evidence with source revision/scope/environment.
+
+## Several Agents, One Unity Editor
+
+Cloning a Unity project per agent costs a Library and an Editor each, and branches collide on one
+machine. Unity Game Agent instead lets every agent work **in the same project, branch and Editor**:
+an Editor-only broker package (Unity 6+) schedules the Editor like a shared resource.
+
+![Several agents, one Unity Editor](assets/illustration-shared-editor.jpg)
+
+<details>
+<summary>Diagram: leases, lanes and the Editor timeline</summary>
+
+![Several agents share one Unity Editor through leases and batched windows](assets/diagram-shared-editor.svg)
+
+</details>
+
+- **Order of operations:** cold work always wins; staged scripts and heavy imports from everyone are
+  compiled together; tests and Play Mode run batched and last; one agent at a time gets the whole
+  Editor for packages or builds.
+- **Compile errors find their author:** the agent that broke the build gets `failed` with the errors,
+  everyone else gets `blocked` instead of a mystery failure.
+- **Background waiting:** an agent with nothing else to do waits on its window as a background task.
+- **Both adapters:** rules for MCP for Unity (CoplayDev) and the Unity CLI (Pipeline package), plus an
+  `uga_broker` command for each.
+- **Several projects on one machine** stay independent; `editor-broker.ps1 projects` shows them all.
+
+![Several projects on one machine](assets/illustration-multi-project.jpg)
+
+<details>
+<summary>Diagram: per-project brokers and the machine registry</summary>
+
+![Several projects on one machine stay independent](assets/diagram-multi-project.svg)
+
+</details>
+
+Start: `tools/editor-broker.ps1 doctor -Fix`, then `session start`. Protocol and adapter tables:
+[tools/shared-editor.md](tools/shared-editor.md). Separate branches or simultaneous Play Mode still
+use [isolated workspaces](tools/parallel-editors.md).
+
+### Measured: three agents build a clicker
+
+Same small game (sized for 5-15 minutes), three Codex agents at once, one machine, run once each
+([benchmark](benchmarks/clicker/README.md), [full results](benchmarks/clicker/results.md)):
+
+| | Without the skill | With the skill |
+|---|---|---|
+| Development time | 8.8 min | 13.2 min (1.0 min of it orchestrator setup) |
+| Compile errors caused by another agent | 2 | 0 |
+| Hidden acceptance tests | 17 / 17 | 17 / 17 |
+| Agents' own tests | 21 | 38 |
+| Unity Editor launches | 3 | 1 |
+| Tokens | 2.05 M | 3.98 M (mostly cached input) |
+
+This is a deliberately simple project, so the time win does not show here: the protocol's fixed costs
+(reading the skill, waiting for windows) are as large as the work itself. What the run does show is the
+cost of working without it: even three agents on a ten-minute game broke each other's build twice and
+started three Editors. Every extra agent is one more writer that can break the shared build, lock the
+project or take the Editor away, so without the skill conflicts and waiting grow with the number of
+agents and development stretches out. The skill keeps every compile error with its author and the
+whole team in one Editor.
 
 ## Development Patterns
 
@@ -115,7 +183,9 @@ These are implemented in the skill today.
 | uGUI adaptivity canon (Expand + safe area) | Done | `project-profiles/plain-ugui.md` |
 | Pre-vetted uGUI effect packages before custom code | Done | `project-profiles/plain-ugui.md`, `tools/libraries-setup.md` |
 | Fast / standard / pro mode matrix | Done | `POLICY_MATRIX.md`, `modes/` |
-| Parallel Unity workspace isolation | Done | [Guide](tools/parallel-editors.md), [PowerShell helper](tools/unity-workspace.ps1) |
+| Several agents in one Editor (broker, lanes, board) | Done | [Protocol](tools/shared-editor.md), [CLI](tools/editor-broker.ps1), [package](unity-package/README.md), CLI + EditMode + live Unity e2e tests |
+| Several projects on one machine | Done | `editor-broker.ps1 projects`, machine registry, reference-counted Editor preferences |
+| Isolated workspaces (escalation) | Done | [Guide](tools/parallel-editors.md), [PowerShell helper](tools/unity-workspace.ps1) |
 | Reuse-first discovery policy | Done | `SKILL.md`, `tools/libraries-setup.md` |
 | Role subskills | Done | `roles/game-designer.md`, `roles/designer.md`, `roles/lead.md`, `roles/developer.md`, `roles/qa.md` |
 | Standard/pro feature docs | Done | `templates/FEATURE.md`, `templates/TASK.md` |
@@ -221,14 +291,19 @@ controls document output, not whether a QA agent runs.
 
 ## Quick Start
 
-1. Put this folder in your agent's skills location (e.g. `~/.claude/skills/unity-game-agent`, `~/.codex/skills/unity-game-agent`, or `.cursor/skills/unity-game-agent`).
-2. Open a Unity project or create an empty project.
+1. Put this folder in your agent's skills location (e.g. `~/.claude/skills/unity-game-agent`, `~/.codex/skills/unity-game-agent`, or `.cursor/skills/unity-game-agent`):
+   `git clone https://github.com/NeoXider/unity-game-agent ~/.claude/skills/unity-game-agent`.
+2. Open a Unity 6 project or create an empty one.
 3. Ask for a quick fix, a direct feature, or a full game.
 4. The skill chooses the shortest verified path:
    - quick fix for narrow edits;
    - fast for prototypes;
    - standard for complete small games/features;
    - pro for stricter architecture and tests.
+5. Several agents on one project: the orchestrator runs
+   `tools/editor-broker.ps1 doctor -ProjectRoot <project> -Fix` (installs the broker package into the
+   project and applies the settings), then `session start -Agent lead`; see
+   [tools/shared-editor.md](tools/shared-editor.md).
 
 Optional bootstrap for tracked projects:
 

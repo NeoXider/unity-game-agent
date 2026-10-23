@@ -69,6 +69,8 @@ Each line: when it was learned → where the rule lives now. Read the document, 
 | 2026-10 | Prime Rule: search for a ready-made solution first, own only if nothing fits or it is demonstrably cheaper; record the decision | `SKILL.md` (Prime Rule), `tools/external-solution-reuse.md` |
 
 | 2026-10 | Isolate worktree/Library/Editor/MCP per parallel task; one operator per workspace; shared-source clones never save assets | `tools/parallel-editors.md`, `SKILL.md` |
+| 2026-10 | Several agents share one Editor through leases and batched windows; stage compiled files because adapters refresh on their own; stdio MCP accepts one client | `tools/shared-editor.md`, `SKILL.md` |
+| 2026-10 | Unity 6 automation traps: BOM in manifest.json, `[InitializeOnLoad]` in import workers, batch-mode update spin, only `SaveAssets` writes ProjectSettings | `tools/mcp-provider-neutral.md` |
 
 ## Active Learnings
 

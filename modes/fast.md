@@ -79,8 +79,8 @@ Required set per [../POLICY_MATRIX.md](../POLICY_MATRIX.md); `fast` keeps each f
 - Keep existing if project uses `New Input System`.
 
 ## MCP Usage
-- Parallel Unity workspaces are **off** in `fast`; use one workspace and one Unity operator.
-  See [parallel-editors.md](../tools/parallel-editors.md) for the standard/pro workflow.
+- `fast` runs one agent and one Unity operator. When the owner asks for several agents anyway, use a
+  shared-editor session ([shared-editor.md](../tools/shared-editor.md)).
 - Follow provider-neutral preflight from `tools/mcp-provider-neutral.md`.
 - If MCP is missing, installation is enabled and within authorized scope, add the adapter to `Packages/manifest.json`, resolve it and retry detection. Otherwise use file-only mode and report unverified Editor checks; read-only/file-only requests do not authorize installation.
 - `batch_execute` or equivalent bulk operations are recommended for multiple objects/components.

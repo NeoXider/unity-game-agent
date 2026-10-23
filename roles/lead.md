@@ -46,8 +46,10 @@ files; preserve existing files and their links. Explicit expanded tracking can u
    exits need demonstrated gap plus narrower/faster cost rationale or explicit from-scratch intent.
 4. Select affected verification drivers/contracts/capture/platform checks. Apply the Test Value Gate
    from [Play Mode QA](../tools/playmode-qa-automation.md); broad suites need an actual blast radius.
-5. Confirm typed source/asset ownership and the single Editor operator/source-final barrier. Update
-   only necessary tracking links, then hand the brief to Developer.
+5. Confirm typed source/asset ownership and the Editor barrier. For several agents, split work into
+   non-overlapping leases (programmers by assembly or feature folder, one scene per scene builder,
+   one screen folder per UI agent) and write them into each brief ([shared-editor.md](../tools/shared-editor.md)).
+   Update only necessary tracking links, then hand the brief to Developer.
 
 ## Done Gate
 

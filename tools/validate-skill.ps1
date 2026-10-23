@@ -45,6 +45,8 @@ $requiredProfileFields = @(
     "skill_memory_scope",
     "role_subskills_enabled",
     "mandatory_subagents_standard_pro",
+    "multi_agent_editor",
+    "shared_editor_settings",
     "subagent_fallback_policy",
     "gd_before_lead",
     "designer_before_lead_when_visual",
@@ -82,7 +84,8 @@ $requiredTemplates = @(
     "tools/playmode-qa-automation.md",
     "tools/project-structure.md",
     "tools/external-solution-reuse.md",
-    "tools/parallel-editors.md"
+    "tools/parallel-editors.md",
+    "tools/shared-editor.md"
 )
 $requiredScripts = @(
     "setup_project.bat",
@@ -92,7 +95,11 @@ $requiredScripts = @(
     "tools/test-scripts.ps1",
     "tools/validate-skill.ps1",
     "tools/unity-workspace.ps1",
-    "tools/test-unity-workspace.ps1"
+    "tools/test-unity-workspace.ps1",
+    "tools/editor-broker.ps1",
+    "tools/test-editor-broker.ps1",
+    "tools/test-editor-broker-unity.ps1",
+    "unity-package/package.json"
 )
 $requiredRoles = @(
     "roles/game-designer.md",

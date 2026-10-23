@@ -128,6 +128,18 @@ Run tests for [system]. Fix failures. Report results.
 
 ---
 
+## Several Agents, One Editor
+
+```
+Run [feature list] with several agents in one Unity Editor.
+Check readiness (editor-broker doctor -Fix, then doctor = READY), start the session,
+split the work into non-overlapping leases (programmers by assembly or feature folder,
+one scene per scene builder, one screen folder per UI agent, QA without leases),
+and keep tests/Play Mode in hot windows. Report the board at the end and stop the session.
+```
+
+---
+
 ## Scene Setup via MCP
 
 ```

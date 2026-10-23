@@ -4,6 +4,50 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.8.0] - 2026-10-23
+
+### Added - several agents in one Unity Editor (default for multi-agent work)
+- `unity-package/` (`com.neoxider.uga-editor-broker`, Unity 6+): Editor-only broker with resource
+  leases, a focus token for scene-graph edits, a batched sync window (staged scripts and heavy assets
+  published, imported and compiled once, errors attributed to their author), a hot window (test
+  selections in one Test Runner run per mode, then time-boxed Play Mode sessions), an exclusive window,
+  guards (Play Mode outside a window, unleased saves, scripts imported outside sync) and a board window.
+- `tools/editor-broker.ps1`: agent CLI (`install`, `doctor [-Fix]`, `session`, `take`, `renew`,
+  `release`, `yield`, `gate`, `stage`, `request [-Wait]`, `wait`, `done`, `cancel`, `status`, `projects`)
+  with exit codes for background waiting. Written for Windows PowerShell 5.1 and PowerShell 7+;
+  tested on 5.1.
+- `tools/shared-editor.md`: protocol, order of operations, staging, splitting work (assembly, feature
+  folder, epic), adapter tables for MCP for Unity and the Unity CLI/Pipeline, several projects on one
+  machine, troubleshooting.
+- Optional `uga_broker` command for MCP for Unity and the Unity CLI (Pipeline 0.8+).
+- Orchestrator readiness check: Unity 6+, package, live Editor, project settings (Enter Play Mode
+  without domain reload, parallel import, verified smoke run with rollback), MCP HTTP transport,
+  per-user session preferences reference-counted across projects, free RAM and commit memory.
+- Sessions trim idle import workers (standby 1, shutdown after 10 s; restored on stop): each is a
+  Unity process of about 1 GB, and with Unity's defaults a second Editor on a busy machine failed to
+  start.
+- Tests: shared vectors run by C# EditMode tests and the PowerShell CLI tests; 8-process lease race
+  and lost-update stress; live Unity e2e (`tools/test-editor-broker-unity.ps1`).
+- `benchmarks/clicker/`: three agents build the same small clicker with and without the skill (brief,
+  hidden acceptance tests, process sampler, screenshots, results). First run: 8.8 vs 13.2 min, 2 vs 0
+  compile errors caused by another agent, 17/17 acceptance on both sides.
+- README: illustrations, Quick Start install steps; `install -Mode git` follows `main` unless
+  `-GitRef` pins a version.
+
+### Changed
+- Multi-agent work on one project defaults to a shared Editor in `standard` and `pro`; isolated
+  workspaces become the escalation for separate branches, package sets or simultaneous Play Mode.
+- The skill states Unity 6 (6000.0) as its minimum.
+- Dev Drive is suggested only when the owner asks or a ReFS volume already exists
+  (`unity-workspace.ps1 doctor/status` follows the same rule).
+- `DEV_PROFILE.json`: `multi_agent_editor`, `shared_editor_settings`.
+- Field-tested gotchas: BOM in `manifest.json`, `[InitializeOnLoad]` in import workers, batch-mode
+  update spin, ProjectSettings saving, stdio MCP transport with several clients, the second Play Mode
+  test run finding zero tests without domain reload, an Editor dying at startup when commit memory runs
+  out.
+
+---
+
 ## [3.7.0] — 2026-10-15
 
 ### ✨ Added — parallel isolated Unity workspaces

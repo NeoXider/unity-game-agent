@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="1200" height="640" rx="24" fill="#0f172a"/>
+  <text x="60" y="64" fill="#f8fafc" font-size="30" font-weight="700">Several agents, one Unity Editor</text>
+  <text x="60" y="96" fill="#94a3b8" font-size="17">Leases decide who may edit what. Batched windows decide when the whole Editor stops.</text>
+
+  <!-- agents -->
+  <g font-size="16" fill="#e2e8f0">
+    <rect x="60" y="130" width="230" height="74" rx="14" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+    <text x="80" y="162" font-weight="700" fill="#38bdf8">Programmers</text>
+    <text x="80" y="186" fill="#cbd5e1">assembly or feature leases</text>
+    <rect x="60" y="220" width="230" height="74" rx="14" fill="#1e293b" stroke="#a78bfa" stroke-width="2"/>
+    <text x="80" y="252" font-weight="700" fill="#a78bfa">Scene builders</text>
+    <text x="80" y="276" fill="#cbd5e1">scene lease + focus token</text>
+    <rect x="60" y="310" width="230" height="74" rx="14" fill="#1e293b" stroke="#f472b6" stroke-width="2"/>
+    <text x="80" y="342" font-weight="700" fill="#f472b6">UI agents</text>
+    <text x="80" y="366" fill="#cbd5e1">screen folder leases</text>
+    <rect x="60" y="400" width="230" height="74" rx="14" fill="#1e293b" stroke="#34d399" stroke-width="2"/>
+    <text x="80" y="432" font-weight="700" fill="#34d399">QA</text>
+    <text x="80" y="456" fill="#cbd5e1">hot requests, no leases</text>
+  </g>
+
+  <!-- arrows to broker -->
+  <g stroke="#64748b" stroke-width="2.5" fill="none" marker-end="url(#arrow)">
+    <path d="M290 167 C 360 167, 360 300, 420 300"/>
+    <path d="M290 257 C 360 257, 360 300, 420 300"/>
+    <path d="M290 347 C 360 347, 360 300, 420 300"/>
+    <path d="M290 437 C 360 437, 360 300, 420 300"/>
+  </g>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <!-- broker -->
+  <rect x="420" y="200" width="250" height="200" rx="20" fill="#111827" stroke="#facc15" stroke-width="3"/>
+  <text x="545" y="240" fill="#facc15" font-size="22" font-weight="700" text-anchor="middle">Editor Broker</text>
+  <text x="545" y="270" fill="#e2e8f0" font-size="15" text-anchor="middle">leases · FIFO queues</text>
+  <text x="545" y="294" fill="#e2e8f0" font-size="15" text-anchor="middle">drain → window → results</text>
+  <text x="545" y="318" fill="#e2e8f0" font-size="15" text-anchor="middle">compile errors → their author</text>
+  <text x="545" y="342" fill="#e2e8f0" font-size="15" text-anchor="middle">live board in the Editor</text>
+  <text x="545" y="376" fill="#94a3b8" font-size="13" text-anchor="middle">state: Library/UgaBroker</text>
+
+  <!-- lanes -->
+  <g font-size="16">
+    <rect x="730" y="130" width="410" height="74" rx="14" fill="#0b3b2e" stroke="#34d399" stroke-width="2"/>
+    <text x="750" y="160" fill="#34d399" font-weight="700">1 · cold — always</text>
+    <text x="750" y="184" fill="#d1fae5">parallel edits on leased resources</text>
+    <rect x="730" y="220" width="410" height="74" rx="14" fill="#0c2f4a" stroke="#38bdf8" stroke-width="2"/>
+    <text x="750" y="250" fill="#38bdf8" font-weight="700">2 · sync — batched</text>
+    <text x="750" y="274" fill="#e0f2fe">publish staged files, import, ONE compile</text>
+    <rect x="730" y="310" width="410" height="74" rx="14" fill="#3b1d0b" stroke="#fb923c" stroke-width="2"/>
+    <text x="750" y="340" fill="#fb923c" font-weight="700">3 · hot — batched, lowest priority</text>
+    <text x="750" y="364" fill="#ffedd5">test selections in one run, then Play Mode sessions</text>
+    <rect x="730" y="400" width="410" height="74" rx="14" fill="#3b0b1f" stroke="#f472b6" stroke-width="2"/>
+    <text x="750" y="430" fill="#f472b6" font-weight="700">4 · exclusive — one holder</text>
+    <text x="750" y="454" fill="#fce7f3">packages, ProjectSettings, builds, merges</text>
+  </g>
+  <g stroke="#facc15" stroke-width="2.5" fill="none" marker-end="url(#arrowY)">
+    <path d="M670 300 C 700 300, 700 167, 730 167"/>
+    <path d="M670 300 C 700 300, 700 257, 730 257"/>
+    <path d="M670 300 C 700 300, 700 347, 730 347"/>
+    <path d="M670 300 C 700 300, 700 437, 730 437"/>
+  </g>
+  <defs>
+    <marker id="arrowY" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#facc15"/>
+    </marker>
+  </defs>
+
+  <!-- timeline -->
+  <text x="60" y="530" fill="#f8fafc" font-size="18" font-weight="700">One Editor over time</text>
+  <rect x="60" y="548" width="1080" height="34" rx="8" fill="#0b3b2e"/>
+  <rect x="300" y="548" width="90" height="34" fill="#38bdf8"/>
+  <rect x="640" y="548" width="170" height="34" fill="#fb923c"/>
+  <rect x="980" y="548" width="70" height="34" fill="#f472b6"/>
+  <g font-size="14" fill="#0f172a" font-weight="700">
+    <text x="345" y="570" text-anchor="middle">sync</text>
+    <text x="725" y="570" text-anchor="middle">hot batch</text>
+    <text x="1015" y="570" text-anchor="middle">excl.</text>
+  </g>
+  <text x="170" y="570" fill="#a7f3d0" font-size="14" text-anchor="middle">cold work</text>
+  <text x="515" y="570" fill="#a7f3d0" font-size="14" text-anchor="middle">cold work</text>
+  <text x="895" y="570" fill="#a7f3d0" font-size="14" text-anchor="middle">cold work</text>
+  <text x="60" y="612" fill="#94a3b8" font-size="14">Agents yield at a safe point → the window drains → runs → everyone resumes. Agents with nothing to do wait on the result as a background task.</text>
+</svg>

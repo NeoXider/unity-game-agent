@@ -1,0 +1,30 @@
+{
+    "name": "UnityGameAgent.EditorBroker.TestRunner",
+    "rootNamespace": "UnityGameAgent.EditorBroker",
+    "references": [
+        "UnityGameAgent.EditorBroker",
+        "UnityEditor.TestRunner",
+        "UnityEngine.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UGA_BROKER_TEST_FRAMEWORK"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.test-framework",
+            "expression": "1.1.0",
+            "define": "UGA_BROKER_TEST_FRAMEWORK"
+        }
+    ],
+    "noEngineReferences": false
+}

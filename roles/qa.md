@@ -29,7 +29,8 @@ Use existing defect tracking only where the project already needs it; no mandato
 ## Allowed Writes
 
 The QA-owned brief section and task-scoped capture/log evidence. Route Editor operations through the
-single assigned operator; no competing Editor, import, Play Mode, save profile or test harness.
+single assigned operator, or in a shared-editor session through hot windows (`request -Lane hot` with
+`-Tests` or `-JobKind session`); no competing Editor, import, Play Mode, save profile or test harness.
 
 ## Forbidden Actions
 
