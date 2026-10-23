@@ -141,6 +141,19 @@ namespace UnityGameAgent.EditorBroker
             return lease;
         }
 
+        // Agents whose active leases, or earlier waiting requests, keep waiting entry `index` queued.
+        public static List<string> Blockers(BrokerState state, BrokerWaiter waiter, int index, long now)
+        {
+            return state.leases
+                .Where(l => l.expiresMs > now && Conflicts(waiter.agent, waiter.kind, waiter.path, l.agent, l.kind, l.path))
+                .Select(l => l.agent)
+                .Concat(state.waiting.Take(index)
+                    .Where(e => Conflicts(waiter.agent, waiter.kind, waiter.path, e.agent, e.kind, e.path))
+                    .Select(e => e.agent))
+                .Distinct()
+                .ToList();
+        }
+
         // Grants waiting requests in FIFO order: an entry is granted only when it conflicts with no
         // active lease and with no earlier entry that is still waiting.
         public static List<BrokerLease> Promote(BrokerState state, BrokerConfig cfg, long now)

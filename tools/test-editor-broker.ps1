@@ -89,11 +89,34 @@ foreach ($scenario in $vectors.scenarios) {
                 $r = Invoke-BrokerRequest $state $step.agent $step.lane $step.kind $requestPaths ([string]$step.tests) ([string]$step.mode) ([string]$step.scene) ([double]$step.minutes) ([string]$step.reason) $now
                 Assert-Broker ($r.status -eq $step.expect) "$label expected $($step.expect) got $($r.status): $($r.message)"
             }
+            'touch' { [void](Update-BrokerRoster $state $step.agent 'test' $now ([string]$step.role) ([string]$step.doing)) }
+            'roster' {
+                $actual = @($state.roster | ForEach-Object { "$($_.agent)|$($_.role)|$($_.doing)" })
+                Assert-Broker (($actual -join ';') -ceq (@($step.list) -join ';')) "$label roster [$($actual -join ';')]"
+            }
             default { throw "$label unknown op" }
         }
     }
 }
-Write-Output "vectors: $(@($vectors.paths).Count) paths, $(@($vectors.scenarios).Count) scenarios, $(@($vectors.filters).Count) filters passed"
+
+foreach ($c in $vectors.forecasts) {
+    $state = New-BrokerState ([pscustomobject]@{ jobs = $c.jobs; window = $c.window })
+    $forecast = Get-BrokerForecast $state (Get-BrokerLaneAverages $c.lanes) ([long]$c.now)
+    $actual = @($forecast | ForEach-Object { "$($_.jobId)|$($_.order)|$($_.startMs)|$($_.doneMs)" })
+    Assert-Broker (($actual -join ';') -ceq (@($c.expect) -join ';')) "forecast $($c.name): [$($actual -join ';')]"
+}
+foreach ($c in $vectors.boards) {
+    $entries = ConvertFrom-BrokerBoard $c.text
+    $actual = @($entries | ForEach-Object { "$($_.id)|$($_.from)|$(@($_.to) -join ',')|$($_.text)" })
+    Assert-Broker (($actual -join ';') -ceq (@($c.entries) -join ';')) "board $($c.name): [$($actual -join ';')]"
+    $unread = @(Get-BrokerBoardUnread $entries ([long]$c.readId) $c.agent | ForEach-Object { $_.id })
+    Assert-Broker (($unread -join ';') -ceq (@($c.unread) -join ';')) "board $($c.name) unread: [$($unread -join ';')]"
+}
+foreach ($c in $vectors.boardFormats) {
+    $text = Format-BrokerBoardEntry ([long]$c.number) ([long]$c.now) $c.from @($c.to) $c.text
+    Assert-Broker ($text -ceq $c.expect) "board format M$($c.number): [$text]"
+}
+Write-Output "vectors: $(@($vectors.paths).Count) paths, $(@($vectors.scenarios).Count) scenarios, $(@($vectors.filters).Count) filters, $(@($vectors.forecasts).Count) forecasts, $(@($vectors.boards).Count + @($vectors.boardFormats).Count) board cases passed"
 
 # ------------------------------------------------------------------ package metadata
 $metaGuids = @{}
@@ -214,6 +237,40 @@ try {
     Assert-Broker ([Math]::Abs($stats.current.avgQueue - 1.0) -lt 0.05) "stats: average queue should be about 1.0, got $($stats.current.avgQueue)"
     Assert-Broker ($stats.project.segments -eq 2 -and $stats.project.jobs -eq 10 -and $stats.project.queuePeak -eq 5) 'stats: project totals over history'
     [void](Invoke-Cli @('release', '-Agent', 'tb'))
+
+    # team brief: the roster, the queue with an ETA from telemetry, and the team board with unread
+    # counts. Posting goes through the lock; a brief marks the board as read for that agent.
+    [void](Invoke-Cli @('take', '-Agent', 'core', '-Resource', 'folder:Assets/Team/', '-Role', 'developer', '-Doing', 'score model'))
+    $said = Invoke-Cli @('say', '-Agent', 'core', '-Message', "Renamed Score.Add to AddPoints.`n# not a heading")
+    Assert-Broker ($said -like 'posted M* to all*team-board.md*') "say output:`n$said"
+    [void](Invoke-Cli @('say', '-Agent', 'qa', '-To', 'ui,core', '-Message', 'Tooltip overlaps at 1280x720.'))
+    [void](Invoke-Cli @('say', '-Agent', 'qa', '-To', 'bad name', '-Message', 'x') 2)
+    [void](Invoke-Cli @('say', '-Agent', 'qa', '-Message', ' ') 2)
+    [void](Invoke-Cli @('say', '-Agent', 'qa', '-Message', ('x' * 301)) 2)
+    $gateText = Invoke-Cli @('gate', '-Agent', 'ui')
+    Assert-Broker ($gateText -like '*2 new message(s) for you*') "gate should point ui at the board:`n$gateText"
+    $requestText = Invoke-Cli @('request', '-Agent', 'core', '-Lane', 'sync')
+    Assert-Broker ($requestText -like '*ETA (rough): window #1 of the queue*') "request should print an ETA:`n$requestText"
+    $requestJson = (Invoke-Cli @('request', '-Agent', 'ui', '-Lane', 'hot', '-Minutes', '2', '-Json')).Split("`n") | Where-Object { $_ -like '{*' } | Select-Object -First 1 | ConvertFrom-Json
+    Assert-Broker ([long]$requestJson.doneMs -gt [long]$requestJson.startMs -and [int]$requestJson.unread -eq 2) "request -Json should carry the ETA and unread count: $($requestJson | ConvertTo-Json -Compress)"
+    $briefText = Invoke-Cli @('brief', '-Agent', 'ui', '-Doing', 'upgrade screen')
+    foreach ($want in @('*Team (5):*', '*core `[developer`]*score model | cold Assets/Team/*', '*Queue (start -> done, ETA from telemetry):*',
+                        '*#1 J* core sync: ~*', '*<- yours*', '*Board: 2 new, 0 other, 2 total*', '*core->all: Renamed Score.Add to AddPoints. / \# not a heading*', '*qa->ui,core: Tooltip overlaps*')) {
+        Assert-Broker ($briefText -like $want) "brief misses $want`n$briefText"
+    }
+    $briefAgain = (Invoke-Cli @('brief', '-Agent', 'ui', '-Json')) | ConvertFrom-Json
+    Assert-Broker (@($briefAgain.board.unread).Count -eq 0 -and $briefAgain.board.total -eq 2) 'a second brief must find nothing new'
+    Assert-Broker ((@($briefAgain.team | Where-Object { $_.agent -eq 'ui' })[0].doing) -eq 'upgrade screen') 'brief -Doing should reach the roster'
+    Assert-Broker ($briefAgain.estimates -eq 'telemetry' -and @($briefAgain.queue).Count -eq 2) 'brief should forecast both queued jobs from telemetry'
+    $coreBrief = (Invoke-Cli @('brief', '-Agent', 'core', '-Json')) | ConvertFrom-Json
+    Assert-Broker (@($coreBrief.board.unread).Count -eq 1 -and $coreBrief.board.othersNew -eq 0) 'core gets the message to ui,core but not its own'
+    $teamState = Invoke-BrokerUpdate $project { param($s, $ctx) }
+    Assert-Broker (@($teamState.roster | Where-Object { $_.agent -eq 'qa' }).Count -eq 1) 'say should add the sender to the roster'
+    Assert-Broker ((Invoke-Cli @('status')) -like '*Team: core (seen*') 'status should list the team'
+    $boardFile = [IO.File]::ReadAllText((Join-Path (Get-BrokerDir $project) 'team-board.md'))
+    Assert-Broker ($boardFile.StartsWith('# Team board') -and (ConvertFrom-BrokerBoard $boardFile).Count -eq 2) "board file:`n$boardFile"
+    Set-FakeState { param($s) foreach ($j in $s.jobs) { if ($j.status -eq 'queued') { Complete-BrokerJob $j 'canceled' 'test' (Get-BrokerNowMs) } } }
+    [void](Invoke-Cli @('release', '-Agent', 'core'))
     Remove-Item -LiteralPath (Join-Path (Get-BrokerDir $project) 'telemetry.jsonl')
 
     # install: embed is idempotent and leaves the manifest alone; git mode writes JSON without a BOM.

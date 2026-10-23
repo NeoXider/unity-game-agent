@@ -440,6 +440,29 @@ static class E2EHelpers
         "$($c.jobs) jobs, $($c.windows) windows, wait avg $($c.avgWaitMs) ms, max $($c.maxWaitMs) ms, queue peak $($c.queuePeak)"
     }
 
+    Step 'team brief: the roster survives Editor writes, the board reaches its reader, ETAs use telemetry' {
+        [void](Invoke-E2ECli @('say', '-Agent', 'lead', '-To', 'a', '-Role', 'lead', '-Message', 'e2e: check the board'))
+        $sync = Invoke-E2EJob @('request', '-Agent', 'lead', '-Lane', 'sync')
+        $queued = (Invoke-E2ECli @('brief', '-Agent', 'b', '-Json')) | ConvertFrom-Json
+        Assert-E2E (@($queued.queue | Where-Object { $_.jobId -eq $sync }).Count -eq 1) 'brief should list the queued sync job'
+        [void](Invoke-E2ECli @('yield', '-Agent', 'a'))
+        [void](Invoke-E2ECli @('yield', '-Agent', 'b'))
+        [void](Invoke-E2ECli @('yield', '-Agent', 'c'))
+        [void](Invoke-E2ECli @('wait', '-Job', $sync, '-TimeoutSec', $StepTimeoutSec))
+        $state = Get-State
+        Assert-E2E (@($state.roster | Where-Object { $_.agent -eq 'lead' -and $_.role -eq 'lead' }).Count -eq 1) 'the Editor dropped the roster written by the CLI'
+        $brief = (Invoke-E2ECli @('brief', '-Agent', 'a', '-Json')) | ConvertFrom-Json
+        Assert-E2E (@($brief.board.unread | Where-Object { $_.from -eq 'lead' }).Count -eq 1) 'agent a should see the message from lead'
+        Assert-E2E ($brief.estimates -eq 'telemetry') "brief should estimate from telemetry, got $($brief.estimates)"
+        "$(@($state.roster).Count) agents in the roster after Editor writes; ETA from telemetry"
+    }
+
+    Step 'package EditMode tests (shared vectors, telemetry, team) pass inside the shared Editor' {
+        $tests = Invoke-E2EJob @('request', '-Agent', 'qa', '-Lane', 'hot', '-Tests', 'assembly:UnityGameAgent.EditorBroker.Tests', '-TestMode', 'EditMode')
+        $text = Invoke-E2ECli @('wait', '-Job', $tests, '-TimeoutSec', $StepTimeoutSec)
+        ($text.Split("`n") | Select-Object -First 1)
+    }
+
     Step 'idle import workers shut down to one standby during a session' {
         $before = @(Get-WorkerProcesses $script:ProjectA).Count
         Wait-Until { @(Get-WorkerProcesses $script:ProjectA).Count -le 1 } 'project A import workers to drop to one' 90

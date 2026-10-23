@@ -24,6 +24,10 @@ namespace UnityGameAgent.EditorBroker
         public float minutes;
         public string reason = "";
         public string jobId = "";
+        public string message = "";
+        public string to = "";
+        public string role = "";
+        public string doing = "";
     }
 
     // Entry point for the optional MCP / Unity CLI adapters. Same verbs and rules as
@@ -71,6 +75,19 @@ namespace UnityGameAgent.EditorBroker
             if ((action == "take" || (action == "release" && !string.IsNullOrEmpty(r.resource))) &&
                 !BrokerPaths.TryParse(r.resource, AsmdefResolver(store.ProjectRoot), out type, out path, out parseError))
                 return BrokerOpResult.Of("error", parseError);
+
+            if (action == "say")
+            {
+                var text = BrokerTeam.CleanText(r.message);
+                if (string.IsNullOrWhiteSpace(text)) return BrokerOpResult.Of("error", "say needs a message.");
+                if (text.Length > BrokerTeam.MaxMessageChars)
+                    return BrokerOpResult.Of("error", "Message is longer than " + BrokerTeam.MaxMessageChars + " characters; link a file instead.");
+            }
+            var recipients = BrokerTeam.Recipients(r.to, out parseError);
+            if (action == "say" && recipients == null) return BrokerOpResult.Of("error", parseError);
+            var editorStatus = action == "brief" ? store.ReadEditorStatus() : null;
+            var history = action == "brief" ? BrokerTeam.History(store) : new List<BrokerTelemetry>();
+            var agentAction = action != "status" && action != "job" && BrokerPaths.IsValidAgent(r.agent);
 
             BrokerOpResult result = null;
             BrokerState state;
@@ -121,18 +138,31 @@ namespace UnityGameAgent.EditorBroker
                             ? BrokerOpResult.Of("error", "Unknown job " + r.jobId + ".")
                             : new BrokerOpResult { status = job.status, jobId = job.id, message = job.summary };
                         break;
+                    case "brief":
+                        if (!BrokerPaths.IsValidAgent(r.agent)) { result = BrokerOpResult.Of("error", "Invalid agent name."); break; }
+                        BrokerOps.Promote(s, cfg, now);
+                        result = BrokerOpResult.Of("ok", BrokerTeam.Brief(store, s, editorStatus, history, r.agent, now, r.role, r.doing));
+                        break;
+                    case "say":
+                        if (!BrokerPaths.IsValidAgent(r.agent)) { result = BrokerOpResult.Of("error", "Invalid agent name."); break; }
+                        var id = BrokerTeam.Post(store, s, r.agent, recipients, r.message, now);
+                        result = BrokerOpResult.Of("posted", id + " posted to " + string.Join(", ", recipients.ToArray()) + ": " + BrokerTeam.BoardPath(store));
+                        break;
                     default:
                         result = BrokerOpResult.Of("error", "Unknown action '" + r.action +
-                                                            "'. Use status, take, release, renew, yield, gate, request, cancel, done or job.");
+                                                            "'. Use status, brief, say, take, release, renew, yield, gate, request, cancel, done or job.");
                         return false;
                 }
                 if (action == "status" || action == "job") return false;
+                if (result.status == "error") return false;
                 BrokerOps.Promote(s, cfg, now);
-                return result.status != "error";
+                if (agentAction) BrokerTeam.Touch(s, r.agent, action, now, r.role, r.doing);
+                return true;
             }, 2000, out state, out error);
 
             if (!ok) return BrokerOpResult.Of("error", error);
-            board = BrokerBoard.Describe(state, store.ReadEditorStatus(), BrokerClock.NowMs());
+            if (agentAction) result.unread = BrokerTeam.UnreadCount(store, state, r.agent);
+            board = action == "brief" ? "" : BrokerBoard.Describe(state, store.ReadEditorStatus(), BrokerClock.NowMs());
             return result;
         }
 
@@ -170,6 +200,9 @@ namespace UnityGameAgent.EditorBroker
                                 " jobs " + string.Join(",", w.jobIds) + waiting);
             }
             else text.AppendLine("Window: none");
+            if (state.roster.Count > 0)
+                text.AppendLine("Team: " + string.Join(", ", state.roster.OrderByDescending(m => m.lastSeenMs)
+                    .Select(m => m.agent + " (seen " + Age(now - m.lastSeenMs) + " ago)").ToArray()) + ". Each agent: brief -Agent <name>.");
 
             text.AppendLine("Leases:");
             foreach (var l in state.leases.OrderBy(l => l.grantedMs))

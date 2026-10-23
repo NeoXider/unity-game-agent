@@ -58,6 +58,8 @@ namespace UnityGameAgent.EditorBroker.Tests
             public string mode = "";
             public string scene = "";
             public string reason = "";
+            public string role = "";
+            public string doing = "";
             public long at;
             public int ttl;
             public int position;
@@ -86,6 +88,39 @@ namespace UnityGameAgent.EditorBroker.Tests
         }
 
         [Serializable]
+        sealed class ForecastCase
+        {
+            public string name = "";
+            public long now;
+            public List<BrokerLaneStats> lanes = new List<BrokerLaneStats>();
+            public BrokerWindow window = new BrokerWindow();
+            public List<BrokerJob> jobs = new List<BrokerJob>();
+            public List<string> expect = new List<string>();
+        }
+
+        [Serializable]
+        sealed class BoardCase
+        {
+            public string name = "";
+            public string text = "";
+            public List<string> entries = new List<string>();
+            public string agent = "";
+            public long readId;
+            public List<string> unread = new List<string>();
+        }
+
+        [Serializable]
+        sealed class BoardFormatCase
+        {
+            public long number;
+            public long now;
+            public string from = "";
+            public List<string> to = new List<string>();
+            public string text = "";
+            public string expect = "";
+        }
+
+        [Serializable]
         sealed class Vectors
         {
             public List<AsmdefEntry> asmdefs = new List<AsmdefEntry>();
@@ -94,6 +129,9 @@ namespace UnityGameAgent.EditorBroker.Tests
             public List<CoverCase> covers = new List<CoverCase>();
             public List<Scenario> scenarios = new List<Scenario>();
             public List<FilterCase> filters = new List<FilterCase>();
+            public List<ForecastCase> forecasts = new List<ForecastCase>();
+            public List<BoardCase> boards = new List<BoardCase>();
+            public List<BoardFormatCase> boardFormats = new List<BoardFormatCase>();
         }
 
         static Vectors s_Vectors;
@@ -156,6 +194,32 @@ namespace UnityGameAgent.EditorBroker.Tests
         public void ScenariosProduceTheExpectedLeaseState()
         {
             foreach (var scenario in Load().scenarios) Run(scenario);
+        }
+
+        [Test]
+        public void ForecastFollowsTheSchedulerOrder()
+        {
+            foreach (var c in Load().forecasts)
+            {
+                var state = new BrokerState { window = c.window ?? new BrokerWindow(), jobs = c.jobs };
+                state.Normalize();
+                var forecast = BrokerTeam.Forecast(state, BrokerTeam.LaneAverages(c.lanes), c.now)
+                    .Select(f => f.jobId + "|" + f.order + "|" + f.startMs + "|" + f.doneMs).ToList();
+                CollectionAssert.AreEqual(c.expect, forecast, c.name + ": " + string.Join(";", forecast.ToArray()));
+            }
+        }
+
+        [Test]
+        public void TeamBoardParsesFormatsAndCountsUnread()
+        {
+            foreach (var c in Load().boards)
+            {
+                var entries = BrokerTeam.ParseBoard(c.text);
+                CollectionAssert.AreEqual(c.entries, entries.Select(e => e.id + "|" + e.from + "|" + string.Join(",", e.to.ToArray()) + "|" + e.text).ToList(), c.name);
+                CollectionAssert.AreEqual(c.unread, BrokerTeam.Unread(entries, c.readId, c.agent).Select(e => e.id).ToList(), c.name + " unread");
+            }
+            foreach (var c in Load().boardFormats)
+                Assert.AreEqual(c.expect, BrokerTeam.FormatEntry(c.number, c.now, c.from, c.to, c.text), "M" + c.number);
         }
 
         static string Key(string agent, string kind, string path)
@@ -228,6 +292,12 @@ namespace UnityGameAgent.EditorBroker.Tests
                         var request = BrokerOps.Request(state, cfg, step.agent, step.lane, step.kind, paths, step.tests, step.mode,
                             step.scene, step.minutes, step.reason, now);
                         Assert.AreEqual(step.expect, request.status, label + ": " + request.message);
+                        break;
+                    case "touch":
+                        BrokerTeam.Touch(state, step.agent, "test", now, step.role, step.doing);
+                        break;
+                    case "roster":
+                        CollectionAssert.AreEqual(step.list, state.roster.Select(m => m.agent + "|" + m.role + "|" + m.doing).ToList(), label);
                         break;
                     default:
                         Assert.Fail(label + ": unknown op");

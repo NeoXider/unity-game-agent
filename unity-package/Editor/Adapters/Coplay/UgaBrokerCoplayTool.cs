@@ -8,12 +8,12 @@ namespace UnityGameAgent.EditorBroker.Adapters
     // installed. It works while the Editor is responsive; during a compile, reload or Play Mode
     // transition use tools/editor-broker.ps1, which reads the same state file.
     [McpForUnityTool("uga_broker", AutoRegister = true,
-        Description = "Unity Game Agent editor broker for several agents sharing one Editor. Actions: status, take, release, renew, yield, gate, request, cancel, done, job. Take a lease before editing a scene/prefab/asset/folder, call gate before each batch of Editor calls, yield when idle, and request sync/hot/exclusive work instead of refreshing, compiling, entering Play Mode or running tests yourself.")]
+        Description = "Unity Game Agent editor broker for several agents sharing one Editor. Actions: status, brief, say, take, release, renew, yield, gate, request, cancel, done, job. Start each step with brief (team, queue with ETA, new team board messages), post interface changes and handoffs with say, take a lease before editing a scene/prefab/asset/folder, call gate before each batch of Editor calls, yield when idle, and request sync/hot/exclusive work instead of refreshing, compiling, entering Play Mode or running tests yourself.")]
     public static class UgaBrokerCoplayTool
     {
         public sealed class Parameters
         {
-            [ToolParameter("status | take | release | renew | yield | gate | request | cancel | done | job", Required = false, DefaultValue = "status")]
+            [ToolParameter("status | brief | say | take | release | renew | yield | gate | request | cancel | done | job", Required = false, DefaultValue = "status")]
             public string action { get; set; }
 
             [ToolParameter("Your agent name (letters, digits, '.', '_' or '-').", Required = false)]
@@ -54,6 +54,18 @@ namespace UnityGameAgent.EditorBroker.Adapters
 
             [ToolParameter("cancel/done/job: job id.", Required = false)]
             public string job_id { get; set; }
+
+            [ToolParameter("say: one short note for the team board (up to 300 characters; link a file for details).", Required = false)]
+            public string message { get; set; }
+
+            [ToolParameter("say: recipients separated by ',' (agent names) or all (default).", Required = false)]
+            public string to { get; set; }
+
+            [ToolParameter("any agent action: your role for the roster (developer, qa, ui...).", Required = false)]
+            public string role { get; set; }
+
+            [ToolParameter("any agent action: one line about what you work on now, shown to the other agents.", Required = false)]
+            public string doing { get; set; }
         }
 
         public static object HandleCommand(JObject @params)
@@ -73,7 +85,11 @@ namespace UnityGameAgent.EditorBroker.Adapters
                 scene = Str(@params, "scene", ""),
                 minutes = @params?["minutes"]?.Value<float>() ?? 0f,
                 reason = Str(@params, "reason", ""),
-                jobId = Str(@params, "job_id", "")
+                jobId = Str(@params, "job_id", ""),
+                message = Str(@params, "message", ""),
+                to = Str(@params, "to", ""),
+                role = Str(@params, "role", ""),
+                doing = Str(@params, "doing", "")
             };
             string board;
             var result = BrokerApi.Execute(BrokerStore.ForCurrentProject(), request, out board);
@@ -83,6 +99,7 @@ namespace UnityGameAgent.EditorBroker.Adapters
                 lease_id = result.leaseId,
                 job_id = result.jobId,
                 position = result.position,
+                unread = result.unread,
                 board
             };
             if (result.status == "error") return new ErrorResponse(result.message, data);

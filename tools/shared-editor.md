@@ -31,7 +31,11 @@ Run this once before delegating to two or more agents, after the normal prefligh
 & $broker doctor -ProjectRoot $project        # must end with READY
 & $broker session start -Agent lead -ProjectRoot $project
 & $broker status -ProjectRoot $project        # the board
+& $broker say -Agent lead -Message 'Split: core owns Assets/Scripts/Core/, ui owns Assets/UI/, qa runs the tests.' -ProjectRoot $project
 ```
+
+Give every agent its name, role and leases in its work brief, and tell it to start each step with
+`brief` (see [Team brief and board](#team-brief-and-board)).
 
 `doctor` checks and reports:
 
@@ -106,12 +110,14 @@ a requester whose files broke the build gets `failed` with the compiler errors; 
 ## The agent loop
 
 ```text
-take leases -> loop { gate (exit 0 = go, 4 = wait) -> one short batch of Editor calls -> save your own assets }
-           -> stage compiled/heavy files -> request sync -> yield -> keep working on your next task
-           -> check the job with status -Job when you need its result
-           -> request hot tests/session when behavior must be proven -> release when done
+brief -> take leases -> loop { gate (exit 0 = go, 4 = wait) -> one short batch of Editor calls -> save your own assets }
+      -> stage compiled/heavy files -> request sync -> yield -> keep working on your next task
+      -> brief again after a window, a result or a new message; say what the others must know
+      -> request hot tests/session when behavior must be proven -> release when done
 ```
 
+- **Start every step with `brief`.** It shows who else works here, what the queue holds and roughly
+  when your job runs, and what the others asked of you.
 - **A request is not a pause.** After `request` keep working: the next file, the next test, the next
   part of your task, reviews of what is already done. Look at the job with `status -Job <id>` when you
   actually need its result. Waiting idle is only for the moment nothing else is left.
@@ -121,6 +127,45 @@ take leases -> loop { gate (exit 0 = go, 4 = wait) -> one short batch of Editor 
 - **Background waiting** (only when nothing else is left): run `request ... -Wait` (or
   `wait -Job <id>`) as a background task and end your turn; the process exits with the result. Exit
   codes: 0 passed, 8 failed, 9 blocked/canceled, 6 timeout, 7 Editor offline.
+
+## Team brief and board
+
+Agents in one Editor should know about each other. Two commands give them that:
+
+```powershell
+& $broker brief -Agent ui -ProjectRoot $project       # team, queue with ETA, your leases, new messages
+& $broker brief -Agent ui -Role ui -Doing 'upgrade screen' -ProjectRoot $project
+& $broker say -Agent core -Message 'Renamed ScoreModel.Add to AddPoints; update callers.' -ProjectRoot $project
+& $broker say -Agent qa -To ui -Message 'Upgrade tooltip overlaps at 1280x720.' -ProjectRoot $project
+```
+
+- **Roster.** Every agent command (`take`, `gate`, `request`, `brief`, `say` and the rest) records
+  the agent and when it was last seen. `-Role` and a one-line `-Doing` (accepted by any agent
+  command) tell the others what it is and what it works on now. The brief lists every agent with its
+  leases, waiting requests and jobs, including agents known only from their leases. An agent quiet
+  for 2 hours that holds nothing drops out.
+- **Queue and ETA.** The brief lists the active window and the queued jobs in the order the scheduler
+  runs them (one sync window, each exclusive request, one hot window with the tests first) with a
+  rough start and finish. The estimate uses this project's telemetry (average window run, drain and
+  wait per lane) and default guesses until there is some. `request` prints the same ETA for the new
+  job. It is an estimate: a sync request made later still goes before waiting hot work, and sessions
+  are counted at their full time box.
+- **Team board.** `Library/UgaBroker/team-board.md` is a Markdown log, one
+  `### M<n> <UTC time> <from> -> <to>` heading per message. `say` appends under the state lock, so
+  agents never overwrite each other; do not edit the file by hand. `-To` takes agent names separated
+  by commas; the default is everyone (`all`). The human posts from the board window (**Team** section).
+- **Short by design.** Every brief lands in an agent's context, so a message is one note of up to
+  300 characters; put details in a file and post its path. The brief stays compact: one line per
+  agent, per queued job and per message (the latest 5).
+- **Unread.** The brief shows the messages for you since your previous brief (the latest 5, one line
+  each; the rest stay in the file) and marks them read. Other commands print `Team board: N new message(s) for you`
+  while something waits.
+- **What to post:** interface changes others call (renames, signatures, events), handoffs ("Shop
+  prefab ready for QA"), blockers and questions to a named agent, and the result of a check someone
+  asked for. Skip progress chatter: the roster and the queue already show it.
+
+Over MCP the `uga_broker` tool does the same with `action: brief` or `action: say` (`message`, `to`,
+`role`, `doing`).
 
 ## Staging: compiled and heavy files
 
@@ -187,7 +232,7 @@ Live counters sit in `state.json`; when a session starts or stops, the finished 
 to `Library/UgaBroker/telemetry.jsonl`, so the project keeps its history across sessions. The board
 shows the live numbers. Use them to tune the split: long lease waits mean overlapping ownership, a
 long queue or drain means agents hold the Editor without `yield`, frequent exclusive windows mean
-work that could be cold.
+work that could be cold. The ETA in `brief` and `request` is computed from the same numbers.
 
 ## Splitting work between agents
 
@@ -243,7 +288,7 @@ Editor's main thread. Follow these tables during a session.
 | `manage_packages`, `manage_editor deploy_package` | **No** | `request -Lane exclusive` |
 | `manage_scene screenshot` | With the focus token or in your session; set `output_folder` outside `Assets/` | - |
 | `batch_execute` | Inside your lease or token, at most 25 commands | - |
-| `uga_broker` (this package) | Always | `status`, `take`, `release`, `renew`, `yield`, `gate`, `request`, `cancel`, `done`, `job` |
+| `uga_broker` (this package) | Always | `status`, `brief`, `say`, `take`, `release`, `renew`, `yield`, `gate`, `request`, `cancel`, `done`, `job` |
 
 Use the **HTTP** transport. Calls of all clients are serialized per Editor, so keep each call short.
 
@@ -285,4 +330,6 @@ PowerShell CLI for anything that must survive a compile.
 | MCP calls time out during a window | Expected: the Editor is compiling or playing; call `gate -Wait` before retrying |
 | Preferences stayed changed after a crash | `session stop -Force` in that project, or open and close a session; a crashed project's hold expires after 10 min |
 | Need to work alone in the Editor | Pause the broker on the board: no windows open and guards are off |
+| `brief` ETAs say "default guesses" | The project has no finished windows yet; the estimate improves after the first sync and hot windows |
+| An agent misses messages | It must call `brief` (not only `status`); messages addressed to another agent count as "other new" |
 | A second Editor exits at startup: "Array buffer allocation failed", no packages loaded | Out of commit memory, not a project defect: close idle Editors or browser windows and start it again |

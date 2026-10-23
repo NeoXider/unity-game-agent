@@ -10,10 +10,10 @@ namespace UnityGameAgent.EditorBroker.Adapters
     public static class UgaBrokerPipelineCommand
     {
         [CliCommand("global", "uga_broker",
-            "Unity Game Agent editor broker for several agents sharing one Editor: status, take, release, renew, yield, gate, request, cancel, done, job.",
+            "Unity Game Agent editor broker for several agents sharing one Editor: status, brief, say, take, release, renew, yield, gate, request, cancel, done, job.",
             MainThreadRequired = false)]
         public static Dictionary<string, object> UgaBroker(
-            [CliArg("action", "status | take | release | renew | yield | gate | request | cancel | done | job")] string action = "status",
+            [CliArg("action", "status | brief | say | take | release | renew | yield | gate | request | cancel | done | job")] string action = "status",
             [CliArg("agent", "Your agent name")] string agent = "",
             [CliArg("resource", "scene:/prefab:/asset:/folder:/asmdef: resource for take or release")] string resource = "",
             [CliArg("kind", "cold or focus")] string kind = "cold",
@@ -26,13 +26,17 @@ namespace UnityGameAgent.EditorBroker.Adapters
             [CliArg("scene", "Scene for a Play Mode session")] string scene = "",
             [CliArg("minutes", "Time box for a session or exclusive window")] float minutes = 0f,
             [CliArg("reason", "Why an exclusive window is needed")] string reason = "",
-            [CliArg("job_id", "Job id for cancel, done or job")] string job_id = "")
+            [CliArg("job_id", "Job id for cancel, done or job")] string job_id = "",
+            [CliArg("message", "Team board message for say")] string message = "",
+            [CliArg("to", "Recipients for say, separated by ',' (default all)")] string to = "",
+            [CliArg("role", "Your role for the roster")] string role = "",
+            [CliArg("doing", "One line about your current work for the roster")] string doing = "")
         {
             var request = new BrokerRequest
             {
                 action = action, agent = agent, resource = resource, kind = kind, ttlSec = ttl_sec, lane = lane,
                 jobKind = job_kind, paths = paths, tests = tests, testMode = test_mode, scene = scene,
-                minutes = minutes, reason = reason, jobId = job_id
+                minutes = minutes, reason = reason, jobId = job_id, message = message, to = to, role = role, doing = doing
             };
             string board;
             var result = BrokerApi.Execute(BrokerStore.ForCurrentProject(), request, out board);
@@ -43,6 +47,7 @@ namespace UnityGameAgent.EditorBroker.Adapters
                 { "lease_id", result.leaseId },
                 { "job_id", result.jobId },
                 { "position", result.position },
+                { "unread", result.unread },
                 { "board", board }
             };
         }

@@ -4,6 +4,28 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.10.0] - 2026-10-23
+
+### Added
+- Agents in one Editor know about each other: `editor-broker.ps1 brief -Agent <name>` shows the team
+  (every agent with its role, current work, leases, waiting requests and jobs, and when it was last
+  seen), the active window and the queue in scheduler order with a rough start and finish per job
+  (from the project's telemetry, defaults until there is some), the agent's own leases and what it
+  waits behind, and the team board messages for it since its last brief.
+- Team board `Library/UgaBroker/team-board.md`: `say -Agent <a> -Message <text> [-To <b,c>]` appends
+  a Markdown entry under the state lock (one note of up to 300 characters, so briefs stay small in
+  every agent's context); other commands print how many messages wait unread. The
+  board window shows the team and the latest messages, and the human can post to the agents from it.
+- Any agent command takes `-Role` and `-Doing` for the roster; `request` prints the ETA of the new
+  job (`startMs`/`doneMs` with `-Json`).
+- `uga_broker` (MCP for Unity, Unity CLI) gains `brief` and `say` (`message`, `to`, `role`, `doing`)
+  and returns `unread`.
+- Shared vectors for the roster, the forecast and the board format, run by the CLI tests and new C#
+  EditMode tests; the live e2e checks that Editor writes keep the roster and runs the package tests in
+  a hot window.
+
+---
+
 ## [3.9.0] - 2026-10-23
 
 ### Added

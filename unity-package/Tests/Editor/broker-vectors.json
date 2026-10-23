@@ -141,6 +141,20 @@
         { "op": "request", "agent": "qa", "lane": "hot", "kind": "session", "scene": "Assets/Levels/Arena.unity", "minutes": 2, "at": 90, "expect": "queued" },
         { "op": "request", "agent": "qa", "lane": "warm", "kind": "sync", "at": 100, "expect": "error" }
       ]
+    },
+    {
+      "name": "roster-touch-and-prune",
+      "steps": [
+        { "op": "touch", "agent": "core", "role": "developer", "doing": "  score\n and   upgrades ", "at": 0 },
+        { "op": "take", "agent": "art", "kind": "cold", "resource": "folder:Assets/Art/", "ttl": 3600, "at": 1000, "expect": "granted" },
+        { "op": "touch", "agent": "art", "at": 1000 },
+        { "op": "request", "agent": "art", "lane": "hot", "kind": "tests", "tests": "category:Art", "at": 1500, "expect": "queued" },
+        { "op": "touch", "agent": "qa", "at": 2000 },
+        { "op": "touch", "agent": "Core", "role": "", "doing": "", "at": 3000 },
+        { "op": "roster", "at": 3000, "list": [ "core|developer|score and upgrades", "art||", "qa||" ] },
+        { "op": "touch", "agent": "lead", "role": "a role name that is much longer than thirty-two characters", "at": 7203000 },
+        { "op": "roster", "at": 7203000, "list": [ "art||", "lead|a role name that is much longer|" ] }
+      ]
     }
   ],
   "filters": [
@@ -151,5 +165,18 @@
     { "spec": "group:^Game\\.Tests\\.A\\.", "fullName": "Game.Tests.A.B", "assembly": "Game.Tests", "categories": [], "match": true },
     { "spec": "assembly:game.tests", "fullName": "X.Y", "assembly": "Game.Tests", "categories": [], "match": true },
     { "spec": "Game.Tests.A.B", "fullName": "Game.Tests.A.B", "assembly": "", "categories": [], "match": true }
+  ],
+  "forecasts": [
+    {"name": "defaults-follow-the-scheduler-order", "now": 1000000, "lanes": [], "jobs": [{"id": "J1", "agent": "core", "lane": "sync", "kind": "sync", "status": "queued", "createdMs": 990000, "startedMs": 0, "minutes": 0}, {"id": "J2", "agent": "qa", "lane": "hot", "kind": "tests", "status": "queued", "createdMs": 995000, "startedMs": 0, "minutes": 0}, {"id": "J3", "agent": "ui", "lane": "hot", "kind": "session", "status": "queued", "createdMs": 996000, "startedMs": 0, "minutes": 2}, {"id": "J4", "agent": "lead", "lane": "exclusive", "kind": "exclusive", "status": "queued", "createdMs": 999000, "startedMs": 0, "minutes": 5}], "expect": ["J1|1|1020000|1050000", "J4|2|1119000|1419000", "J2|3|1429000|1489000", "J3|3|1489000|1609000"]},
+    {"name": "active-hot-window-with-telemetry", "now": 2000000, "lanes": [{"lane": "sync", "jobs": 4, "waitMs": 80000, "windows": 2, "windowMs": 50000, "drainMs": 6000}, {"lane": "hot", "jobs": 2, "waitMs": 90000, "windows": 1, "windowMs": 45000, "drainMs": 5000}], "window": {"id": "W9", "lane": "hot", "phase": "tests", "startedMs": 1990000, "requestedMs": 1985000, "drainDeadlineMs": 2045000, "jobIds": ["J10", "J11", "J12"]}, "jobs": [{"id": "J10", "agent": "qa", "lane": "hot", "kind": "tests", "status": "running", "createdMs": 1900000, "startedMs": 1990000, "minutes": 0}, {"id": "J11", "agent": "ui", "lane": "hot", "kind": "session", "status": "queued", "createdMs": 1950000, "startedMs": 0, "minutes": 1}, {"id": "J12", "agent": "core", "lane": "hot", "kind": "tests", "status": "passed", "createdMs": 1940000, "startedMs": 1990000, "minutes": 0}, {"id": "J13", "agent": "core", "lane": "sync", "kind": "sync", "status": "queued", "createdMs": 1999000, "startedMs": 0, "minutes": 0}, {"id": "J14", "agent": "qa", "lane": "hot", "kind": "tests", "status": "queued", "createdMs": 1998000, "startedMs": 0, "minutes": 0}], "expect": ["J10|0|1990000|2035000", "J11|0|2035000|2095000", "J13|1|2098000|2123000", "J14|2|2128000|2173000"]},
+    {"name": "draining-window-then-hot-tests-first", "now": 3000000, "lanes": [], "window": {"id": "W5", "lane": "sync", "phase": "draining", "startedMs": 0, "requestedMs": 2995000, "drainDeadlineMs": 3055000, "jobIds": ["J20"]}, "jobs": [{"id": "J20", "agent": "core", "lane": "sync", "kind": "sync", "status": "queued", "createdMs": 2980000, "startedMs": 0, "minutes": 0}, {"id": "J23", "agent": "ui", "lane": "hot", "kind": "session", "status": "queued", "createdMs": 2990000, "startedMs": 0, "minutes": 0.5}, {"id": "J24", "agent": "qa", "lane": "hot", "kind": "tests", "status": "queued", "createdMs": 2990000, "startedMs": 0, "minutes": 0}], "expect": ["J20|0|3005000|3035000", "J24|1|3110000|3170000", "J23|1|3170000|3200000"]},
+    {"name": "exclusive-overrun-ends-now", "now": 4000000, "lanes": [{"lane": "exclusive", "jobs": 1, "waitMs": 10000, "windows": 1, "windowMs": 200000, "drainMs": 2000}], "window": {"id": "W7", "lane": "exclusive", "phase": "exclusive", "holder": "lead", "startedMs": 3700000, "requestedMs": 3690000, "drainDeadlineMs": 3750000, "jobIds": ["J30"]}, "jobs": [{"id": "J30", "agent": "lead", "lane": "exclusive", "kind": "exclusive", "status": "running", "createdMs": 3600000, "startedMs": 3700000, "minutes": 10}, {"id": "J31", "agent": "ui", "lane": "exclusive", "kind": "exclusive", "status": "queued", "createdMs": 3950000, "startedMs": 0, "minutes": 3}], "expect": ["J30|0|3700000|4000000", "J31|1|4002000|4202000"]}
+  ],
+  "boards": [
+    {"name": "parse-and-unread", "text": "# Team board\n\nintro\n\n### M3 2026-10-23 10:00:00Z core -> all\nRenamed X.\n\\### quoted\n\n### M5 2026-10-23 10:01:00Z qa -> ui,core\nTooltip overlaps.\n\n### M6 2026-10-23 10:02:00Z ui -> all\nOwn note.\n\n### M8 2026-10-23 10:03:00Z lead -> qa\r\nOnly for qa.\r\n", "entries": ["M3|core|all|Renamed X.\n\\### quoted", "M5|qa|ui,core|Tooltip overlaps.", "M6|ui|all|Own note.", "M8|lead|qa|Only for qa."], "agent": "UI", "readId": 3, "unread": ["M5"]}
+  ],
+  "boardFormats": [
+    {"number": 12, "now": 1792751883000, "from": "core", "to": ["all"], "text": "  Line one\r\n# heading\r\n\r\nLast line   \n\n", "expect": "### M12 2026-10-23 10:38:03Z core -> all\nLine one\n\\# heading\n\nLast line\n\n"},
+    {"number": 13, "now": 1792751883999, "from": "qa", "to": ["ui", "core"], "text": "one line", "expect": "### M13 2026-10-23 10:38:03Z qa -> ui,core\none line\n\n"}
   ]
 }

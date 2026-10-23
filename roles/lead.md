@@ -48,7 +48,8 @@ files; preserve existing files and their links. Explicit expanded tracking can u
    from [Play Mode QA](../tools/playmode-qa-automation.md); broad suites need an actual blast radius.
 5. Confirm typed source/asset ownership and the Editor barrier. For several agents, split work into
    non-overlapping leases (programmers by assembly or feature folder, one scene per scene builder,
-   one screen folder per UI agent) and write them into each brief ([shared-editor.md](../tools/shared-editor.md)).
+   one screen folder per UI agent), write them with each agent's name and role into its brief and
+   post the split on the team board with `say` ([shared-editor.md](../tools/shared-editor.md)).
    Update only necessary tracking links, then hand the brief to Developer.
 
 ## Done Gate

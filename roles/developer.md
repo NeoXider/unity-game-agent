@@ -27,9 +27,11 @@ and integration path, selfcheck evidence, skipped checks and remaining risk. No 
 ## Allowed Writes
 
 Only assigned implementation files and the Developer-owned brief section. In a shared-editor session
-take the leases named in the brief, `gate` before Editor calls, write compiled files to your staging
-folder and `request -Lane sync`; without a session the Unity operator compiles. Never refresh,
-compile, play or run tests directly while other agents share the Editor ([shared-editor.md](../tools/shared-editor.md)).
+start each step with `brief` (team, queue with ETA, messages for you), post renamed or changed APIs
+and handoffs with `say`, take the leases named in the brief, `gate` before Editor calls, write
+compiled files to your staging folder and `request -Lane sync`; without a session the Unity operator
+compiles. Never refresh, compile, play or run tests directly while other agents share the Editor
+([shared-editor.md](../tools/shared-editor.md)).
 After a request, keep working on the rest of the task; idle waiting is only for when nothing is left.
 
 ## Forbidden Actions

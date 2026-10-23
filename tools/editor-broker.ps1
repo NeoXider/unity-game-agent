@@ -6,13 +6,16 @@ package inside the Editor. This CLI works while the Editor compiles, reloads, pl
 Written for Windows PowerShell 5.1 and PowerShell 7+ (pwsh on macOS/Linux); tested on 5.1. See tools/shared-editor.md.
 
 'stats' prints the project's telemetry (waits per agent, queue length, window and drain times).
+'brief' tells one agent who else works in the project, what the queue holds with a rough ETA, what
+it holds itself and what is new on the team board; 'say' posts to that board
+(Library/UgaBroker/team-board.md).
 
 Exit codes: 0 ok | 2 invalid request | 3 lease queued | 4 gate says wait | 6 timeout |
 7 Editor offline | 8 job failed | 9 job blocked/canceled or doctor not ready.
 #>
 param(
     [Parameter(Position=0)]
-    [ValidateSet('install','doctor','session','take','renew','release','yield','gate','stage','request','wait','done','cancel','status','stats','projects')]
+    [ValidateSet('install','doctor','session','take','renew','release','yield','gate','stage','request','wait','done','cancel','status','stats','projects','brief','say')]
     [string]$Command = 'status',
     [Parameter(Position=1)][string]$Action,
     # Several projects on one machine: give every agent its project explicitly (this parameter,
@@ -37,6 +40,11 @@ param(
     [int]$TimeoutSec = 1800,
     [ValidateSet('embed','git')][string]$Mode = 'embed',
     [string]$GitRef,
+    # Team board and roster: say -Message [-To agent,...]; any agent command accepts -Role and -Doing.
+    [string]$Message,
+    [string[]]$To,
+    [string]$Role,
+    [string]$Doing,
     [switch]$Fix,
     [switch]$Force,
     [switch]$Json
@@ -52,6 +60,9 @@ $script:BrokerConfig = [ordered]@{
     sessionDefaultMinutes = 5.0; exclusiveDefaultMinutes = 10.0; maxFinishedJobs = 50; maxViolations = 50
 }
 $script:Utf8NoBom = New-Object System.Text.UTF8Encoding $false
+# Set by the CLI for agent commands: every saved update records the caller in the roster.
+$script:BrokerSeen = $null
+$script:BrokerUnread = 0
 
 class BrokerCliError : System.Exception {
     [int]$Code
@@ -239,6 +250,11 @@ function ConvertTo-BrokerViolation($s) {
     return [ordered]@{ atMs = [long]$s.atMs; agent = [string]$s.agent; kind = [string]$s.kind; detail = [string]$s.detail }
 }
 
+function ConvertTo-BrokerMember($s) {
+    return [ordered]@{ agent = [string]$s.agent; role = [string]$s.role; doing = [string]$s.doing; firstSeenMs = [long]$s.firstSeenMs
+        lastSeenMs = [long]$s.lastSeenMs; lastCommand = [string]$s.lastCommand; readId = [long]$s.readId }
+}
+
 function New-BrokerState($Source) {
     if ($null -eq $Source) { $Source = [pscustomobject]@{} }
     $nextId = [long]$Source.nextId
@@ -252,6 +268,7 @@ function New-BrokerState($Source) {
         jobs = New-BrokerList (@($Source.jobs) | Where-Object { $null -ne $_ } | ForEach-Object { ConvertTo-BrokerJob $_ })
         window = ConvertTo-BrokerWindow $(if ($null -ne $Source.window) { $Source.window } else { [pscustomobject]@{} })
         violations = New-BrokerList (@($Source.violations) | Where-Object { $null -ne $_ } | ForEach-Object { ConvertTo-BrokerViolation $_ })
+        roster = New-BrokerList (@($Source.roster) | Where-Object { $null -ne $_ } | ForEach-Object { ConvertTo-BrokerMember $_ })
     }
     # Telemetry is counted by the Editor (BrokerTelemetry.cs); the CLI only carries it through.
     if ($null -ne $Source.telemetry) { $state.telemetry = $Source.telemetry }
@@ -579,6 +596,13 @@ function Invoke-BrokerUpdate([string]$__buProject, [scriptblock]$__buMutate) {
             Add-BrokerViolation $__buState '' 'state-recovered' "state.json was unreadable; recovered from $__buRecovered." (Get-BrokerNowMs)
             $__buCtx.save = $true
         }
+        if ($null -ne $script:BrokerSeen) {
+            $__buSeen = $script:BrokerSeen
+            if ($__buCtx.save) { [void](Update-BrokerRoster $__buState $__buSeen.agent $__buSeen.command (Get-BrokerNowMs) $__buSeen.role $__buSeen.doing) }
+            $__buMember = @($__buState.roster | Where-Object { Test-BrokerSameAgent $_.agent $__buSeen.agent }) | Select-Object -First 1
+            $__buReadId = if ($null -ne $__buMember) { [long]$__buMember.readId } else { [long]0 }
+            $script:BrokerUnread = @(Get-BrokerBoardUnread (Read-BrokerBoard $__buProject) $__buReadId $__buSeen.agent).Count
+        }
         if ($__buCtx.save) {
             $__buState.revision = [long]$__buState.revision + 1
             $__buState.updatedMs = Get-BrokerNowMs
@@ -732,6 +756,381 @@ function Format-BrokerStats($Stats) {
     return ($lines -join "`n")
 }
 
+# ---------------------------------------------------------------- team: roster, queue forecast and board (mirror BrokerTeam.cs)
+$script:BrokerTeamConfig = [ordered]@{
+    rosterTtlMs = 7200000; activeMs = 600000; maxMessageChars = 300; maxRoleChars = 32; maxDoingChars = 120
+    briefMessages = 5; messageLineChars = 160
+}
+# Guesses for a lane without telemetry yet; the sync and exclusive waits are the scheduler's maximum.
+$script:BrokerForecastDefaults = @{
+    sync = @{ runMs = 30000; drainMs = 10000; waitMs = 30000 }
+    hot = @{ runMs = 60000; drainMs = 10000; waitMs = 120000 }
+    exclusive = @{ runMs = 0; drainMs = 10000; waitMs = 120000 }
+}
+
+function Get-BrokerOneLine([string]$Text, [int]$Max) {
+    if ([string]::IsNullOrWhiteSpace($Text)) { return '' }
+    $line = ($Text -replace '\s+', ' ').Trim()
+    if ($line.Length -gt $Max) { $line = $line.Substring(0, $Max).TrimEnd() }
+    return $line
+}
+
+function Test-BrokerBusy($State, [string]$Agent, [long]$Now) {
+    if (@($State.leases | Where-Object { $_.expiresMs -gt $Now -and (Test-BrokerSameAgent $_.agent $Agent) }).Count -gt 0) { return $true }
+    if (@($State.waiting | Where-Object { $_.expiresMs -gt $Now -and (Test-BrokerSameAgent $_.agent $Agent) }).Count -gt 0) { return $true }
+    return @($State.jobs | Where-Object { $_.status -in @('queued','running') -and (Test-BrokerSameAgent $_.agent $Agent) }).Count -gt 0
+}
+
+# Records that an agent called the broker. Agents quiet for longer than the roster TTL that hold
+# nothing drop out, so the roster lists the agents of the current work, not of last week.
+function Update-BrokerRoster($State, [string]$Agent, [string]$CommandName, [long]$Now, [string]$RoleText = '', [string]$DoingText = '') {
+    $member = @($State.roster | Where-Object { Test-BrokerSameAgent $_.agent $Agent }) | Select-Object -First 1
+    if ($null -eq $member) {
+        $member = ConvertTo-BrokerMember ([pscustomobject]@{ agent = $Agent; firstSeenMs = $Now })
+        [void]$State.roster.Add($member)
+    }
+    $member.lastSeenMs = $Now
+    $member.lastCommand = [string]$CommandName
+    $roleLine = Get-BrokerOneLine $RoleText $script:BrokerTeamConfig.maxRoleChars
+    if ($roleLine) { $member.role = $roleLine }
+    $doingLine = Get-BrokerOneLine $DoingText $script:BrokerTeamConfig.maxDoingChars
+    if ($doingLine) { $member.doing = $doingLine }
+    $cutoff = $Now - $script:BrokerTeamConfig.rosterTtlMs
+    $State.roster = New-BrokerList ($State.roster | Where-Object { $_.lastSeenMs -gt $cutoff -or (Test-BrokerSameAgent $_.agent $Agent) -or (Test-BrokerBusy $State $_.agent $Now) })
+    return $member
+}
+
+# Sums the per-lane counters of telemetry segments (closed history plus the live one).
+function Get-BrokerLaneTotals($Segments) {
+    $totals = [ordered]@{}
+    foreach ($segment in @($Segments)) {
+        if ($null -eq $segment) { continue }
+        foreach ($l in @($segment.lanes)) {
+            if ($null -eq $l -or [string]::IsNullOrEmpty([string]$l.lane)) { continue }
+            $key = [string]$l.lane
+            if (-not $totals.Contains($key)) { $totals[$key] = [ordered]@{ lane = $key; jobs = 0; waitMs = [long]0; windows = 0; windowMs = [long]0; drainMs = [long]0 } }
+            $t = $totals[$key]
+            $t.jobs += [int]$l.jobs; $t.waitMs += [long]$l.waitMs; $t.windows += [int]$l.windows
+            $t.windowMs += [long]$l.windowMs; $t.drainMs += [long]$l.drainMs
+        }
+    }
+    return @($totals.Values)
+}
+
+# Average window run, drain and job wait per lane; a lane without data keeps the defaults.
+function Get-BrokerLaneAverages($Lanes) {
+    $averages = @{}
+    foreach ($name in @('sync', 'hot', 'exclusive')) {
+        $d = $script:BrokerForecastDefaults[$name]
+        $averages[$name] = @{ runMs = [long]$d.runMs; drainMs = [long]$d.drainMs; waitMs = [long]$d.waitMs; measured = $false }
+    }
+    foreach ($l in @($Lanes)) {
+        if ($null -eq $l -or -not $averages.ContainsKey([string]$l.lane)) { continue }
+        $a = $averages[[string]$l.lane]
+        if ([int]$l.windows -gt 0) {
+            $a.runMs = [long][Math]::Floor([double]$l.windowMs / [int]$l.windows)
+            $a.drainMs = [long][Math]::Floor([double]$l.drainMs / [int]$l.windows)
+            $a.measured = $true
+        }
+        if ([int]$l.jobs -gt 0) { $a.waitMs = [long][Math]::Floor([double]$l.waitMs / [int]$l.jobs) }
+    }
+    return $averages
+}
+
+function Get-BrokerJobDurationMs($JobItem, $Average) {
+    if ($JobItem.kind -eq 'exclusive' -and $Average.measured) { return [long]$Average.runMs }
+    return [long][Math]::Round([double]$JobItem.minutes * 60000)
+}
+
+function New-BrokerForecastEntry($JobItem, [int]$Order, [long]$Start, [long]$Done) {
+    return [ordered]@{ jobId = [string]$JobItem.id; agent = [string]$JobItem.agent; lane = [string]$JobItem.lane; kind = [string]$JobItem.kind
+        order = $Order; startMs = $Start; doneMs = $Done }
+}
+
+function Test-BrokerBatchJob([string]$WindowLane, $JobItem) { return $WindowLane -eq 'sync' -or ($WindowLane -eq 'hot' -and $JobItem.kind -eq 'tests') }
+
+# Adds the jobs of one window, in run order, and returns when the window ends. The sync jobs and the
+# tests of a hot window run as one batch; sessions and exclusive work follow one by one. A job that
+# has started keeps its start and ends no earlier than now.
+function Add-BrokerForecastWindow($Forecast, [string]$WindowLane, $Jobs, [long]$Cursor, $Averages, [int]$Order, [long]$Now) {
+    $avg = $Averages[$WindowLane]
+    $batch = @($Jobs | Where-Object { Test-BrokerBatchJob $WindowLane $_ })
+    if ($batch.Count -gt 0) {
+        $started = [long]0
+        foreach ($j in $batch) { if ([long]$j.startedMs -gt 0 -and ($started -eq 0 -or [long]$j.startedMs -lt $started)) { $started = [long]$j.startedMs } }
+        if ($started -gt 0) { $start = $started; $done = [Math]::Max($Now, $started + [long]$avg.runMs) }
+        else { $start = $Cursor; $done = $Cursor + [long]$avg.runMs }
+        foreach ($j in $batch) { [void]$Forecast.Add((New-BrokerForecastEntry $j $Order $start $done)) }
+        $Cursor = $done
+    }
+    foreach ($j in @($Jobs | Where-Object { -not (Test-BrokerBatchJob $WindowLane $_) })) {
+        $duration = Get-BrokerJobDurationMs $j $avg
+        if ([long]$j.startedMs -gt 0) { $start = [long]$j.startedMs; $done = [Math]::Max($Now, $start + $duration) }
+        else { $start = $Cursor; $done = $Cursor + $duration }
+        [void]$Forecast.Add((New-BrokerForecastEntry $j $Order $start $done))
+        $Cursor = $done
+    }
+    return $Cursor
+}
+
+# A planned window opens after the previous one plus a drain, and not before its oldest job is as
+# old as the lane's average wait (which folds in how long agents take to yield).
+function Add-BrokerPlannedWindow($Forecast, [string]$WindowLane, $Jobs, [long]$Cursor, $Averages, [int]$Order, [long]$Now) {
+    $avg = $Averages[$WindowLane]
+    $oldest = [long]::MaxValue
+    foreach ($j in $Jobs) { if ([long]$j.createdMs -lt $oldest) { $oldest = [long]$j.createdMs } }
+    $start = [Math]::Max($Cursor + [long]$avg.drainMs, $oldest + [long]$avg.waitMs)
+    return Add-BrokerForecastWindow $Forecast $WindowLane $Jobs $start $Averages $Order $Now
+}
+
+# Rough plan of the queue in the scheduler's order: the active window (order 0), one sync window for
+# every staged change, each exclusive request, then one hot window (tests first, then sessions).
+# Jobs queued later can still go first (a new sync request opens before waiting hot work).
+function Get-BrokerForecast($State, $Averages, [long]$Now) {
+    $forecast = New-Object System.Collections.ArrayList
+    $cursor = $Now
+    $taken = @{}
+    if ((Test-BrokerWindow $State) -and $Averages.ContainsKey([string]$State.window.lane)) {
+        $w = $State.window
+        $inWindow = New-Object System.Collections.ArrayList
+        foreach ($id in @($w.jobIds)) {
+            $taken[[string]$id] = $true
+            $item = @($State.jobs | Where-Object { $_.id -eq $id }) | Select-Object -First 1
+            if ($null -ne $item -and $item.status -in @('queued', 'running')) { [void]$inWindow.Add($item) }
+        }
+        if ([long]$w.startedMs -le 0) {
+            $drain = [long]$Averages[[string]$w.lane].drainMs
+            $deadline = if ([long]$w.drainDeadlineMs -gt 0) { [long]$w.drainDeadlineMs } else { [long]$w.requestedMs + $drain }
+            $cursor = [Math]::Max($Now, [Math]::Min($deadline, [long]$w.requestedMs + $drain))
+        }
+        $cursor = Add-BrokerForecastWindow $forecast ([string]$w.lane) $inWindow $cursor $Averages 0 $Now
+    }
+    $indexed = for ($i = 0; $i -lt $State.jobs.Count; $i++) {
+        $j = $State.jobs[$i]
+        if ($j.status -eq 'queued' -and -not $taken.ContainsKey([string]$j.id)) { [pscustomobject]@{ job = $j; index = $i } }
+    }
+    # Sort-Object is not stable in Windows PowerShell: the list index breaks ties like LINQ OrderBy.
+    $queued = @($indexed | Sort-Object @{ Expression = { [long]$_.job.createdMs } }, @{ Expression = { $_.index } } | ForEach-Object { $_.job })
+    $order = 0
+    $sync = @($queued | Where-Object { $_.lane -eq 'sync' })
+    if ($sync.Count -gt 0) { $order++; $cursor = Add-BrokerPlannedWindow $forecast 'sync' $sync $cursor $Averages $order $Now }
+    foreach ($e in @($queued | Where-Object { $_.lane -eq 'exclusive' })) { $order++; $cursor = Add-BrokerPlannedWindow $forecast 'exclusive' @($e) $cursor $Averages $order $Now }
+    $hot = @(@($queued | Where-Object { $_.lane -eq 'hot' -and $_.kind -eq 'tests' }) + @($queued | Where-Object { $_.lane -eq 'hot' -and $_.kind -ne 'tests' }))
+    if ($hot.Count -gt 0) { $order++; $cursor = Add-BrokerPlannedWindow $forecast 'hot' $hot $cursor $Averages $order $Now }
+    return ,$forecast
+}
+
+# Telemetry history (telemetry.jsonl) as raw segments; the live segment is in the state.
+function Get-BrokerTelemetryHistory([string]$Project) {
+    $segments = New-Object System.Collections.ArrayList
+    $file = Join-Path (Get-BrokerDir $Project) 'telemetry.jsonl'
+    if (-not (Test-Path -LiteralPath $file)) { return ,$segments }
+    foreach ($line in [IO.File]::ReadAllLines($file)) {
+        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+        try { [void]$segments.Add(($line | ConvertFrom-Json)) } catch { continue }
+    }
+    return ,$segments
+}
+
+# The team board is a Markdown log in Library/UgaBroker. Every entry is a '### M<n> <UTC time> <from> -> <to>'
+# heading and a body; ids come from the state counter and are appended under the state lock.
+$script:BrokerBoardHeader = (@'
+# Team board
+
+Notes between the agents of this project, oldest first. Post with
+`editor-broker.ps1 say -Agent <you> -Message "..." [-To <agent>]`; `brief` shows what is new for you.
+Post through the broker (it appends under the state lock) instead of editing this file.
+'@).Replace("`r`n", "`n") + "`n`n"
+
+function Get-BrokerBoardFile([string]$Project) { return Join-Path (Get-BrokerDir $Project) 'team-board.md' }
+
+# LF line ends, no blank edges, and no line that would start a Markdown heading (or a new entry).
+function ConvertTo-BrokerBoardText([string]$Text) {
+    $lines = ([string]$Text -replace "`r`n?", "`n").Trim().Split("`n")
+    $clean = foreach ($line in $lines) { if ($line.StartsWith('#')) { '\' + $line.TrimEnd() } else { $line.TrimEnd() } }
+    return (@($clean) -join "`n")
+}
+
+function Format-BrokerBoardEntry([long]$Number, [long]$Now, [string]$From, [string[]]$To, [string]$Text) {
+    $at = [DateTimeOffset]::FromUnixTimeMilliseconds($Now).UtcDateTime.ToString('yyyy-MM-dd HH:mm:ss', [Globalization.CultureInfo]::InvariantCulture)
+    return "### M$Number ${at}Z $From -> $(@($To) -join ',')`n$(ConvertTo-BrokerBoardText $Text)`n`n"
+}
+
+function ConvertFrom-BrokerBoard([string]$Text) {
+    $entries = New-Object System.Collections.ArrayList
+    if ([string]::IsNullOrEmpty($Text)) { return ,$entries }
+    $current = $null
+    $body = $null
+    $finish = { if ($null -ne $current) { $current.text = (@($body) -join "`n").Trim(); [void]$entries.Add($current) } }
+    foreach ($raw in $Text.Split("`n")) {
+        $line = $raw.TrimEnd("`r")
+        $m = [regex]::Match($line, '^### M(\d{1,18}) (\d{4}-\d\d-\d\d \d\d:\d\d:\d\dZ) (\S+) -> (\S+)\s*$')
+        if ($m.Success) {
+            . $finish
+            $current = [ordered]@{ id = 'M' + $m.Groups[1].Value; number = [long]$m.Groups[1].Value; at = $m.Groups[2].Value
+                from = $m.Groups[3].Value; to = @($m.Groups[4].Value.Split(',') | Where-Object { $_ }); text = '' }
+            $body = New-Object System.Collections.ArrayList
+            continue
+        }
+        if ($null -ne $current) { [void]$body.Add($line) }
+    }
+    . $finish
+    return ,$entries
+}
+
+function Read-BrokerBoard([string]$Project) {
+    $file = Get-BrokerBoardFile $Project
+    if (-not (Test-Path -LiteralPath $file)) { return ,(New-Object System.Collections.ArrayList) }
+    $entries = ConvertFrom-BrokerBoard ([IO.File]::ReadAllText($file, [Text.Encoding]::UTF8))
+    return ,$entries
+}
+
+# Call inside Invoke-BrokerUpdate: the id comes from the state and the append runs under its lock.
+function Add-BrokerBoardMessage([string]$Project, $State, [string]$From, [string[]]$To, [string]$Text, [long]$Now) {
+    $file = Get-BrokerBoardFile $Project
+    $id = New-BrokerId $State 'M'
+    $entry = Format-BrokerBoardEntry ([long]$id.Substring(1)) $Now $From $To $Text
+    if (-not (Test-Path -LiteralPath $file)) { $entry = $script:BrokerBoardHeader + $entry }
+    [IO.File]::AppendAllText($file, $entry, $script:Utf8NoBom)
+    return $id
+}
+
+function Test-BrokerBoardFor($Entry, [string]$Agent) {
+    if (Test-BrokerSameAgent $Entry.from $Agent) { return $false }
+    foreach ($t in @($Entry.to)) { if ($t -ieq 'all' -or (Test-BrokerSameAgent $t $Agent)) { return $true } }
+    return $false
+}
+
+function Get-BrokerBoardUnread($Entries, [long]$ReadId, [string]$Agent) {
+    return @($Entries | Where-Object { $_.number -gt $ReadId -and (Test-BrokerBoardFor $_ $Agent) })
+}
+
+# Short job name for the brief: "sync", "hot/tests", "hot/session 3 min", "exclusive".
+function Get-BrokerJobShort($JobItem) {
+    if ($null -eq $JobItem) { return '' }
+    $name = if ($JobItem.lane -eq $JobItem.kind) { [string]$JobItem.lane } else { "$($JobItem.lane)/$($JobItem.kind)" }
+    if ($JobItem.kind -eq 'session') { $name += " $($JobItem.minutes) min" }
+    return $name
+}
+
+# One line of at most $Max characters: line breaks become ' / '.
+function Get-BrokerClip([string]$Text, [int]$Max) {
+    $line = @(([string]$Text).Split("`n") | ForEach-Object { $_.Trim() } | Where-Object { $_ }) -join ' / '
+    if ($line.Length -gt $Max) { $line = $line.Substring(0, $Max - 3).TrimEnd() + '...' }
+    return $line
+}
+
+# Everything one agent needs before its next step, kept short because it lands in the agent's context:
+# who else works here, the queue with a rough ETA, what blocks it and what is new on the team board.
+# Marks the board as read for the agent.
+function Get-BrokerBrief([string]$Project, $State, $Editor, [string]$Agent, [long]$Now, $History, [string]$RoleText = '', [string]$DoingText = '') {
+    $segments = @($History) + @($State.telemetry) | Where-Object { $null -ne $_ }
+    $averages = Get-BrokerLaneAverages (Get-BrokerLaneTotals $segments)
+    $forecast = Get-BrokerForecast $State $averages $Now
+    $member = Update-BrokerRoster $State $Agent 'brief' $Now $RoleText $DoingText
+    $entries = Read-BrokerBoard $Project
+    $unread = @(Get-BrokerBoardUnread $entries $member.readId $Agent)
+    $othersNew = @($entries | Where-Object { $_.number -gt $member.readId -and -not (Test-BrokerSameAgent $_.from $Agent) -and -not (Test-BrokerBoardFor $_ $Agent) }).Count
+    foreach ($e in $entries) { if ($e.number -gt $member.readId) { $member.readId = [long]$e.number } }
+
+    $names = New-Object System.Collections.ArrayList
+    $addName = { param($n) if ($n -and -not @($names | Where-Object { Test-BrokerSameAgent $_ $n })) { [void]$names.Add([string]$n) } }
+    foreach ($m in $State.roster) { & $addName $m.agent }
+    foreach ($l in $State.leases) { & $addName $l.agent }
+    foreach ($w in $State.waiting) { & $addName $w.agent }
+    foreach ($j in @($State.jobs | Where-Object { $_.status -in @('queued', 'running') })) { & $addName $j.agent }
+    $team = foreach ($name in $names) {
+        $m = @($State.roster | Where-Object { Test-BrokerSameAgent $_.agent $name }) | Select-Object -First 1
+        $seen = if ($null -ne $m) { [long]$m.lastSeenMs } else { [long]0 }
+        [ordered]@{ agent = $name; you = (Test-BrokerSameAgent $name $Agent); role = $(if ($null -ne $m) { $m.role } else { '' }); doing = $(if ($null -ne $m) { $m.doing } else { '' })
+            lastSeenMs = $seen; active = (($seen -gt 0 -and $Now - $seen -le $script:BrokerTeamConfig.activeMs) -or (Test-BrokerBusy $State $name $Now))
+            leases = @($State.leases | Where-Object { $_.expiresMs -gt $Now -and (Test-BrokerSameAgent $_.agent $name) } | ForEach-Object { "$($_.kind) $($_.path)" + $(if ($_.yielded) { ' (yielded)' } else { '' }) })
+            waiting = @($State.waiting | Where-Object { Test-BrokerSameAgent $_.agent $name } | ForEach-Object { "$($_.kind) $($_.path)" })
+            jobs = @($State.jobs | Where-Object { $_.status -in @('queued', 'running') -and (Test-BrokerSameAgent $_.agent $name) } | ForEach-Object { "$($_.id) $(Get-BrokerJobShort $_)" + $(if ($_.status -eq 'running') { ' running' } else { '' }) }) }
+    }
+    $queue = foreach ($f in $forecast) {
+        $item = @($State.jobs | Where-Object { $_.id -eq $f.jobId }) | Select-Object -First 1
+        $entry = [ordered]@{}
+        foreach ($k in $f.Keys) { $entry[$k] = $f[$k] }
+        $entry.label = Get-BrokerJobShort $item
+        $entry.mine = Test-BrokerSameAgent $f.agent $Agent
+        $entry
+    }
+    $myWaiting = for ($i = 0; $i -lt $State.waiting.Count; $i++) {
+        $w = $State.waiting[$i]
+        if (-not (Test-BrokerSameAgent $w.agent $Agent)) { continue }
+        $behind = New-Object System.Collections.ArrayList
+        foreach ($l in $State.leases) { if ($l.expiresMs -gt $Now -and (Test-BrokerConflict $w.agent $w.kind $w.path $l.agent $l.kind $l.path) -and -not $behind.Contains($l.agent)) { [void]$behind.Add($l.agent) } }
+        for ($k = 0; $k -lt $i; $k++) { $e = $State.waiting[$k]; if ((Test-BrokerConflict $w.agent $w.kind $w.path $e.agent $e.kind $e.path) -and -not $behind.Contains($e.agent)) { [void]$behind.Add($e.agent) } }
+        [ordered]@{ id = $w.id; kind = $w.kind; path = $w.path; position = $i + 1; behind = @($behind) }
+    }
+    $window = $null
+    if (Test-BrokerWindow $State) {
+        $w = $State.window
+        $unyielded = if ($w.phase -eq 'draining') { @($State.leases | Where-Object { $_.expiresMs -gt $Now -and -not $_.yielded -and -not (Test-BrokerSameAgent $_.agent $w.holder) } | ForEach-Object { $_.agent } | Select-Object -Unique) } else { @() }
+        $window = [ordered]@{ id = $w.id; lane = $w.lane; phase = $w.phase; holder = $w.holder; jobIds = @($w.jobIds); unyielded = @($unyielded); drainDeadlineMs = [long]$w.drainDeadlineMs }
+    }
+    $measured = @($averages.Values | Where-Object { $_.measured }).Count -gt 0
+    return [ordered]@{
+        agent = $Agent; atMs = $Now; sessionId = $State.sessionId; sessionOwner = $State.sessionOwner; paused = [bool]$State.paused
+        editor = $(if ($null -eq $Editor) { $null } else { [ordered]@{ phase = [string]$Editor.phase; heartbeatAgeMs = (Get-BrokerEditorAgeMs $Editor); compileFailed = [bool]$Editor.compileFailed } })
+        window = $window; team = @($team); queue = @($queue); estimates = $(if ($measured) { 'telemetry' } else { 'defaults' })
+        mine = [ordered]@{
+            leases = @($State.leases | Where-Object { $_.expiresMs -gt $Now -and (Test-BrokerSameAgent $_.agent $Agent) } | ForEach-Object { [ordered]@{ id = $_.id; kind = $_.kind; path = $_.path; expiresInMs = $_.expiresMs - $Now; yielded = [bool]$_.yielded } })
+            waiting = @($myWaiting)
+        }
+        board = [ordered]@{ path = (Get-BrokerBoardFile $Project); total = $entries.Count; unreadTotal = $unread.Count
+            unread = @($unread | Select-Object -Last $script:BrokerTeamConfig.briefMessages); othersNew = $othersNew }
+    }
+}
+
+function Format-BrokerBrief($Brief) {
+    $now = [long]$Brief.atMs
+    $lines = New-Object System.Collections.ArrayList
+    $session = if ($Brief.sessionId) { "session $($Brief.sessionId) (owner $($Brief.sessionOwner))" } else { 'no session' }
+    $editorText = if ($null -eq $Brief.editor) { 'Editor offline' } else { "Editor $($Brief.editor.phase)" + $(if ($Brief.editor.compileFailed) { ', COMPILE ERRORS' } else { '' }) }
+    [void]$lines.Add("Brief for $($Brief.agent): $session, $editorText" + $(if ($Brief.paused) { ', broker PAUSED' } else { '' }) + '.')
+    [void]$lines.Add("Team ($(@($Brief.team).Count)):")
+    foreach ($m in @($Brief.team)) {
+        $line = "  $($m.agent)" + $(if ($m.you) { ' [you]' } elseif ($m.role) { " [$($m.role)]" } else { '' })
+        if (-not $m.you) { $line += $(if ($m.lastSeenMs -gt 0) { ' ' + (Format-BrokerAge ($now - $m.lastSeenMs)) + ' ago' } else { ' not seen' }) }
+        if (-not $m.active) { $line += ' (quiet)' }
+        if ($m.doing) { $line += ": $($m.doing)" }
+        $leases = @($m.leases)
+        if ($leases.Count -gt 0) { $line += ' | ' + (@($leases | Select-Object -First 3) -join ', ') + $(if ($leases.Count -gt 3) { " +$($leases.Count - 3)" } else { '' }) }
+        if (@($m.jobs).Count -gt 0) { $line += ' | ' + (@($m.jobs) -join ', ') }
+        [void]$lines.Add($line)
+    }
+    if ($null -ne $Brief.window) {
+        $w = $Brief.window
+        $waits = if (@($w.unyielded).Count -gt 0) { ', waits for ' + (@($w.unyielded) -join ', ') + ' to yield' } else { '' }
+        [void]$lines.Add("Window: $($w.id) $($w.lane)/$($w.phase)" + $(if ($w.holder) { " for $($w.holder)" } else { '' }) + $waits + '.')
+    }
+    if (@($Brief.queue).Count -gt 0) {
+        $source = if ($Brief.estimates -eq 'telemetry') { 'ETA from telemetry' } else { 'ETA from defaults, no telemetry yet' }
+        [void]$lines.Add("Queue (start -> done, $source):")
+        foreach ($q in @($Brief.queue)) {
+            $slot = if ($q.order -eq 0) { 'now' } else { '#' + $q.order }
+            $start = if ($q.startMs -le $now) { 'running' } else { '~' + (Format-BrokerAge ($q.startMs - $now)) }
+            [void]$lines.Add("  $slot $($q.jobId) $($q.agent) $($q.label): $start -> ~$(Format-BrokerAge ($q.doneMs - $now))" + $(if ($q.mine) { ' <- yours' } else { '' }))
+        }
+    } else { [void]$lines.Add('Queue: empty.') }
+    $mine = @()
+    foreach ($w in @($Brief.mine.waiting)) { $mine += "waiting $($w.id) $($w.path) #$($w.position)" + $(if (@($w.behind).Count -gt 0) { ' behind ' + (@($w.behind) -join ', ') } else { '' }) }
+    foreach ($l in @($Brief.mine.leases | Where-Object { $_.expiresInMs -lt 120000 })) { $mine += "$($l.path) expires in $(Format-BrokerAge $l.expiresInMs), renew" }
+    if ($mine.Count -gt 0) { [void]$lines.Add('You: ' + ($mine -join '; ') + '.') }
+    $b = $Brief.board
+    [void]$lines.Add("Board: $($b.unreadTotal) new, $($b.othersNew) other, $($b.total) total (Library/UgaBroker/team-board.md).")
+    if ($b.unreadTotal -gt @($b.unread).Count) { [void]$lines.Add("  ($($b.unreadTotal - @($b.unread).Count) older new in the file)") }
+    foreach ($e in @($b.unread)) { [void]$lines.Add("  $($e.id) $($e.from)->$(@($e.to) -join ','): $(Get-BrokerClip $e.text $script:BrokerTeamConfig.messageLineChars)") }
+    $next = @()
+    if ($null -ne $Brief.window -and @($Brief.window.unyielded | Where-Object { Test-BrokerSameAgent $_ $Brief.agent }).Count -gt 0) { $next += "save and yield, $($Brief.window.id) waits for you" }
+    if (@($Brief.queue | Where-Object { $_.mine }).Count -gt 0) { $next += 'keep working, your jobs run without you' }
+    if ($b.unreadTotal -gt 0) { $next += 'reply with say -To <agent> if needed' }
+    if ($next.Count -gt 0) { [void]$lines.Add('Next: ' + ($next -join '; ') + '.') }
+    return ($lines -join "`n")
+}
+
 function Format-BrokerBoard($State, $Editor) {
     $now = Get-BrokerNowMs
     $lines = New-Object System.Collections.ArrayList
@@ -755,6 +1154,9 @@ function Format-BrokerBoard($State, $Editor) {
         }
         [void]$lines.Add($line)
     } else { [void]$lines.Add('Window: none') }
+    if ($State.roster.Count -gt 0) {
+        [void]$lines.Add('Team: ' + ((@($State.roster | Sort-Object { -[long]$_.lastSeenMs }) | ForEach-Object { "$($_.agent) (seen $(Format-BrokerAge ($now - $_.lastSeenMs)) ago)" }) -join ', ') + '. Each agent: brief -Agent <name>.')
+    }
     [void]$lines.Add('Leases:')
     if ($State.leases.Count -eq 0) { [void]$lines.Add('  (none)') }
     foreach ($l in @($State.leases | Sort-Object grantedMs)) {
@@ -782,13 +1184,17 @@ function Format-BrokerBoard($State, $Editor) {
 }
 
 function Write-BrokerResult($Result, [string]$Extra = '') {
-    if ($Json) { Write-Output ($Result | ConvertTo-Json -Depth 10 -Compress); return }
+    if ($Json) {
+        if ($null -ne $script:BrokerSeen) { $Result.unread = $script:BrokerUnread }
+        Write-Output ($Result | ConvertTo-Json -Depth 10 -Compress); return
+    }
     $parts = @($Result.status)
     if ($Result.leaseId) { $parts += $Result.leaseId }
     if ($Result.jobId) { $parts += $Result.jobId }
     if ($Result.position) { $parts += "position $($Result.position)" }
     Write-Output (($parts -join ' ') + ': ' + $Result.message)
     if ($Extra) { Write-Output $Extra }
+    if ($null -ne $script:BrokerSeen -and $script:BrokerUnread -gt 0) { Write-Output "Team board: $script:BrokerUnread new message(s) for you; run brief -Agent $($script:BrokerSeen.agent)." }
 }
 
 # ---------------------------------------------------------------- commands
@@ -976,8 +1382,9 @@ function Invoke-BrokerCli {
     }
     $project = Get-BrokerProject $ProjectRoot
     $now = Get-BrokerNowMs
-    $needsAgent = @('take','renew','release','yield','gate','stage','request','done','cancel')
+    $needsAgent = @('take','renew','release','yield','gate','stage','request','done','cancel','brief','say')
     if ($Command -in $needsAgent -and -not (Test-BrokerAgent $Agent)) { Stop-Broker 'Pass -Agent <name> (letters, digits, ., _ or -; at most 48).' 2 }
+    if ($Command -in $needsAgent) { $script:BrokerSeen = @{ agent = $Agent; command = $Command; role = $Role; doing = $Doing } }
     $resolver = { param($name) Find-BrokerAsmdef $project $name }
 
     switch ($Command) {
@@ -998,6 +1405,32 @@ function Invoke-BrokerCli {
             $state = Invoke-BrokerUpdate $project { param($s, $ctx) }
             $stats = Get-BrokerStats $project $state $now
             if ($Json) { Write-Output ($stats | ConvertTo-Json -Depth 8 -Compress) } else { Write-Output (Format-BrokerStats $stats) }
+        }
+        'brief' {
+            $editor = Read-BrokerEditor $project
+            $history = Get-BrokerTelemetryHistory $project
+            [void](Invoke-BrokerUpdate $project { param($s, $ctx)
+                [void](Invoke-BrokerPromote $s $now)
+                $script:BrokerBrief = Get-BrokerBrief $project $s $editor $Agent $now $history $Role $Doing
+                $ctx.save = $true })
+            if ($Json) { Write-Output ($script:BrokerBrief | ConvertTo-Json -Depth 8 -Compress) } else { Write-Output (Format-BrokerBrief $script:BrokerBrief) }
+        }
+        'say' {
+            $text = ConvertTo-BrokerBoardText $Message
+            if ([string]::IsNullOrWhiteSpace($text)) { Stop-Broker 'say needs -Message "<text>".' 2 }
+            if ($text.Length -gt $script:BrokerTeamConfig.maxMessageChars) { Stop-Broker "Message is longer than $($script:BrokerTeamConfig.maxMessageChars) characters: keep it to one short note and link a file for details." 2 }
+            $recipients = @(@($To) | ForEach-Object { if ($_) { $_.Split(@(',', ';'), [StringSplitOptions]::RemoveEmptyEntries) } } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+            if ($recipients.Count -eq 0 -or @($recipients | Where-Object { $_ -ieq 'all' }).Count -gt 0) { $recipients = @('all') }
+            foreach ($r in $recipients) { if ($r -ne 'all' -and -not (Test-BrokerAgent $r)) { Stop-Broker "Invalid recipient '$r': use agent names or all." 2 } }
+            [void](Invoke-BrokerUpdate $project { param($s, $ctx)
+                $script:BrokerSaid = Add-BrokerBoardMessage $project $s $Agent $recipients $text $now
+                $ctx.save = $true })
+            $file = Get-BrokerBoardFile $project
+            if ($Json) { Write-Output ([ordered]@{ status = 'posted'; id = $script:BrokerSaid; to = $recipients; path = $file; unread = $script:BrokerUnread } | ConvertTo-Json -Compress) }
+            else {
+                Write-Output "posted $($script:BrokerSaid) to $($recipients -join ', '): $file"
+                if ($script:BrokerUnread -gt 0) { Write-Output "Team board: $script:BrokerUnread new message(s) for you; run brief -Agent $Agent." }
+            }
         }
         'session' {
             if ($Action -notin @('start','stop')) { Stop-Broker "Use: session start -Agent <owner> | session stop" 2 }
@@ -1113,7 +1546,17 @@ function Invoke-BrokerCli {
                 $count = if (Test-Path -LiteralPath $stagingDir) { @(Get-ChildItem -LiteralPath $stagingDir -Recurse -File).Count } else { 0 }
                 if ($count -eq 0) { Write-Warning 'Nothing is staged for this agent; the sync window will only refresh and compile.' }
             }
-            Write-BrokerResult $result
+            $history = Get-BrokerTelemetryHistory $project
+            $segments = @($history) + @($state.telemetry) | Where-Object { $null -ne $_ }
+            $forecast = Get-BrokerForecast $state (Get-BrokerLaneAverages (Get-BrokerLaneTotals $segments)) $now
+            $eta = @($forecast | Where-Object { $_.jobId -eq $result.jobId }) | Select-Object -First 1
+            $etaText = ''
+            if ($null -ne $eta) {
+                $result.startMs = $eta.startMs; $result.doneMs = $eta.doneMs
+                $slot = if ($eta.order -eq 0) { 'the current window' } else { "window #$($eta.order) of the queue" }
+                $etaText = "ETA (rough): $slot, starts in ~$(Format-BrokerAge ($eta.startMs - $now)), done in ~$(Format-BrokerAge ($eta.doneMs - $now)). Keep working meanwhile; brief shows the whole queue."
+            }
+            Write-BrokerResult $result $etaText
             if ($Wait) { Wait-BrokerJob $project $result.jobId }
         }
         'wait' {

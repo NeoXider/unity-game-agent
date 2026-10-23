@@ -10,7 +10,10 @@ stepping on each other. Unity 6 (6000.0) or newer. Editor-only: nothing ships in
   sessions one by one. Cold work keeps priority.
 - **Exclusive window** for changes that recompile or reimport for everyone: packages, scripting
   defines, build target, builds and merges. Build Settings, tags and layers are leased like assets.
-- **Board**: Window > Unity Game Agent > Editor Broker.
+- **Team**: agents see each other (roster with role, current work, leases and jobs), the queue with a
+  rough ETA from the project's telemetry, and a Markdown team board (`Library/UgaBroker/team-board.md`)
+  for handoffs and questions.
+- **Board**: Window > Unity Game Agent > Editor Broker. The human can post to the team board from it.
 - Optional `uga_broker` command for MCP for Unity (CoplayDev, 9.0+) and the Unity CLI (Pipeline
   package 0.8+). It is compiled only when those packages are installed.
 

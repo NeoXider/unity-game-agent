@@ -24,6 +24,7 @@ namespace UnityGameAgent.EditorBroker
         public BrokerWindow window = new BrokerWindow();
         public List<BrokerViolation> violations = new List<BrokerViolation>();
         public BrokerTelemetry telemetry = new BrokerTelemetry();
+        public List<BrokerMember> roster = new List<BrokerMember>();
 
         public bool HasWindow => window != null && !string.IsNullOrEmpty(window.id);
         public bool SessionActive => !string.IsNullOrEmpty(sessionId);
@@ -46,9 +47,11 @@ namespace UnityGameAgent.EditorBroker
             if (sessionOwner == null) sessionOwner = "";
             if (projectSettingsRequest == null) projectSettingsRequest = "";
             if (telemetry == null) telemetry = new BrokerTelemetry();
+            if (roster == null) roster = new List<BrokerMember>();
             window.Normalize();
             telemetry.Normalize();
             foreach (var job in jobs) job.Normalize();
+            foreach (var member in roster) member.Normalize();
             if (nextId < 1) nextId = 1;
         }
     }
@@ -170,6 +173,28 @@ namespace UnityGameAgent.EditorBroker
         public string detail = "";
     }
 
+    // One agent that called the broker recently (see BrokerTeam). readId is the newest team board
+    // message the agent has seen in a brief.
+    [Serializable]
+    public sealed class BrokerMember
+    {
+        public string agent = "";
+        public string role = "";
+        public string doing = "";
+        public long firstSeenMs;
+        public long lastSeenMs;
+        public string lastCommand = "";
+        public long readId;
+
+        public void Normalize()
+        {
+            if (agent == null) agent = "";
+            if (role == null) role = "";
+            if (doing == null) doing = "";
+            if (lastCommand == null) lastCommand = "";
+        }
+    }
+
     [Serializable]
     public sealed class BrokerOpResult
     {
@@ -178,6 +203,7 @@ namespace UnityGameAgent.EditorBroker
         public string leaseId = "";
         public string jobId = "";
         public int position;
+        public int unread;      // team board messages for the caller since its last brief
 
         public static BrokerOpResult Of(string status, string message)
         {
@@ -234,7 +260,7 @@ namespace UnityGameAgent.EditorBroker
     public static class BrokerConstants
     {
         public const int Schema = 1;
-        public const string PackageVersion = "3.9.0";
+        public const string PackageVersion = "3.10.0";
 
         public const string KindCold = "cold";
         public const string KindFocus = "focus";

@@ -114,6 +114,8 @@ Detailed diagram: [leases, lanes and the Editor timeline](assets/diagram-shared-
 - **Several projects on one machine** stay independent. `editor-broker.ps1 projects` lists them all.
 - **Telemetry per project:** `editor-broker.ps1 stats` shows how long each agent waits, how long the
   queue gets and how long windows take, for the current session and across past ones.
+- **Agents know about each other:** `brief` shows the team, the queue with a rough ETA and new
+  messages; `say` posts handoffs and API changes to a shared Markdown team board.
 
 ![Several projects on one machine](assets/illustration-multi-project.jpg)
 
@@ -183,6 +185,7 @@ These are implemented in the skill today.
 | Several agents in one Editor (broker, lanes, board) | Done | [Protocol](tools/shared-editor.md), [CLI](tools/editor-broker.ps1), [package](unity-package/README.md), CLI + EditMode + live Unity e2e tests |
 | Several projects on one machine | Done | `editor-broker.ps1 projects`, machine registry, reference-counted Editor preferences |
 | Shared-editor telemetry per project | Done | `editor-broker.ps1 stats`: wait per agent, queue length, window and drain times, session history |
+| Team brief and board | Done | `editor-broker.ps1 brief` (roster, queue ETA, unread messages), `say` -> `Library/UgaBroker/team-board.md` |
 | Isolated workspaces (escalation) | Done | [Guide](tools/parallel-editors.md), [PowerShell helper](tools/unity-workspace.ps1) |
 | Reuse-first discovery policy | Done | `SKILL.md`, `tools/libraries-setup.md` |
 | Role subskills | Done | `roles/game-designer.md`, `roles/designer.md`, `roles/lead.md`, `roles/developer.md`, `roles/qa.md` |

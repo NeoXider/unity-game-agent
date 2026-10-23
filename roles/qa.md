@@ -31,6 +31,8 @@ Use existing defect tracking only where the project already needs it; no mandato
 The QA-owned brief section and task-scoped capture/log evidence. Route Editor operations through the
 single assigned operator, or in a shared-editor session through hot windows (`request -Lane hot` with
 `-Tests` or `-JobKind session`); no competing Editor, import, Play Mode, save profile or test harness.
+In a session, check `brief` for handoffs addressed to you and report defects to their owner with
+`say -To <agent>` as well as in the brief.
 
 ## Forbidden Actions
 
