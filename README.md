@@ -39,7 +39,7 @@ That is the gap this skill fills.
 | Independent QA pass | No | Partial | Second QA subagent, same brief's QA section |
 | Several agents in one Unity Editor | Manual | Rare | Broker package: leases, one batched import/compile, batched tests and Play Mode, exclusive windows, live board |
 | Several projects on one machine | Manual | Rare | Independent broker per project, machine-wide registry, shared Editor preferences reference-counted |
-| Isolated Editors when really needed | Manual | Rare | Worktree + own Library/Editor/MCP as an escalation, disk/RAM gates, headless runs |
+| Several Editors at once, on request | Manual | Rare | Opt-in: you ask, or the agent proposes and you accept; worktree + own Library/Editor/MCP per Editor, disk/RAM gates, headless runs |
 | Play Mode verification policy | Weak | Partial | Required by mode |
 | EditMode/PlayMode test expectations | Optional | Optional | Declared per task/feature |
 | Screenshot evidence and visual review | Optional | Partial | Required for visual/runtime-visible work |
@@ -122,8 +122,9 @@ Detailed diagram: [leases, lanes and the Editor timeline](assets/diagram-shared-
 Detailed diagram: [per-project brokers and the machine registry](assets/diagram-multi-project.svg).
 
 Start: `tools/editor-broker.ps1 doctor -Fix`, then `session start`. Protocol and adapter tables:
-[tools/shared-editor.md](tools/shared-editor.md). Separate branches or simultaneous Play Mode still
-use [isolated workspaces](tools/parallel-editors.md).
+[tools/shared-editor.md](tools/shared-editor.md). Want two or more Editors at once (separate branches,
+simultaneous Play Mode, a long test queue)? Ask for it, or accept the agent's proposal:
+[several Editors at once](tools/parallel-editors.md).
 
 ### Measured: three agents build a clicker
 
@@ -186,7 +187,7 @@ These are implemented in the skill today.
 | Several projects on one machine | Done | `editor-broker.ps1 projects`, machine registry, reference-counted Editor preferences |
 | Shared-editor telemetry per project | Done | `editor-broker.ps1 stats`: wait per agent, queue length, window and drain times, session history |
 | Team brief and board | Done | `editor-broker.ps1 brief` (roster, queue ETA, unread messages), `say` -> `Library/UgaBroker/team-board.md` |
-| Isolated workspaces (escalation) | Done | [Guide](tools/parallel-editors.md), [PowerShell helper](tools/unity-workspace.ps1) |
+| Several Editors at once (opt-in) | Done | [Guide](tools/parallel-editors.md), [PowerShell helper](tools/unity-workspace.ps1) |
 | Reuse-first discovery policy | Done | `SKILL.md`, `tools/libraries-setup.md` |
 | Role subskills | Done | `roles/game-designer.md`, `roles/designer.md`, `roles/lead.md`, `roles/developer.md`, `roles/qa.md` |
 | Standard/pro feature docs | Done | `templates/FEATURE.md`, `templates/TASK.md` |

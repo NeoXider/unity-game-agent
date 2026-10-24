@@ -140,6 +140,17 @@ and keep tests/Play Mode in hot windows. Report the board at the end and stop th
 
 ---
 
+## Several Editors at Once
+
+```
+Run [feature list] in [2] Unity Editors at once, one workspace per Editor.
+Check disk and RAM first (unity-workspace doctor) and tell me the cost.
+Give each Editor its own branch, agents and scenes; agents in the same Editor share it
+through the broker. Merge the branches into the main project after QA and report.
+```
+
+---
+
 ## Scene Setup via MCP
 
 ```

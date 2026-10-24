@@ -40,6 +40,7 @@
   "role_subskills_enabled": true,
   "mandatory_subagents_standard_pro": "developer_then_independent_qa",
   "multi_agent_editor": "shared_broker",
+  "parallel_editors_policy": "on_request_or_offer",
   "shared_editor_settings": "apply",
   "subagent_fallback_policy": "only_when_tools_unavailable",
   "gd_before_lead": true,

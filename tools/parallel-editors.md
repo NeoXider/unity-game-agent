@@ -1,10 +1,47 @@
 # Parallel Unity Editors (isolated workspaces)
 
-**This is the escalation path.** Several agents on one project share one Editor by default through
-the broker: see [shared-editor.md](shared-editor.md). Use isolated workspaces only when tasks need
-separate branches, different package sets, simultaneous Play Mode, or multiplayer clients. Each
-workspace costs a Library and an Editor's worth of disk and RAM. A docs-only or file-only task does not
-need an Editor workspace.
+**This is the opt-in variant.** Several agents on one project share one Editor by default through
+the broker: see [shared-editor.md](shared-editor.md). Two or more Editors at once run only when the
+owner asks for them or accepts the agent's proposal (next section). Each workspace costs a Library
+and an Editor's worth of disk and RAM. A docs-only or file-only task does not need an Editor workspace.
+
+## Several Editors at once: when and how
+
+**Who decides.** The owner. Run several Editors when the owner asks ("two Editors", "one Editor per
+feature", "a separate Editor for the multiplayer client"). The agent may propose it, never switch to
+it silently, when `parallel_editors_policy` is `"on_request_or_offer"` (the default); with
+`"on_request"` it only follows the owner's request. Propose when one of these holds:
+
+- tasks need separate branches or different package sets (a package upgrade next to feature work);
+- two things must be in Play Mode at the same time (multiplayer clients, side-by-side comparison, a
+  build the owner plays while agents keep working);
+- the hot queue is the bottleneck: `brief` keeps forecasting Play Mode or test windows ten or more
+  minutes out for several agents, and the work splits into independent areas;
+- a large team (four or more agents) works on clearly separate areas of a big project.
+
+**The proposal is one short message:** why, how many Editors and which task goes to each, the cost
+from `doctor` (one Library copy and about `EditorGB` (5 GB by default) of RAM per extra Editor, and
+the first import time on a fresh Library), and how results come back (workspace branches, merged by
+the orchestrator after QA). Ask once per decision; on "no" stay in the shared Editor and record the
+answer in `AGENT_MEMORY.md` so the same proposal is not repeated.
+
+**How many.** As many as `doctor` and `open` admit for disk and RAM, usually two or three. The
+canonical project stays the integration Editor; every other Editor is a workspace (`new`, then
+`open`). A workspace with two or more agents in it runs its own broker session, because the broker
+is per project: pass `-ProjectRoot <workspace>` to `editor-broker.ps1`, the same way as for several
+projects on one machine. One agent per workspace needs no broker.
+
+**Steps.**
+
+1. `doctor` (disk, RAM, Editor version, Smart Merge); commit what the workspaces must start from.
+2. `new -Name <task>` per extra Editor, then `open -Name <task>`; route MCP per instance (MCP routing
+   below). Write each workspace, branch, agent, owned scenes/prefabs and MCP instance into the briefs.
+3. Agents commit on their workspace branches. QA runs per workspace (`test` headless, or in its Editor).
+4. The orchestrator merges each branch into the canonical project (in a shared session: an
+   exclusive window, then a sync window), reruns the affected QA, then `finish -Confirm -Remove`.
+
+For simultaneous Play Mode on the same source without separate branches, use `clone-tests`
+(shared-source tests and multiplayer, below) instead of full workspaces.
 
 ## Ownership and isolation
 

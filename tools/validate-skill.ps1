@@ -46,6 +46,7 @@ $requiredProfileFields = @(
     "role_subskills_enabled",
     "mandatory_subagents_standard_pro",
     "multi_agent_editor",
+    "parallel_editors_policy",
     "shared_editor_settings",
     "subagent_fallback_policy",
     "gd_before_lead",

@@ -4,6 +4,21 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.11.0] - 2026-10-24
+
+### Added
+- Several Editors at once as an explicit opt-in variant: two or more Editors on one project, each in
+  its own workspace (worktree, branch, Library, MCP instance). They run only when the owner asks, or
+  when the agent proposes them and the owner accepts; the agent never switches silently. The
+  proposal names the reason (separate branches or package sets, simultaneous Play Mode, a hot queue
+  that keeps several agents waiting, a large team on separate areas), how many Editors and which
+  task each gets, the measured disk and RAM cost, and how branches come back. A workspace with two
+  or more agents runs its own broker session. Guide: `tools/parallel-editors.md`.
+- `DEV_PROFILE.json` field `parallel_editors_policy`: `"on_request_or_offer"` (default) or
+  `"on_request"` (the agent never proposes).
+
+---
+
 ## [3.10.1] - 2026-10-23
 
 ### Fixed

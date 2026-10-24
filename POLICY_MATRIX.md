@@ -21,7 +21,7 @@ Single source of truth for mode-specific cadences. No ambiguity.
 | **Role subskills** | Only selected roles | Developer + QA; design/Lead only for gaps | Same |
 | **Real subagents when available/allowed** | Optional | One Developer, second independent QA | Same; reuse agents through correction loop |
 | **Several agents on one project** | One agent | Shared Editor through the broker (default) | Same |
-| **Isolated workspaces** | Off | Escalation: separate branches, package sets or simultaneous Play Mode | Same |
+| **Several Editors at once** | Off | Opt-in: owner's request, or the agent proposes and the owner accepts (separate branches, package sets, simultaneous Play Mode, long hot queue) | Same |
 | **Editor operator** | One per Editor | The broker serializes sync/hot/exclusive windows; agents hold leases | Same |
 | **Tests / Play Mode in multi-agent work** | Single agent drives them | Hot window: test selections batched per mode, sessions after | Same; headless builds in an exclusive window or isolated workspace |
 | **Multi-agent readiness check** | - | `editor-broker.ps1 doctor -Fix`, READY, `session start` | Same |

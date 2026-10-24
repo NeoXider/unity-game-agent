@@ -17,8 +17,9 @@ Components:
 - Optional `uga_broker` command for MCP for Unity (CoplayDev) and for the Unity CLI (Pipeline
   package), compiled only when that adapter is installed.
 
-Use [isolated workspaces](parallel-editors.md) instead only when tasks truly need separate branches,
-different package sets or simultaneous Play Mode.
+Several Editors at once, one [workspace](parallel-editors.md) each, are an opt-in variant: only on
+the owner's request, or when the agent proposes them (separate branches, package sets, simultaneous
+Play Mode, a hot queue that keeps several agents waiting) and the owner accepts.
 
 ## Orchestrator preflight (multi-agent modes)
 

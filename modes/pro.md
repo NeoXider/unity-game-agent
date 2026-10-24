@@ -33,8 +33,8 @@ ServiceLocator, mandatory interfaces/services, more managers, or deeper folders.
 - When two or more agents work on the project concurrently, they **share one Editor through the
   broker by default**: run the readiness check, assign non-overlapping leases (assembly, feature
   folder, scene, screen) in each brief and follow [shared-editor.md](../tools/shared-editor.md).
-  Escalate to [isolated workspaces](../tools/parallel-editors.md) only for separate branches, package
-  sets or simultaneous Play Mode.
+  [Several Editors at once](../tools/parallel-editors.md) run only on the owner's request or an
+  accepted proposal: separate branches, package sets, simultaneous Play Mode or a long hot queue.
 
 ## BUILD
 

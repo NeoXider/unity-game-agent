@@ -2,7 +2,7 @@
 name: unity-game-agent
 description: "Build, fix and verify Unity games, gameplay, scenes, UI and assets; resume tracked projects or run focused feature work. Reuse existing project and package systems before custom code, and use live MCP capabilities for Editor operations."
 metadata:
-  version: 3.10.1
+  version: 3.11.0
   author: Neoxider
   homepage: https://github.com/NeoXider/unity-game-agent
 ---
@@ -130,6 +130,8 @@ Important policy meanings:
 - `multi_agent_editor: "shared_broker"`: two or more agents on one project share one Editor through
   the broker ([tools/shared-editor.md](tools/shared-editor.md)); `"isolated_workspaces"` selects
   [parallel workspaces](tools/parallel-editors.md) instead.
+- `parallel_editors_policy: "on_request_or_offer"`: several Editors at once run on the owner's request,
+  or the agent proposes them and the owner accepts; `"on_request"` means the agent never proposes.
 - `shared_editor_settings: "apply"`: the orchestrator's `doctor -Fix` applies the project settings a
   shared session needs (Enter Play Mode without domain reload, parallel import) and records them;
   `"report"` only lists them. Per-user session preferences are always restored by `session stop`.
@@ -192,7 +194,7 @@ and QA policy always still apply. To add a pattern, see [patterns/README.md](pat
 - Mobile build size (ASTC, sprite atlases, player-settings audit, APK, pushing heavy repos): [tools/mobile-build-and-size.md](tools/mobile-build-and-size.md)
 - Meta progress map (stops on a painted road, HUD obstacles, crops): [tools/meta-progress-map.md](tools/meta-progress-map.md)
 - Several agents in one Editor (default for multi-agent work), adapter rules for MCP for Unity and the Unity CLI, several projects on one machine: [tools/shared-editor.md](tools/shared-editor.md), [tools/editor-broker.ps1](tools/editor-broker.ps1), package `unity-package/` ([README](unity-package/README.md))
-- Isolated workspaces (escalation: separate branches/packages/simultaneous Play Mode): [tools/parallel-editors.md](tools/parallel-editors.md) and [tools/unity-workspace.ps1](tools/unity-workspace.ps1)
+- Several Editors at once (opt-in: owner's request or accepted proposal; separate branches/packages/simultaneous Play Mode): [tools/parallel-editors.md](tools/parallel-editors.md) and [tools/unity-workspace.ps1](tools/unity-workspace.ps1)
 - Broker tests: [tools/test-editor-broker.ps1](tools/test-editor-broker.ps1) (no Unity) and [tools/test-editor-broker-unity.ps1](tools/test-editor-broker-unity.ps1) (live Unity 6 Editor)
 - Trustworthy UI screenshots (Device Simulator, one driver per workspace, measuring instead of eyeballing): [tools/ui-screenshot-truth.md](tools/ui-screenshot-truth.md)
 - Skill memory: [SKILL_MEMORY.md](SKILL_MEMORY.md) and [tools/append-skill-memory.ps1](tools/append-skill-memory.ps1)
@@ -295,10 +297,19 @@ adapter tables and troubleshooting: [tools/shared-editor.md](tools/shared-editor
 Several projects on one machine each get their own Editor and broker; pass `-ProjectRoot` (or
 `UGA_PROJECT_ROOT`) on every call and route MCP per project. `editor-broker.ps1 projects` lists them.
 
-**Isolated workspaces are the escalation**, not the default: use [parallel-editors.md](tools/parallel-editors.md)
-only when tasks need separate branches, different package sets or simultaneous Play Mode. Suggest a
-Dev Drive only when the owner asks about disk space for workspaces or a Dev Drive (ReFS) volume
-already exists.
+### Several Editors at once (opt-in)
+
+Two or more Editors on one project, each in its own workspace (worktree, branch, Library, MCP
+instance), run **only when the owner asks, or when the agent proposes it and the owner accepts**;
+never switch silently. Propose (when `parallel_editors_policy` allows) for separate branches or
+package sets, simultaneous Play Mode (multiplayer, a build the owner plays meanwhile), a hot queue
+that `brief` keeps forecasting ten or more minutes out, or a team of four or more agents on clearly
+separate areas. The proposal says why, how many Editors and which task each gets, the measured disk
+and RAM cost, and that branches come back through the orchestrator's merge after QA; ask once and
+record the answer in `AGENT_MEMORY.md`. A workspace with two or more agents runs its own broker
+session (`-ProjectRoot <workspace>`). Steps, sizing and MCP routing:
+[parallel-editors.md](tools/parallel-editors.md). Suggest a Dev Drive only when the owner asks about
+disk space for workspaces or a Dev Drive (ReFS) volume already exists.
 
 ## Session Routing
 

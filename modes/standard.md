@@ -32,8 +32,9 @@ Mode changes verification depth, not architecture complexity or document count.
 
 Two or more concurrent agents **share one Editor through the broker**: readiness check, disjoint
 leases per brief, staged compiled files, batched sync/hot/exclusive windows; see
-[shared-editor.md](../tools/shared-editor.md). [Isolated workspaces](../tools/parallel-editors.md) are
-an opt-in escalation for separate branches, package sets or simultaneous Play Mode.
+[shared-editor.md](../tools/shared-editor.md). [Several Editors at once](../tools/parallel-editors.md)
+(one workspace each) run only on the owner's request or an accepted proposal: separate branches,
+package sets, simultaneous Play Mode or a hot queue that keeps several agents waiting.
 
 Without a broker session one operator owns Unity/import/scene/assets/play/tests; code writers have
 disjoint scopes and freeze source before its single batch compile.
