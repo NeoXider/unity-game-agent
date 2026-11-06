@@ -23,7 +23,8 @@ requirements and one task/feature brief; no mandatory new GDD/log/checklist tree
 | `Docs/DEV_PLAN.md` | Task plan (after Plan mode) | standard/pro; optional in fast |
 | `Docs/ARCHITECTURE.md` | Affected architecture decisions | actual boundary/architecture work |
 | `Docs/Features/` or `Docs/Tasks/` | One canonical work brief with Developer/QA sections | tracked work |
-| Separate `Docs/QA/` | Expanded tracking checklist | explicit expanded tracking |
+| `Docs/Audit/QA/` | Expanded QA checklist and written QA audits (committed) | explicit expanded tracking or a QA audit |
+| `Docs/QA/` | Raw QA artifacts: run captures, test XML/logs, metrics, receipts. Listed in `.gitignore` as `/Docs/QA/`, never committed; audits link to it | whenever QA runs write artifacts |
 | `Docs/QA_AGENT/` | Legacy independent duplicate | explicit duplicate request only |
 
 **Anti-patterns:** Do not create a competing docs tree or duplicate results into QA/QA_AGENT/log files

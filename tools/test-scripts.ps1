@@ -138,7 +138,7 @@ try {
         "Docs/Features/FEAT-001-player-movement.md",
         "Docs/Tasks/TASK-001-01-input-adapter.md",
         "Docs/Tasks/TASK-001-02-move-controller.md",
-        "Docs/QA/FEAT-001-player-movement-qa.md",
+        "Docs/Audit/QA/FEAT-001-player-movement-qa.md",
         "Docs/QA_AGENT/FEAT-001-player-movement-qa.md",
         "Docs/Features/FEAT-002-combat-loop.md",
         "Docs/Tasks/TASK-002-01-aim.md",

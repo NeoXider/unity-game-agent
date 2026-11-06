@@ -1,6 +1,6 @@
 # QA Checklist: [FEAT-NNN Name]
 
-**Feature:** [../Features/FEAT-NNN-name.md](../Features/FEAT-NNN-name.md)  
+**Feature:** [../../Features/FEAT-NNN-name.md](../../Features/FEAT-NNN-name.md)  
 **Mode:** standard | pro  
 **Scene/build target:** [scene/platform]  
 **Agent owner:** [agent/session]  

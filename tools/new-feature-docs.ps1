@@ -87,7 +87,8 @@ if (-not [string]::IsNullOrWhiteSpace($DocsRoot)) {
 }
 $featuresDir = Join-Path $docs "Features"
 $tasksDir = Join-Path $docs "Tasks"
-$qaDir = Join-Path $docs "QA"
+# Written QA checklists/audits are committed under Docs/Audit/QA; Docs/QA holds raw run artifacts and is gitignored.
+$qaDir = Join-Path (Join-Path $docs "Audit") "QA"
 $qaAgentDir = Join-Path $docs "QA_AGENT"
 
 $expandedTracking = $DetailedTracking -or $CreateIndependentQa
@@ -137,7 +138,7 @@ foreach ($taskName in $Tasks) {
 
 $trackingLinks = "Compact brief: Developer and independent QA own the sections above."
 if ($expandedTracking) {
-    $trackingLinks = "- Expanded QA: [checklist](../QA/$featureStem-qa.md)"
+    $trackingLinks = "- Expanded QA: [checklist](../Audit/QA/$featureStem-qa.md)"
     if ($CreateIndependentQa) {
         $trackingLinks += [Environment]::NewLine + "- Explicit legacy independent QA: [checklist](../QA_AGENT/$featureStem-qa.md)"
     }

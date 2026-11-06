@@ -47,6 +47,10 @@ Two obligations follow:
 2. **State in the report that the synthetic profile has no insets**, so nobody believes those frames
    proved notch safety. They did not.
 
+## Capture orientation
+
+`ScreenCapture.CaptureScreenshotIntoRenderTexture` returns the frame vertically flipped on graphics APIs where `SystemInfo.graphicsUVStartsAtTop` is true (Direct3D, Metal, Vulkan); `ScreenCapture.CaptureScreenshot` and `CaptureScreenshotAsTexture` are upright. Flip the render texture before `ReadPixels` when that flag is set: Blit it to a temporary with scale `(1, -1)` and offset `(0, 1)`, then Blit back. Open one saved frame and look at it: an upside-down frame still passes size, luma and "not blank" checks, so only a look catches it.
+
 ## Reading the evidence
 
 Visual claims must be measured, not eyeballed. Two concrete misreadings from one session:

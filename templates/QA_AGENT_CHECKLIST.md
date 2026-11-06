@@ -1,7 +1,7 @@
 # QA Agent Checklist: [FEAT-NNN Name]
 
 **Feature:** [../Features/FEAT-NNN-name.md](../Features/FEAT-NNN-name.md)  
-**Source checklist:** [../QA/FEAT-NNN-name-qa.md](../QA/FEAT-NNN-name-qa.md)  
+**Source checklist:** [../Audit/QA/FEAT-NNN-name-qa.md](../Audit/QA/FEAT-NNN-name-qa.md)  
 **Mode:** standard | pro  
 **Created:** YYYY-MM-DD HH:MM  
 **Updated:** YYYY-MM-DD HH:MM

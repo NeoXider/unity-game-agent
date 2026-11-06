@@ -7,7 +7,7 @@
 
 ## Standard/Pro Tracking
 
-For Standard/Pro, every Feature has a page in `Docs/Features/`, every implementation task has a page in `Docs/Tasks/`, and every Feature has QA files in `Docs/QA/` and `Docs/QA_AGENT/`.
+For Standard/Pro, every Feature has a page in `Docs/Features/`, every implementation task has a page in `Docs/Tasks/`, and every Feature has QA files in `Docs/Audit/QA/` and `Docs/QA_AGENT/` (raw run artifacts go to the gitignored `Docs/QA/`).
 
 Fast/Quick Fix can keep this brief unless the user requests full tracking.
 

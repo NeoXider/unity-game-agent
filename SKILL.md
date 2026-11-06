@@ -2,7 +2,7 @@
 name: unity-game-agent
 description: "Build, fix and verify Unity games, gameplay, scenes, UI and assets; resume tracked projects or run focused feature work. Reuse existing project and package systems before custom code, and use live MCP capabilities for Editor operations."
 metadata:
-  version: 3.11.0
+  version: 3.12.0
   author: Neoxider
   homepage: https://github.com/NeoXider/unity-game-agent
 ---

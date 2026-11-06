@@ -4,6 +4,25 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.12.0] - 2026-11-06
+
+### Changed
+- QA evidence split (owner rule): raw artifacts written by runs (captures, frame dumps, test XML/logs,
+  metrics, receipts) live in `Docs/QA/`, which the project `.gitignore` lists as `/Docs/QA/` and never
+  commits; written QA audits and expanded per-feature QA checklists live in `Docs/Audit/QA/` and are
+  committed. `tools/new-feature-docs.ps1`, the QA templates, `reference.md`, `modes/fast.md` and
+  `templates/DEV_PLAN.md` follow it; `tools/playmode-qa-automation.md` § Where QA Evidence Lives has
+  the migration steps for an existing project.
+- Test runs cover the touched systems only (`-testFilter`); the full suite runs once, before a stable
+  release. A failing class is compared against the commit before the change before it is blamed.
+
+### Added
+- `tools/ui-screenshot-truth.md` § Capture orientation: `CaptureScreenshotIntoRenderTexture` is flipped
+  vertically where `SystemInfo.graphicsUVStartsAtTop` (Direct3D); flip before `ReadPixels` and look at a
+  saved frame. Found in VampireDota, where QA frame dumps were written upside down.
+
+---
+
 ## [3.11.0] - 2026-10-24
 
 ### Added

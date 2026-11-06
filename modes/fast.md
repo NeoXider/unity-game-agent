@@ -63,7 +63,7 @@ Required set per [../POLICY_MATRIX.md](../POLICY_MATRIX.md); `fast` keeps each f
 - `Docs/DEV_LOG/` — brief entries on batch completion.
 - `Docs/AGENT_MEMORY.md` — important decisions only.
 - `Docs/Screenshots/iter-NN/` — **required**, one folder per iteration.
-- `Docs/Features/`, `Docs/Tasks/`, `Docs/QA/`, `Docs/QA_AGENT/` — optional in `fast`; create only if the
+- `Docs/Features/`, `Docs/Tasks/`, `Docs/Audit/QA/`, `Docs/QA_AGENT/` — optional in `fast`; create only if the
   user asks for stronger tracking.
 
 ## Architecture

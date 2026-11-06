@@ -234,6 +234,8 @@ old file, carry the reviewer's comments over verbatim with their resolution befo
 - **Edit Mode is not the runtime lifecycle.** Do not infer `OnEnable`, `OnDisable` or `OnDestroy` behavior from a plain Edit Mode test; check the component and test setup. [Edit-mode execution attributes](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/ExecuteAlways.html) affect which events execute. Prefer Play Mode for runtime lifecycle/audio routing; calling a callback directly tests that method, not Unity dispatch. The project observed `AudioMixer.SetFloat` returning false in Edit Mode; inspect exposed parameters and snapshot editing as well, since the [API reference](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/Audio.AudioMixer.SetFloat.html) documents those failure conditions and recommends setting values from `Start` or later.
 - **Check the effective test timeout.** A 180 s limit from a prior run is not a universal NUnit batch default. Inspect the installed Unity Test Framework/NUnit version, test attributes, runner settings and timeout failure before choosing a budget (see [NUnit timeout configuration](https://docs.nunit.org/articles/nunit/writing-tests/attributes/timeout.html)). A source-wide regex scan can exceed a configured limit on a slow disk: prefilter with a cheap string check that preserves every possible regex match, without loosening the check.
 - **Budget from the project's measured suite.** A prior full EditMode run took about 20 minutes on a loaded machine; this is an observation, not a duration guarantee. Iterate with a fixture filter, then run the required full suite after the final changes and report the actual duration/results.
+- **Run the touched systems only.** Pass `-testFilter` with the test classes of the changed code, the tests that assert its strings/contracts and the Play Mode tests of the changed flow. The full suite runs once, before a stable release, when the owner calls it.
+- **Blame a failure only after a baseline.** When a filtered class fails, run the same classes on the commit before the change; identical failures there are pre-existing (often batch-mode limits such as missing audio clips, no Game View capture, or a frame-rate threshold) and are reported as such, not fixed blindly.
 - **Vendor package tests** that depend on IMGUI or a live window can fail in batch mode for reasons unrelated to the game. Name them as foreign in the report instead of ignoring the run.
 
 ## Bounded QA Attempts
@@ -262,6 +264,12 @@ For visual/UI/camera/gameplay-visible features:
 4. Link evidence once from the work brief; existing state/index records can link that brief.
 
 Tests that exercise visible runtime behavior should capture or trigger screenshot evidence when tooling supports it. If the test cannot capture screenshots, pair it with MCP screenshot after the same scenario or record why screenshot evidence is unavailable.
+
+## Where QA Evidence Lives
+
+- Raw artifacts written by runs (captures, frame dumps, test XML/logs, metrics, receipts) go to `Docs/QA/<date>-<feature>/`. The project `.gitignore` lists `/Docs/QA/`: reruns overwrite these files, and they never reach a commit or a review diff.
+- The written QA audit (what ran, on which revision, results, what stays unverified, links to the local artifacts) goes to `Docs/Audit/QA/<date>-<feature>/README.md` and is committed. Expanded per-feature QA checklists live there too.
+- Moving an existing project: `git mv` every report from `Docs/QA` to `Docs/Audit/QA` keeping the subfolders, recompute their relative links (artifact links now point back into `Docs/QA`), rewrite links to them from other docs, add `/Docs/QA/` to `.gitignore`, then `git rm -r --cached Docs/QA`. The files stay on disk.
 
 ## QA Rules
 
