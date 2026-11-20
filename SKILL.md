@@ -2,7 +2,7 @@
 name: unity-game-agent
 description: "Build, fix and verify Unity games, gameplay, scenes, UI and assets; resume tracked projects or run focused feature work. Reuse existing project and package systems before custom code, and use live MCP capabilities for Editor operations."
 metadata:
-  version: 3.13.0
+  version: 3.13.1
   author: Neoxider
   homepage: https://github.com/NeoXider/unity-game-agent
 ---
@@ -197,7 +197,7 @@ and QA policy always still apply. To add a pattern, see [patterns/README.md](pat
 - Several Editors at once (opt-in: owner's request or accepted proposal; separate branches/packages/simultaneous Play Mode): [tools/parallel-editors.md](tools/parallel-editors.md) and [tools/unity-workspace.ps1](tools/unity-workspace.ps1)
 - Broker tests: [tools/test-editor-broker.ps1](tools/test-editor-broker.ps1) (no Unity) and [tools/test-editor-broker-unity.ps1](tools/test-editor-broker-unity.ps1) (live Unity 6 Editor)
 - Trustworthy UI screenshots (Device Simulator, one driver per workspace, measuring instead of eyeballing): [tools/ui-screenshot-truth.md](tools/ui-screenshot-truth.md)
-- Restyling art to an approved mockup (measured 1:1 acceptance, cutting assets from the mockup, plate ghosts, shadows, 9-slice audit, device check): [tools/asset-restyle.md](tools/asset-restyle.md) with [tools/design-diff.py](tools/design-diff.py), [tools/plate-patch.py](tools/plate-patch.py), [tools/ImageSliceAudit.cs](tools/ImageSliceAudit.cs)
+- Restyling art to an approved mockup (measured 1:1 acceptance, cutting assets from the mockup with alpha, plate ghosts, shadows, 9-slice audit, device check): [tools/asset-restyle.md](tools/asset-restyle.md) with [tools/design-diff.py](tools/design-diff.py), [tools/cut-matte.py](tools/cut-matte.py), [tools/plate-patch.py](tools/plate-patch.py), [tools/ImageSliceAudit.cs](tools/ImageSliceAudit.cs)
 - Skill memory: [SKILL_MEMORY.md](SKILL_MEMORY.md) and [tools/append-skill-memory.ps1](tools/append-skill-memory.ps1)
 - Role subskills: [roles/game-designer.md](roles/game-designer.md), [roles/designer.md](roles/designer.md), [roles/lead.md](roles/lead.md), [roles/developer.md](roles/developer.md), [roles/qa.md](roles/qa.md)
 - Standard/Pro feature docs generator: [tools/new-feature-docs.ps1](tools/new-feature-docs.ps1)

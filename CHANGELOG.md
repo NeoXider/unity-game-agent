@@ -4,6 +4,21 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.13.1] - 2026-11-20
+
+### Added
+- `tools/cut-matte.py`: alpha matte for pieces cut from a mockup as opaque rectangles, from a measured
+  outline (chamfered/rounded rect, circle, polygon) with 8x anti-aliasing and edge decontamination;
+  `--audit` lists sprites whose border has no transparent pixel.
+
+### Changed
+- `tools/asset-restyle.md`: pieces on the background must be cut with alpha. Rectangle cuts showed a frame
+  and lines on the device although the design diff scored them high (the rectangle holds the mockup's own
+  wood in the mockup state). Segmentation (GrabCut) loses shaded rims; measure the outline instead. Patch
+  the plate under former rectangles, and inspect the plate alone with boosted low frequencies.
+
+---
+
 ## [3.13.0] - 2026-11-20
 
 ### Added

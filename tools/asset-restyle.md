@@ -60,6 +60,20 @@ If the mockup is the owner's own art and its resolution is close to the target v
   (512 px final): ring with bevel and directional light, dark face with fine grain, vector glyph on top.
 - Mockup resolution caps sharpness on 1080x2400 screens (~1.4x upscale). Note it; upscale with a proper
   upscaler later rather than repainting.
+- Every piece that sits on the background (plaques, buttons, bars, badges) must be cut WITH ALPHA: the
+  piece opaque, everything around it transparent. A rectangle cut keeps the mockup's wood around the
+  piece. That wood never matches the game plate (which was inpainted under the UI), so the rectangle's
+  edges show as a frame and vertical lines between plaques; a runtime shadow on such a sprite is also a
+  rectangle. The design diff does NOT catch it: in the mockup state the rectangle holds the mockup's own
+  wood, so the region scores high (that is how 0.84-0.99 hid it here; the owner found it on the phone).
+- Matte with [cut-matte.py](cut-matte.py): measure the outline on the lit top/left edges (pixel profiles,
+  a 5-8x grid crop) and describe it as primitives (chamfered/rounded rect, circle, polygon for an arch).
+  GrabCut and colour-distance segmentation failed: the shaded bottom/right bevel is as dark as the wood
+  shadow and a brass rim has the hue of oak, so they cut the rim off. Let the runtime shadow follow the
+  new alpha instead of the mockup's darkened wood.
+- After matting, patch the plate under the former rectangles too (the inpainted patches are now exposed,
+  section 4), and run `cut-matte.py --audit <art root>`: only intentionally full-bleed sprites (board
+  frame, grid tiles) may remain on the list.
 
 ## 4. Background plates cut from the mockup leave ghosts
 
@@ -68,7 +82,10 @@ harmless, but anything under DYNAMIC content (tray pieces, counters) shows the i
 the content differs from the mockup state. The diff will not catch this, because in the reference state
 the same pieces cover the patches.
 
-- Check by capturing a different game state and boosting contrast (x2.2) on the tray band.
+- The same applies under every static piece once it is matted: the plate here had a darker rectangle
+  under each plaque and the gear, with a light strip between them. Patch those footprints as well.
+- Check by capturing a different game state and boosting contrast (x2.2) on the tray band, and look at
+  the plate alone with its low frequencies boosted (blur sigma 12, x6 around the mean): rectangles pop out.
 - Fix with [plate-patch.py](plate-patch.py): replace only the footprints of the mockup's dynamic items
   (bounding boxes + padding, plus the drop-shadow offset) with tone-matched clean texture, keeping the
   mockup's low-frequency shading, feathered edges.
