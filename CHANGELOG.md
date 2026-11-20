@@ -4,6 +4,26 @@ All notable changes to this skill are documented here.
 
 ---
 
+## [3.13.0] - 2026-11-20
+
+### Added
+- `tools/asset-restyle.md`: restyling a game's art to one approved mockup with measured acceptance.
+  Freeze the reference; capture in the mockup's game state; accept per region by shift/MAE/SSIM instead
+  of by eye; cut assets from the mockup itself when it is the owner's art at near-target resolution
+  (look-alikes reached SSIM 0.37-0.62, cuts 0.84-0.99); erase baked text, keep TMP; pick the OFL font by
+  SSIM; render small round icons procedurally at 4x; patch inpaint ghosts under dynamic content; UIEffect
+  for big UI shadows and baked shadows for repeated cells, verified by an on/off pixel diff; 9-slice audit;
+  `spriteMode: Multiple` rect pitfall when a texture changes size; batchmode APK and emulator walk-through.
+  From the Block Puzzle MVP restyle, where three rounds judged by eye were rejected by the owner.
+- `tools/design-diff.py`: per-region shift/MAE/SSIM comparison of a capture against the approved image,
+  with blend, heatmap and side-by-side crops; regions from JSON.
+- `tools/plate-patch.py`: replaces the footprints of a mockup's dynamic items in a background plate with
+  tone-matched clean texture, keeping the plate's shading.
+- `tools/ImageSliceAudit.cs`: editor audit listing stretched Images (aspect off by >2 % without real
+  slice borders, compressed borders, textures that must tile); acceptance is an empty list.
+
+---
+
 ## [3.12.0] - 2026-11-06
 
 ### Changed
